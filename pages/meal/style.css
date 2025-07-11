@@ -1,0 +1,30 @@
+.meal-record-container {
+  padding: 20px;
+  font-family: sans-serif;
+  text-align: center;
+}
+
+#meal-form {
+  margin-bottom: 20px;
+}
+
+#record-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.record-entry {
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+  text-align: left;
+}
+
+.record-entry img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+}
