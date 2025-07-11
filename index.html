@@ -9,7 +9,9 @@
 <body>
   <div id="app">
     <div class="calorie-display">本日の摂取カロリー: <span id="calorie">1580 kcal</span></div>
-    <div id="page-content" class="page-content">おすすめの料理を表示します。</div>
+
+    <iframe id="subpage" src="pages/recommend/index.html" frameborder="0"></iframe>
+
     <div class="bottom-nav">
       <button onclick="switchPage('recommend')">🔍<br>レコメンド</button>
       <button onclick="switchPage('fridge')">🧊<br>冷蔵庫</button>
@@ -21,93 +23,3 @@
   <script src="main.js"></script>
 </body>
 </html>
-
-/* style.css */
-body {
-  margin: 0;
-  font-family: sans-serif;
-  background: #f8fafc;
-}
-
-#app {
-  padding-bottom: 100px;
-  min-height: 100vh;
-  position: relative;
-}
-
-.calorie-display {
-  text-align: center;
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-top: 1rem;
-}
-
-#calorie {
-  color: #f43f5e;
-}
-
-.page-content {
-  margin: 2rem;
-  text-align: center;
-}
-
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: space-around;
-  background: white;
-  border-top: 1px solid #e5e7eb;
-  padding: 0.5rem 0;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
-  font-size: 0.8rem;
-}
-
-.bottom-nav button {
-  flex: 1;
-  text-align: center;
-  background: none;
-  border: none;
-  color: #6b7280;
-  cursor: pointer;
-}
-
-.bottom-nav button:focus,
-.bottom-nav button.active {
-  color: #3b82f6;
-}
-
-button {
-  font-size: 1rem;
-  margin: 1rem;
-  padding: 1rem 2rem;
-  background-color: #ff7f50;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-#question {
-  font-size: 1.2rem;
-  margin-top: 2rem;
-  min-height: 50px;
-}
-
-#result {
-  font-size: 1.1rem;
-  background: #fff0e0;
-  border-radius: 10px;
-  padding: 1rem;
-  margin-top: 2rem;
-  max-width: 700px;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: left;
-}
-
-.recipe-section {
-  margin-top: 1rem;
-}
