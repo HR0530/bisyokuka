@@ -7,49 +7,53 @@ document.getElementById('meal-form').addEventListener('submit', async function (
 
   const reader = new FileReader();
   reader.onload = async function (event) {
-    const imageBase64 = event.target.result.split(',')[1]; // base64のみ
+    const imageBase64 = event.target.result.split(',')[1]; // data:image/jpeg;base64,...の「,」以降を抜き出す
 
     const timestamp = new Date().toLocaleString('ja-JP', {
       year: 'numeric', month: '2-digit', day: '2-digit',
       hour: '2-digit', minute: '2-digit'
     });
 
-    let estimatedCalories = '??? kcal';
     let labelDescription = '不明';
+    let estimatedCalories = '??? kcal';
 
     try {
-      const visionResponse = await fetch(
-        "https://vision.googleapis.com/v1/images:annotate?key=7077a1384411d30b64524f88f618c93ba755130f",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            requests: [
-              {
-                image: {
-                  content: imageBase64,
+      const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=AIzaSyAdZutx0s1Jjcs_vtaTFXBPgSN-VuXNShA", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: "この料理の名前と、一般的なカロリー量（おおよそ）を答えてください。例:「これはカレーライスです。おおよそ550kcalです。」"
                 },
-                features: [{ type: "LABEL_DETECTION", maxResults: 5 }],
-              },
-            ],
-          }),
-        }
-      );
+                {
+                  inlineData: {
+                    mimeType: "image/jpeg",
+                    data: imageBase64
+                  }
+                }
+              ]
+            }
+          ]
+        })
+      });
 
-      const data = await visionResponse.json();
-      const labels = data.responses[0].labelAnnotations;
+      const result = await response.json();
+      const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "認識できませんでした";
 
-      if (labels && labels.length > 0) {
-        labelDescription = labels[0].description;
-        estimatedCalories = estimateCaloriesFromLabel(labelDescription) + " kcal";
-      } else {
-        labelDescription = '料理名不明';
-        estimatedCalories = 'カロリー不明';
-      }
+      // 「〇〇です。おおよそXXXkcalです。」の形式から抽出
+      const labelMatch = text.match(/これは(.+?)です/);
+      const calorieMatch = text.match(/おおよそ(\d+)\s?kcal/);
+
+      labelDescription = labelMatch ? labelMatch[1] : "不明";
+      estimatedCalories = calorieMatch ? calorieMatch[1] + " kcal" : "不明";
+
     } catch (err) {
-      console.error("Vision API エラー:", err);
+      console.error("Gemini Vision API エラー:", err);
       labelDescription = 'エラー';
       estimatedCalories = '取得失敗';
     }
@@ -69,20 +73,3 @@ document.getElementById('meal-form').addEventListener('submit', async function (
 
   reader.readAsDataURL(file);
 });
-
-// シンプルなラベル → カロリー辞書（必要に応じて拡張）
-function estimateCaloriesFromLabel(label) {
-  const calorieMap = {
-    'hamburger': 500,
-    'pizza': 600,
-    'salad': 150,
-    'sushi': 300,
-    'steak': 700,
-    'noodles': 450,
-    'rice': 200,
-    'curry': 550
-  };
-
-  const key = label.toLowerCase();
-  return calorieMap[key] || 400; // デフォルトは400kcal
-}
