@@ -6,83 +6,38 @@ body {
 
 #app {
   padding-bottom: 100px;
-  min-height: 100vh;
-  position: relative;
 }
 
 .calorie-display {
   text-align: center;
   font-size: 1.5rem;
   font-weight: bold;
-  margin-top: 1rem;
+  margin: 1rem;
+  color: #ef4444;
 }
 
-#calorie {
-  color: #f43f5e;
-}
-
-.page-content {
-  margin: 2rem;
-  text-align: center;
+iframe {
+  width: 100%;
+  height: calc(100vh - 160px);
+  border: none;
 }
 
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
   display: flex;
   justify-content: space-around;
+  width: 100%;
   background: white;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #ccc;
   padding: 0.5rem 0;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
-  font-size: 0.8rem;
 }
 
 .bottom-nav button {
   flex: 1;
-  text-align: center;
+  font-size: 0.8rem;
   background: none;
   border: none;
-  color: #6b7280;
+  color: #555;
   cursor: pointer;
-}
-
-.bottom-nav button:focus,
-.bottom-nav button.active {
-  color: #3b82f6;
-}
-
-button {
-  font-size: 1rem;
-  margin: 1rem;
-  padding: 1rem 2rem;
-  background-color: #ff7f50;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-#question {
-  font-size: 1.2rem;
-  margin-top: 2rem;
-  min-height: 50px;
-}
-
-#result {
-  font-size: 1.1rem;
-  background: #fff0e0;
-  border-radius: 10px;
-  padding: 1rem;
-  margin-top: 2rem;
-  max-width: 700px;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: left;
-}
-
-.recipe-section {
-  margin-top: 1rem;
 }
