@@ -1,0 +1,76 @@
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background-color: #f7f9fc;
+  padding: 30px;
+  color: #333;
+}
+
+h1 {
+  color: #2c3e50;
+  text-align: center;
+}
+
+.card {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 600px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+input[type="text"],
+input[type="number"] {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+button {
+  padding: 10px 15px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #2980b9;
+}
+
+.weight-control {
+  display: flex;
+  flex-direction: column;
+}
+
+.weight-control .buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.weight-control .buttons button {
+  flex: 1;
+  font-size: 14px;
+  padding: 6px;
+  background-color: #95a5a6;
+}
+
+.weight-control .buttons button:hover {
+  background-color: #7f8c8d;
+}
+
+#food-list li {
+  cursor: pointer;
+  margin-bottom: 5px;
+}
