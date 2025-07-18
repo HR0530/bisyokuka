@@ -5,6 +5,10 @@ body {
   background-color: #fefefe;
 }
 
+h1 {
+  margin-bottom: 1rem;
+}
+
 #webcam-container {
   margin-top: 20px;
 }
@@ -23,4 +27,9 @@ canvas {
   font-weight: bold;
   color: #e91e63;
   margin-top: 10px;
+}
+
+#upload-result {
+  font-size: 1.1rem;
+  color: #333;
 }
