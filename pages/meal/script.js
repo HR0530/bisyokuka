@@ -1,19 +1,16 @@
-const MODEL_PATH = "./tm-my-image-model/";
+const MODEL_URL = "https://teachablemachine.withgoogle.com/models/pWtQx_jD_/";
 
 let model, maxPredictions;
 
-// カロリー目安（モデルのクラス名に合わせて調整してください）
+// カロリー目安（モデルのクラス名に合わせて適宜変更してください）
 const calorieTable = {
   "ラーメン": 600,
   "ハンバーグ": 450,
-  "カレー": 550,
-  "サラダ": 120,
-  "寿司": 400,
-  // 追加可能
+  // 他のクラス名を追加してください
 };
 
 async function loadModel() {
-  model = await tmImage.load(MODEL_PATH + "model.json", MODEL_PATH + "metadata.json");
+  model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
   maxPredictions = model.getTotalClasses();
 }
 loadModel();
@@ -29,7 +26,6 @@ imageUpload.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
-  // 画像プレビュー作成
   const reader = new FileReader();
   reader.onload = () => {
     imageContainer.innerHTML = `<img id="uploaded-image" src="${reader.result}" alt="アップロード画像" />`;
@@ -37,14 +33,12 @@ imageUpload.addEventListener("change", (e) => {
   };
   reader.readAsDataURL(file);
 
-  // 判定結果リセット
   labelContainer.textContent = "";
 });
 
 imageUpload.addEventListener("change", async () => {
   if (!uploadedImage || !model) return;
 
-  // 画像が完全に読み込まれてから推論
   uploadedImage.onload = async () => {
     const predictions = await model.predict(uploadedImage);
     predictions.sort((a, b) => b.probability - a.probability);
@@ -54,10 +48,9 @@ imageUpload.addEventListener("change", async () => {
     const confidence = (topPrediction.probability * 100).toFixed(2);
     const calories = calorieTable[className] || "不明";
 
-    labelContainer.textContent = 
+    labelContainer.textContent =
       `判定結果: ${className}\n確率: ${confidence}%\n推定カロリー: ${calories} kcal`;
 
-    // 履歴に追加
     const now = new Date().toLocaleString();
     const li = document.createElement("li");
     li.textContent = `${now} - ${className} - 約${calories} kcal`;
