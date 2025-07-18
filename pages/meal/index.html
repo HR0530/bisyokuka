@@ -10,10 +10,26 @@
 </head>
 <body>
   <h1>料理カロリー推定</h1>
-  <p>カメラに料理を写すと、料理名とカロリーが表示されます。</p>
-  <button onclick="init()">▶ Start</button>
-  <div id="webcam-container"></div>
-  <div id="label-container"></div>
+
+  <!-- Webカメラによる推定 -->
+  <section>
+    <h2>📷 カメラで判定</h2>
+    <p>カメラに料理を写すと、料理名とカロリーが表示されます。</p>
+    <button onclick="init()">▶ Start</button>
+    <div id="webcam-container"></div>
+    <div id="label-container"></div>
+  </section>
+
+  <hr />
+
+  <!-- 画像アップロードによる推定 -->
+  <section>
+    <h2>🖼️ 画像をアップロードして判定</h2>
+    <input type="file" accept="image/*" onchange="handleImageUpload(event)" />
+    <br />
+    <img id="uploaded-image" width="224" style="display:none; margin-top:10px;" />
+    <div id="upload-result" style="margin-top: 20px;"></div>
+  </section>
 
   <script src="script.js"></script>
 </body>
