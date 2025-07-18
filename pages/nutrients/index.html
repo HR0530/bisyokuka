@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>栄養管理 ＆ レシピ提案アプリ</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap" rel="stylesheet">
+</head>
+<body>
+  <h1>🥕 栄養管理 ＆ レシピ提案アプリ</h1>
+
+  <div class="card">
+    <form id="food-form">
+      <input type="text" id="food-name" list="food-options" placeholder="食材名（例：にんじん）" required>
+      <datalist id="food-options"></datalist>
+
+      <div class="weight-control">
+        <input type="number" id="food-weight" value="100" min="0">
+        <div class="buttons">
+          <button type="button" class="adjust" data-diff="-100">-100</button>
+          <button type="button" class="adjust" data-diff="-50">-50</button>
+          <button type="button" class="adjust" data-diff="-10">-10</button>
+          <button type="button" class="adjust" data-diff="10">+10</button>
+          <button type="button" class="adjust" data-diff="50">+50</button>
+          <button type="button" class="adjust" data-diff="100">+100</button>
+        </div>
+      </div>
+
+      <button type="submit">追加</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>📋 登録済み食材</h2>
+    <ul id="food-list"></ul>
+  </div>
+
+  <div class="card">
+    <h2>🔥 栄養素合計</h2>
+    <p id="summary">カロリー: 0 kcal｜たんぱく質: 0g｜脂質: 0g｜炭水化物: 0g</p>
+  </div>
+
+  <div class="card">
+    <h2>🍽 レシピ提案</h2>
+    <div id="recipe-list"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
