@@ -106,6 +106,7 @@ document.getElementById("food-form").addEventListener("submit", function (e) {
     alert("その食材はデータベースにありません。");
     return;
   }
+
   if (isNaN(weight) || weight <= 0) {
     alert("使用量（g）は正の数で入力してください。");
     return;
@@ -130,10 +131,9 @@ document.getElementById("food-form").addEventListener("submit", function (e) {
 
   const li = document.createElement("li");
   li.textContent = `${item.name}：${item.weight}g`;
-  li.title = "クリックで削除";
   li.style.cursor = "pointer";
-
-  li.addEventListener("click", () => {
+  li.title = "クリックで削除";
+  li.addEventListener("click", function () {
     total.cal -= item.cal;
     total.protein -= item.protein;
     total.fat -= item.fat;
@@ -145,8 +145,7 @@ document.getElementById("food-form").addEventListener("submit", function (e) {
   document.getElementById("food-list").appendChild(li);
 
   updateSummary();
-
-  this.reset();
+  document.getElementById("food-form").reset();
   document.getElementById("food-weight").value = 100; // デフォルト値に戻す
 });
 
@@ -154,10 +153,10 @@ document.getElementById("food-form").addEventListener("submit", function (e) {
 function updateSummary() {
   const p = document.getElementById("summary");
   p.textContent =
-    `カロリー: ${total.cal.toFixed(1)} kcal｜` +
-    `たんぱく質: ${total.protein.toFixed(1)} g｜` +
-    `脂質: ${total.fat.toFixed(1)} g｜` +
-    `炭水化物: ${total.carb.toFixed(1)} g`;
+    カロリー: ${total.cal.toFixed(1)} kcal｜ +
+    たんぱく質: ${total.protein.toFixed(1)}g｜ +
+    脂質: ${total.fat.toFixed(1)}g｜ +
+    `炭水化物: ${total.carb.toFixed(1)}g`;
 }
 
 // 重量調整ボタンの処理
@@ -166,8 +165,7 @@ document.querySelectorAll(".adjust").forEach(button => {
     const diff = parseInt(button.dataset.diff);
     const input = document.getElementById("food-weight");
     let value = parseInt(input.value) || 0;
-    value = Math.max(1, value + diff); // 1g以下にはしない
+    value = Math.max(0, value + diff);
     input.value = value;
   });
 });
-
