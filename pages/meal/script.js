@@ -7,7 +7,7 @@ document.getElementById('meal-form').addEventListener('submit', async function (
 
   const reader = new FileReader();
   reader.onload = async function (event) {
-    const imageBase64 = event.target.result.split(',')[1]; // data:image/jpeg;base64,...の「,」以降を抜き出す
+    const imageBase64 = event.target.result.split(',')[1];
 
     const timestamp = new Date().toLocaleString('ja-JP', {
       year: 'numeric', month: '2-digit', day: '2-digit',
@@ -16,6 +16,25 @@ document.getElementById('meal-form').addEventListener('submit', async function (
 
     let labelDescription = '不明';
     let estimatedCalories = '??? kcal';
+
+    // 🍚 料理名とその一般的なカロリー（100〜600kcal程度）
+    const calorieDB = {
+      "カレーライス": 550,
+      "ラーメン": 600,
+      "ハンバーグ": 400,
+      "寿司": 500,
+      "天ぷら": 450,
+      "とんかつ": 600,
+      "焼きそば": 520,
+      "うどん": 350,
+      "そば": 330,
+      "牛丼": 550,
+      "オムライス": 500,
+      "スパゲッティ": 480,
+      "ピザ": 600,
+      "唐揚げ": 550,
+      "親子丼": 500
+    };
 
     try {
       const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=AIzaSyAdZutx0s1Jjcs_vtaTFXBPgSN-VuXNShA", {
@@ -28,7 +47,7 @@ document.getElementById('meal-form').addEventListener('submit', async function (
             {
               parts: [
                 {
-                  text: "この料理の名前と、一般的なカロリー量（おおよそ）を答えてください。例:「これはカレーライスです。おおよそ550kcalです。」"
+                  text: "この画像の料理名と含まれる主な食材、そして一般的な分量での合計カロリー（kcal）をできるだけ詳しく答えてください。"
                 },
                 {
                   inlineData: {
@@ -45,12 +64,24 @@ document.getElementById('meal-form').addEventListener('submit', async function (
       const result = await response.json();
       const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "認識できませんでした";
 
-      // 「〇〇です。おおよそXXXkcalです。」の形式から抽出
       const labelMatch = text.match(/これは(.+?)です/);
       const calorieMatch = text.match(/おおよそ(\d+)\s?kcal/);
 
-      labelDescription = labelMatch ? labelMatch[1] : "不明";
-      estimatedCalories = calorieMatch ? calorieMatch[1] + " kcal" : "不明";
+      if (labelMatch) {
+        labelDescription = labelMatch[1];
+
+        // 🍴 Geminiの結果にカロリー情報がなければ、calorieDBを参照
+        if (calorieMatch) {
+          estimatedCalories = calorieMatch[1] + " kcal";
+        } else if (calorieDB[labelDescription]) {
+          estimatedCalories = calorieDB[labelDescription] + " kcal（推定DBより）";
+        } else {
+          estimatedCalories = "不明";
+        }
+      } else {
+        labelDescription = "不明";
+        estimatedCalories = "不明";
+      }
 
     } catch (err) {
       console.error("Gemini Vision API エラー:", err);
