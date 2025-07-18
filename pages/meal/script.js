@@ -1,84 +1,75 @@
 const URL = "./tm-my-image-model/";
-let model, webcam, labelContainer, maxPredictions;
+let model, maxPredictions;
 
-// カロリーDB（料理名とカロリーの対応）
-const calorieDB = {
-  "ハンバーグ": "400 kcal",
-  "ラーメン": "600 kcal"
-};
-
-// モデル読み込み
-(async () => {
+async function loadModel() {
   const modelURL = URL + "model.json";
   const metadataURL = URL + "metadata.json";
   model = await tmImage.load(modelURL, metadataURL);
   maxPredictions = model.getTotalClasses();
-})();
-
-// Webカメラ判定
-async function init() {
-  const flip = true;
-  webcam = new tmImage.Webcam(200, 200, flip);
-  await webcam.setup();
-  await webcam.play();
-  window.requestAnimationFrame(loop);
-
-  document.getElementById("webcam-container").appendChild(webcam.canvas);
-  labelContainer = document.getElementById("label-container");
-  labelContainer.innerHTML = "";
-
-  for (let i = 0; i < maxPredictions; i++) {
-    labelContainer.appendChild(document.createElement("div"));
-  }
-
-  const calorieDiv = document.createElement("div");
-  calorieDiv.id = "calorie-display";
-  calorieDiv.style.fontWeight = "bold";
-  calorieDiv.style.color = "#e91e63";
-  calorieDiv.style.marginTop = "10px";
-  labelContainer.appendChild(calorieDiv);
 }
+loadModel();
 
-async function loop() {
-  webcam.update();
-  await predictWebcam();
-  window.requestAnimationFrame(loop);
-}
+const imageUpload = document.getElementById("imageUpload");
+const imagePreview = document.getElementById("imagePreview");
+const resultDiv = document.getElementById("result");
+const predictButton = document.getElementById("predictButton");
+const historyList = document.getElementById("historyList");
 
-async function predictWebcam() {
-  const prediction = await model.predict(webcam.canvas);
-  prediction.sort((a, b) => b.probability - a.probability);
-  const top = prediction[0];
+let uploadedImage = null;
 
-  for (let i = 0; i < maxPredictions; i++) {
-    const p = prediction[i];
-    labelContainer.childNodes[i].innerHTML = `${p.className}: ${p.probability.toFixed(2)}`;
-  }
-
-  const cal = calorieDB[top.className] || "不明";
-  labelContainer.childNodes[maxPredictions].innerHTML = `▶ 推定カロリー: ${cal}`;
-}
-
-// アップロード画像判定
-async function handleImageUpload(event) {
+imageUpload.addEventListener("change", (event) => {
   const file = event.target.files[0];
-  if (!file || !model) return;
+  if (!file) return;
 
-  const img = document.getElementById("uploaded-image");
-  img.src = URL.createObjectURL(file);
-  img.style.display = "block";
-
-  img.onload = async () => {
-    const prediction = await model.predict(img);
-    prediction.sort((a, b) => b.probability - a.probability);
-    const top = prediction[0];
-
-    const cal = calorieDB[top.className] || "不明";
-    const resultDiv = document.getElementById("upload-result");
-    resultDiv.innerHTML = `
-      <strong>判定結果:</strong><br>
-      ${top.className}（${(top.probability * 100).toFixed(1)}%）<br>
-      ▶ 推定カロリー: ${cal}
-    `;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.src = reader.result;
+    img.onload = () => {
+      uploadedImage = img;
+      imagePreview.innerHTML = "";
+      imagePreview.appendChild(img);
+    };
   };
-}
+  reader.readAsDataURL(file);
+});
+
+predictButton.addEventListener("click", async () => {
+  if (!uploadedImage || !model) {
+    resultDiv.textContent = "画像が読み込まれていません";
+    return;
+  }
+
+  const prediction = await model.predict(uploadedImage);
+  prediction.sort((a, b) => b.probability - a.probability);
+
+  const top = prediction[0];
+  const now = new Date();
+  const datetime = now.toLocaleString();
+  const label = top.className;
+  const confidence = (top.probability * 100).toFixed(2);
+
+  // ラベルからカロリーを推定（例：ラベル名: カロリー）
+  const caloriesMap = {
+    "ラーメン": 500,
+    "サラダ": 120,
+    "カレー": 650,
+    "ハンバーグ": 700,
+    "寿司": 400
+  };
+  const estimatedCalories = caloriesMap[label] || "不明";
+
+  resultDiv.innerHTML = `
+    <p>分類結果: <strong>${label}</strong></p>
+    <p>信頼度: <strong>${confidence}%</strong></p>
+    <p>推定カロリー: <strong>${estimatedCalories} kcal</strong></p>
+    <p>日時: ${datetime}</p>
+  `;
+
+  // 履歴追加
+  const item = document.createElement("li");
+  item.innerHTML = `
+    ${datetime} - ${label} (${estimatedCalories} kcal, ${confidence}%)
+  `;
+  historyList.prepend(item);
+});
