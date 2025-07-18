@@ -2,35 +2,24 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>料理カロリー判定</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>画像アップロードで食事分類</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
 </head>
 <body>
-  <h1>料理カロリー推定</h1>
+  <h1>食事画像アップローダー</h1>
 
-  <!-- Webカメラによる推定 -->
-  <section>
-    <h2>📷 カメラで判定</h2>
-    <p>カメラに料理を写すと、料理名とカロリーが表示されます。</p>
-    <button onclick="init()">▶ Start</button>
-    <div id="webcam-container"></div>
-    <div id="label-container"></div>
-  </section>
+  <input type="file" id="imageUpload" accept="image/*" />
+  <div id="imagePreview"></div>
+  <button id="predictButton">判定する</button>
 
-  <hr />
+  <div id="result"></div>
 
-  <!-- 画像アップロードによる推定 -->
-  <section>
-    <h2>🖼️ 画像をアップロードして判定</h2>
-    <input type="file" accept="image/*" onchange="handleImageUpload(event)" />
-    <br />
-    <img id="uploaded-image" width="224" style="display:none; margin-top:10px;" />
-    <div id="upload-result" style="margin-top: 20px;"></div>
-  </section>
+  <h2>履歴</h2>
+  <ul id="historyList"></ul>
 
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image"></script>
   <script src="script.js"></script>
 </body>
 </html>
