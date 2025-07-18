@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>食事記録</title>
+  <title>料理カロリー判定</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
 </head>
 <body>
-  <div class="meal-record-container">
-    <h2>食事記録</h2>
-    <form id="meal-form">
-      <input type="file" id="meal-photo" accept="image/*" required />
-      <button type="submit">アップロード</button>
-    </form>
-    <div id="record-list"></div>
-  </div>
+  <h1>料理カロリー推定</h1>
+  <p>カメラに料理を写すと、料理名とカロリーが表示されます。</p>
+  <button onclick="init()">▶ Start</button>
+  <div id="webcam-container"></div>
+  <div id="label-container"></div>
+
   <script src="script.js"></script>
 </body>
 </html>
