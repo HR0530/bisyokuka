@@ -21,8 +21,8 @@
 
     <div class="calorie-card">
       <div class="rank-label">本日の摂取カロリー</div>
-      <div class="calorie-value"><span id="calorie">1580</span> kcal</div>
-     <div class="rank-sub">目標まであと <span id="remainingCalorie">--</span> kcal</div>
+      <div class="calorie-value"><span id="currentCalorie">0</span> kcal</div>
+      <div class="rank-sub">目標まであと <span id="remainingCalorie">--</span> kcal</div>
     </div>
 
     <div class="feature-grid">
@@ -55,20 +55,21 @@
       const userName = localStorage.getItem("username") || "美食家さん";
       document.getElementById("userName").textContent = `こんにちは、${userName}！`;
 
-      // カロリー目標の反映
-      const calorieGoal = localStorage.getItem("calorieGoal") || "1580";
-      document.getElementById("calorie").textContent = calorieGoal;
-
-      // 残りカロリー表示（仮で現在摂取＝1160として）
-      const currentCalorie = 1160;
-      const remaining = Math.max(0, calorieGoal - currentCalorie);
-      document.getElementById("remaining").textContent = `目標まであと ${remaining} kcal`;
-
-      // プロフィール画像の反映（Base64が保存されている想定）
+      // プロフィール画像の反映
       const userIcon = localStorage.getItem("userIcon");
       if (userIcon) {
         document.getElementById("profileIcon").src = userIcon;
       }
+    }
+
+    function loadCalorieInfo() {
+      const calorieGoal = parseInt(localStorage.getItem("calorieGoal")) || 1580;
+      const today = new Date().toLocaleDateString();
+      const todayCalorie = parseInt(localStorage.getItem("calorie_" + today)) || 0;
+
+      document.getElementById("currentCalorie").textContent = todayCalorie;
+      const remaining = Math.max(0, calorieGoal - todayCalorie);
+      document.getElementById("remainingCalorie").textContent = remaining;
     }
   </script>
 </body>
