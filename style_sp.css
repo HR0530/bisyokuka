@@ -1,17 +1,20 @@
 body {
   margin: 0;
   font-family: sans-serif;
-  background: #f8fafc;
-}
-
-.container {
+  background: #fefefe;
   padding: 1rem;
 }
 
-.header {
+.header-row {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  justify-content: space-between;
+}
+
+.profile-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .profile-icon {
@@ -21,56 +24,45 @@ body {
   object-fit: cover;
 }
 
-.user-info {
-  flex-grow: 1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.user-name {
+  font-size: 1rem;
+  font-weight: bold;
 }
 
 .header-buttons button {
-  margin-left: 0.5rem;
+  margin-left: 0.3rem;
   font-size: 1.2rem;
-  background: none;
   border: none;
+  background: none;
   cursor: pointer;
 }
 
 .calorie-card {
-  background: white;
-  border-radius: 0.8rem;
-  padding: 1rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   text-align: center;
+  padding: 1rem;
   margin: 1rem 0;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .calorie-value {
   font-size: 2rem;
-  font-weight: bold;
   color: #ef4444;
 }
 
-.rank-sub {
-  font-size: 0.9rem;
-  color: #555;
-}
-
 .feature-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
 }
 
 .feature-card {
-  flex: 1 1 45%;
-  background: #ffffff;
-  border-radius: 0.6rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
   padding: 1rem;
-  font-size: 0.95rem;
+  background: white;
   text-align: center;
-  cursor: pointer;
+  border-radius: 0.6rem;
+  font-size: 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
   border: none;
 }
