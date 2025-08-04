@@ -1,24 +1,17 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>料理カロリー判定（写真アップロード）</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
+  <meta charset="UTF-8">
+  <title>食事記録 | 美食家さん</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>料理カロリー推定（写真アップロード）</h1>
-  <p>写真をアップロードすると、料理名と推定カロリーを判定します。</p>
+  <div class="meal-container">
+    <h1>食事記録</h1>
 
-  <input type="file" id="upload-image" accept="image/*" />
-  <div id="image-preview"></div>
-
-  <div id="result-container"></div>
-
-  <h2>判定履歴</h2>
-  <ul id="history-list"></ul>
+    <input type="file" id="photoInput" accept="image/*">
+    <div id="mealList"></div>
+  </div>
 
   <script src="script.js"></script>
 </body>
