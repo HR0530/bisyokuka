@@ -6,66 +6,53 @@
   <title>美食家さん</title>
   <link rel="stylesheet" href="style_sp.css" />
 </head>
-<body onload="checkLogin(); loadUserSettings(); loadCalorieInfo();">
-  <div class="home-page">
-    <div class="header-row">
-      <img id="profileIcon" src="img/user-icon.png" alt="ユーザーアイコン" class="profile-icon" />
-      <div class="user-name" id="userName">こんにちは、美食家さん！</div>
-      <div class="header-buttons">
-        <button class="settings-button" onclick="window.location.href='settings.html'">⚙️</button>
-        <button class="logout-button" onclick="logout()">📕</button>
-      </div>
-    </div>
+<body>
+  <div class="top-bar">美食家さん</div>
 
-    <div class="calorie-card">
-      <div class="rank-label">本日の摂取カロリー</div>
-      <div class="calorie-value"><span id="currentCalorie">0</span> kcal</div>
-      <div class="rank-sub">目標まであと <span id="remainingCalorie">--</span> kcal</div>
-    </div>
+  <div class="profile-section">
+    <img id="profileIcon" class="profile-img" src="img/user-icon.png" alt="プロフィール" />
+    <div class="user-name" id="userName">〇〇さん</div>
+  </div>
 
-    <div class="feature-grid">
-      <div class="feature-card" onclick="switchPage('meal')">📷<br>食事記録</div>
-      <div class="feature-card" onclick="switchPage('fridge')">🧊<br>冷蔵庫管理</div>
-      <div class="feature-card" onclick="switchPage('question')">🧠<br>質問提案</div>
-      <div class="feature-card" onclick="switchPage('nutrients')">👥<br>栄養分析</div>
-      <div class="feature-card" onclick="switchPage('akinator')">🍽️<br>AI献立</div>
-    </div>
+  <div class="card">
+    <div class="card-rank">本日の摂取カロリー</div>
+    <div class="card-value"><span id="currentCalorie">0</span> kcal</div>
+    <div class="card-sub">目標まであと <span id="remainingCalorie">--</span> kcal</div>
+  </div>
+
+  <div class="button-grid">
+    <div class="grid-button" onclick="switchPage('meal')">📷<br>食事記録</div>
+    <div class="grid-button" onclick="switchPage('fridge')">🧊<br>冷蔵庫管理</div>
+    <div class="grid-button" onclick="switchPage('question')">🧠<br>質問提案</div>
+    <div class="grid-button" onclick="switchPage('nutrients')">👥<br>栄養分析</div>
+    <div class="grid-button" onclick="switchPage('akinator')">🍽️<br>AI献立</div>
   </div>
 
   <script>
-    function checkLogin() {
-      if (localStorage.getItem("loggedIn") !== "true") {
-        window.location.href = "login.html";
-      }
-    }
-
-    function logout() {
-      localStorage.removeItem("loggedIn");
-      window.location.href = "login.html";
-    }
-
-    function switchPage(pageName) {
-      window.location.href = `pages/${pageName}/index.html`;
+    function switchPage(name) {
+      window.location.href = `pages/${name}/index.html`;
     }
 
     function loadUserSettings() {
       const userName = localStorage.getItem("username") || "美食家さん";
       document.getElementById("userName").textContent = `こんにちは、${userName}！`;
-      const userIcon = localStorage.getItem("userIcon");
-      if (userIcon) {
-        document.getElementById("profileIcon").src = userIcon;
-      }
+
+      const icon = localStorage.getItem("userIcon");
+      if (icon) document.getElementById("profileIcon").src = icon;
     }
 
     function loadCalorieInfo() {
-      const calorieGoal = parseInt(localStorage.getItem("calorieGoal")) || 1580;
+      const goal = parseInt(localStorage.getItem("calorieGoal")) || 1580;
       const today = new Date().toLocaleDateString();
-      const todayCalorie = parseInt(localStorage.getItem("calorie_" + today)) || 0;
-
-      document.getElementById("currentCalorie").textContent = todayCalorie;
-      const remaining = Math.max(0, calorieGoal - todayCalorie);
-      document.getElementById("remainingCalorie").textContent = remaining;
+      const current = parseInt(localStorage.getItem("calorie_" + today)) || 0;
+      document.getElementById("currentCalorie").textContent = current;
+      document.getElementById("remainingCalorie").textContent = Math.max(0, goal - current);
     }
+
+    window.onload = function () {
+      loadUserSettings();
+      loadCalorieInfo();
+    };
   </script>
 </body>
 </html>
