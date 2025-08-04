@@ -16,9 +16,28 @@ body {
   color: #ef4444;
 }
 
+.logout-container {
+  text-align: right;
+  margin: 0 1rem 1rem;
+}
+
+.logout-container button {
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.logout-container button:hover {
+  background-color: #dc2626;
+}
+
 iframe {
   width: 100%;
-  height: calc(100vh - 160px);
+  height: calc(100vh - 200px);
   border: none;
 }
 
