@@ -8,13 +8,26 @@
 </head>
 <body>
   <h1>🍽️ 料理アキネーター</h1>
+
+  <!-- トップに戻るボタン -->
+  <div style="text-align:right; margin-bottom: 1rem;">
+    <button onclick="goHome()">🏠 トップに戻る</button>
+  </div>
+
   <div id="question"></div>
+
   <div id="buttons">
     <button onclick="handleAnswer(true)">はい</button>
     <button onclick="handleAnswer(false)">いいえ</button>
   </div>
+
   <div id="result" style="display:none;"></div>
 
+  <script>
+    function goHome() {
+      window.location.href = "../../index.html";
+    }
+  </script>
   <script src="script.js"></script>
 </body>
 </html>
