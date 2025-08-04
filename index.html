@@ -6,6 +6,14 @@
   <title>美食家さん</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
+    <!-- ✅ ログイン済チェック（最上部に追加） -->
+  <script>
+    if (localStorage.getItem("loggedIn") !== "true") {
+      window.location.href = "login.html"; // ログイン画面にリダイレクト
+    }
+  </script>
+  
 <body>
   <div id="app">
     <div class="calorie-display">本日の摂取カロリー: <span id="calorie">1580 kcal</span></div>
