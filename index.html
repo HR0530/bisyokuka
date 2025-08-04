@@ -7,31 +7,34 @@
   <link rel="stylesheet" href="app-style.css" />
 </head>
 <body onload="checkLogin()">
-  <div id="app">
-    <!-- ログアウト -->
-    <div class="logout-container">
+  <div class="home-page">
+
+    <!-- ユーザー挨拶セクション -->
+    <div class="profile-section">
+      <img src="img/user-icon.png" alt="ユーザーアイコン" class="profile-icon">
+      <div class="user-name">こんにちは、美食家さん！</div>
+    </div>
+
+    <!-- カロリー表示カード -->
+    <div class="calorie-card">
+      <div class="rank-label">本日の摂取カロリー</div>
+      <div class="calorie-value"><span id="calorie">1580</span> kcal</div>
+      <div class="rank-sub">目標まであと <strong>420 kcal</strong></div>
+    </div>
+
+    <!-- 機能カード -->
+    <div class="feature-grid">
+      <div class="feature-card" onclick="switchPage('meal')">📷<br>食事記録</div>
+      <div class="feature-card" onclick="switchPage('fridge')">🧊<br>冷蔵庫管理</div>
+      <div class="feature-card" onclick="switchPage('question')">🧠<br>質問提案</div>
+      <div class="feature-card" onclick="switchPage('nutrients')">👥<br>栄養分析</div>
+      <div class="feature-card" onclick="switchPage('akinator')">🍽️<br>AI献立</div>
+    </div>
+
+    <div class="logout-button-area">
       <button onclick="logout()">ログアウト</button>
     </div>
 
-    <!-- カロリー表示 -->
-    <div class="calorie-card">
-      <h2>本日の摂取カロリー</h2>
-      <div class="calorie-amount"><span id="calorie">1580</span> kcal</div>
-    </div>
-
-    <!-- iframeで各機能画面 -->
-    <div class="subpage-container">
-      <iframe id="subpage" src="pages/recommend/index.html" frameborder="0"></iframe>
-    </div>
-
-    <!-- ナビゲーション -->
-    <div class="bottom-nav">
-      <button onclick="switchPage('meal')">📷<br>食事記録</button>
-      <button onclick="switchPage('fridge')">🧊<br>冷蔵庫</button>
-      <button onclick="switchPage('question')">🧠<br>質問</button>
-      <button onclick="switchPage('nutrients')">👥<br>栄養素</button>
-      <button onclick="switchPage('akinator')">🍽️<br>アキネーター</button>
-    </div>
   </div>
 
   <script src="main.js"></script>
