@@ -1,83 +1,99 @@
 body {
   margin: 0;
   font-family: 'Segoe UI', sans-serif;
-  background: #fdf8f3;
+  background: #fef6f8; /* 柔らかいピンク背景 */
 }
 
-#app {
-  padding-bottom: 100px;
-  position: relative;
-  max-width: 600px;
+.home-page {
+  max-width: 500px;
   margin: auto;
+  padding: 1rem;
+  background: #fff;
+}
+
+/* ユーザーアイコン・名前 */
+.profile-section {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.profile-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #f4cdd4;
+  margin-bottom: 0.5rem;
+}
+
+.user-name {
+  font-size: 1.1rem;
+  color: #444;
+  margin-bottom: 1rem;
+}
+
+/* カロリーカード（中央表示） */
+.calorie-card {
+  background: #fff0f4;
+  border-radius: 12px;
+  padding: 1.2rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin-bottom: 2rem;
+}
+
+.rank-label {
+  color: #cc3366;
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+  letter-spacing: 1px;
+}
+
+.calorie-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #e44;
+  margin-bottom: 0.3rem;
+}
+
+.rank-sub {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+/* 機能グリッド */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(42%, 1fr));
+  gap: 1rem;
+}
+
+.feature-card {
+  background: #ffffff;
+  text-align: center;
+  padding: 1rem 0.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  font-size: 0.95rem;
+  color: #444;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.feature-card:hover {
+  transform: scale(1.05);
 }
 
 /* ログアウト */
-.logout-container {
-  text-align: right;
-  padding: 0.5rem 1rem 0 0;
-}
-
-.logout-container button {
-  background: none;
-  border: none;
-  color: #666;
-  cursor: pointer;
-  font-size: 0.9rem;
-}
-
-/* カロリーカード */
-.calorie-card {
+.logout-button-area {
+  margin-top: 2rem;
   text-align: center;
-  background: white;
-  margin: 1rem;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 
-.calorie-card h2 {
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
-  color: #444;
-}
-
-.calorie-amount {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #ef4444;
-}
-
-/* iframe領域 */
-.subpage-container {
-  margin: 1rem;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-}
-
-iframe {
-  width: 100%;
-  height: calc(100vh - 300px);
-  border: none;
-}
-
-/* 下ナビ */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  display: flex;
-  justify-content: space-around;
-  width: 100%;
-  background: white;
-  border-top: 1px solid #ddd;
-  padding: 0.5rem 0;
-}
-
-.bottom-nav button {
-  flex: 1;
-  font-size: 0.75rem;
+.logout-button-area button {
   background: none;
   border: none;
-  color: #333;
+  color: #888;
+  font-size: 0.9rem;
   cursor: pointer;
 }
