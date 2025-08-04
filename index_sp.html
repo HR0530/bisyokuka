@@ -1,21 +1,28 @@
+<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>美食家さん</title>
-  <link rel="stylesheet" href="style_sp.css" />
+  <link rel="stylesheet" href="style_pc.css" />
 </head>
-<body onload="checkLogin()">
+<body onload="checkLogin(); loadUserSettings(); loadCalorieInfo();">
   <div class="home-page">
-    <div class="profile-section">
-      <img src="img/user-icon.png" alt="ユーザーアイコン" class="profile-icon">
-      <div class="user-name">こんにちは、美食家さん！</div>
+    <div class="header-row">
+      <div class="profile-section">
+        <img id="profileIcon" src="img/user-icon.png" alt="ユーザーアイコン" class="profile-icon">
+        <div class="user-name" id="userName">こんにちは、美食家さん！</div>
+      </div>
+      <div class="header-buttons">
+        <button class="settings-button" onclick="window.location.href='settings.html'">⚙️ 設定</button>
+        <button class="logout-button" onclick="logout()">ログアウト</button>
+      </div>
     </div>
 
     <div class="calorie-card">
       <div class="rank-label">本日の摂取カロリー</div>
-      <div class="calorie-value"><span id="calorie">1580</span> kcal</div>
-      <div class="rank-sub">目標まであと <strong>420 kcal</strong></div>
+      <div class="calorie-value"><span id="currentCalorie">0</span> kcal</div>
+      <div class="rank-sub">目標まであと <span id="remainingCalorie">--</span> kcal</div>
     </div>
 
     <div class="feature-grid">
@@ -25,11 +32,45 @@
       <div class="feature-card" onclick="switchPage('nutrients')">👥<br>栄養分析</div>
       <div class="feature-card" onclick="switchPage('akinator')">🍽️<br>AI献立</div>
     </div>
-
-    <div class="logout-button-area">
-      <button onclick="logout()">ログアウト</button>
-    </div>
   </div>
-  <script src="main.js"></script>
+
+  <script>
+    function checkLogin() {
+      if (localStorage.getItem("loggedIn") !== "true") {
+        window.location.href = "login.html";
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("loggedIn");
+      window.location.href = "login.html";
+    }
+
+    function switchPage(pageName) {
+      window.location.href = `pages/${pageName}/index.html`;
+    }
+
+    function loadUserSettings() {
+      // ユーザー名の反映
+      const userName = localStorage.getItem("username") || "美食家さん";
+      document.getElementById("userName").textContent = `こんにちは、${userName}！`;
+
+      // プロフィール画像の反映
+      const userIcon = localStorage.getItem("userIcon");
+      if (userIcon) {
+        document.getElementById("profileIcon").src = userIcon;
+      }
+    }
+
+    function loadCalorieInfo() {
+      const calorieGoal = parseInt(localStorage.getItem("calorieGoal")) || 1580;
+      const today = new Date().toLocaleDateString();
+      const todayCalorie = parseInt(localStorage.getItem("calorie_" + today)) || 0;
+
+      document.getElementById("currentCalorie").textContent = todayCalorie;
+      const remaining = Math.max(0, calorieGoal - todayCalorie);
+      document.getElementById("remainingCalorie").textContent = remaining;
+    }
+  </script>
 </body>
 </html>
