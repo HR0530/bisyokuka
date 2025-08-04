@@ -1,11 +1,12 @@
-body {
+html, body {
   margin: 0;
   padding: 0;
   height: 100vh;
+  overflow: hidden; /* スクロール防止 */
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #fffdf5;
+  background-color: #f4f1ec;
   font-family: 'Segoe UI', sans-serif;
 }
 
@@ -14,47 +15,13 @@ body {
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  width: 90%;
-  max-width: 320px;
+  width: 85%;
+  max-width: 340px;
   text-align: center;
+  box-sizing: border-box;
 }
 
-.login-logo {
-  width: 64px;
-  height: 64px;
-  object-fit: cover;
-  border-radius: 50%;
-  margin-bottom: 1rem;
-}
-
-.login-container h2 {
-  margin-bottom: 1.2rem;
-  font-size: 1.5rem;
-  color: #4a3f35;
-}
-
-.login-container input {
-  width: 100%;
-  padding: 0.8rem;
-  margin-bottom: 1rem;
-  font-size: 1rem;
-  background-color: #f0eee9;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-.login-container button {
-  width: 100%;
-  padding: 0.8rem;
-  background-color: #f28c8c;
-  color: white;
-  font-size: 1rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
+/* ロゴアイコン */
 .app-icon {
   width: 65px;
   height: 65px;
@@ -64,12 +31,45 @@ body {
   display: block;
 }
 
-
-.login-container button:hover {
-  background-color: #e05b5b;
+/* タイトル */
+.login-container h2 {
+  margin-bottom: 1.2rem;
+  font-size: 1.5rem;
+  color: #444;
 }
 
+/* 入力フィールド */
+.login-container input {
+  width: 100%;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fafafa;
+  box-sizing: border-box;
+  text-align: left; /* 左寄せで自然に見せる */
+}
+
+/* ボタン */
+.login-container button {
+  width: 100%;
+  padding: 0.8rem;
+  background-color: #f87171;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.login-container button:hover {
+  background-color: #e65b5b;
+}
+
+/* エラー表示 */
 #error-message {
   color: red;
   font-size: 0.85rem;
+  margin-top: 0.5rem;
 }
