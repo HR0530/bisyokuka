@@ -1,46 +1,67 @@
 body {
   margin: 0;
-  font-family: sans-serif;
-  background: #f8fafc;
+  font-family: 'Segoe UI', sans-serif;
+  background: #fdf8f3;
 }
 
 #app {
   padding-bottom: 100px;
+  position: relative;
+  max-width: 600px;
+  margin: auto;
 }
 
-.calorie-display {
-  text-align: center;
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin: 1rem;
-  color: #ef4444;
-}
-
+/* ログアウト */
 .logout-container {
   text-align: right;
-  margin: 0 1rem 1rem;
+  padding: 0.5rem 1rem 0 0;
 }
 
 .logout-container button {
-  padding: 0.4rem 1rem;
-  font-size: 0.8rem;
-  background-color: #ef4444;
-  color: white;
+  background: none;
   border: none;
-  border-radius: 5px;
+  color: #666;
   cursor: pointer;
+  font-size: 0.9rem;
 }
 
-.logout-container button:hover {
-  background-color: #dc2626;
+/* カロリーカード */
+.calorie-card {
+  text-align: center;
+  background: white;
+  margin: 1rem;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.calorie-card h2 {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: #444;
+}
+
+.calorie-amount {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #ef4444;
+}
+
+/* iframe領域 */
+.subpage-container {
+  margin: 1rem;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
 }
 
 iframe {
   width: 100%;
-  height: calc(100vh - 200px);
+  height: calc(100vh - 300px);
   border: none;
 }
 
+/* 下ナビ */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -48,15 +69,15 @@ iframe {
   justify-content: space-around;
   width: 100%;
   background: white;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid #ddd;
   padding: 0.5rem 0;
 }
 
 .bottom-nav button {
   flex: 1;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   background: none;
   border: none;
-  color: #555;
+  color: #333;
   cursor: pointer;
 }
