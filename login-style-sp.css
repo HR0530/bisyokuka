@@ -2,14 +2,15 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f4f1ec;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f4f1ec;
-  font-family: 'Segoe UI', sans-serif;
-  overflow: auto; /* ←ここをautoまたは削除してOK */
+  box-sizing: border-box;
 }
 
+/* ログインボックス */
 .login-container {
   background-color: white;
   padding: 2rem;
@@ -19,11 +20,9 @@ html, body {
   max-width: 340px;
   text-align: center;
   box-sizing: border-box;
-  position: relative;
 }
 
-
-/* ロゴアイコン */
+/* アイコン画像 */
 .app-icon {
   width: 65px;
   height: 65px;
@@ -36,7 +35,7 @@ html, body {
 /* タイトル */
 .login-container h2 {
   margin-bottom: 1.2rem;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   color: #444;
 }
 
@@ -50,7 +49,6 @@ html, body {
   border-radius: 6px;
   background: #fafafa;
   box-sizing: border-box;
-  text-align: left; /* 左寄せで自然に見せる */
 }
 
 /* ボタン */
@@ -69,7 +67,7 @@ html, body {
   background-color: #e65b5b;
 }
 
-/* エラー表示 */
+/* エラーメッセージ */
 #error-message {
   color: red;
   font-size: 0.85rem;
