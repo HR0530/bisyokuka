@@ -19,12 +19,14 @@ body {
 }
 
 .login-icon {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 0.3rem;
-  margin-top: -0.2rem;
+  width: 48px !important;
+  height: 48px !important;
+  display: block;
+  margin: 0 auto 0.3rem;
   border-radius: 50%;
+  object-fit: cover;
 }
+
 
 .login-container h2 {
   margin-bottom: 1.2rem;
