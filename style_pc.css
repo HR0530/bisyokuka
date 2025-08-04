@@ -157,4 +157,22 @@ body {
 .save-area button:hover {
   background: #e25c5c;
 }
+.header-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.header-buttons button {
+  padding: 0.7rem 1.2rem;
+  font-size: 0.95rem;
+  background: #f87171;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.header-buttons button:hover {
+  background: #e65b5b;
+}
 
