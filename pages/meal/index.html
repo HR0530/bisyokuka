@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>食事記録 | 美食家さん</title>
   <link rel="stylesheet" href="style.css">
+  
+  <!-- ログインチェック用 -->
+  <script src="../../main.js"></script>
+  <script>
+    checkLogin();
+  </script>
 </head>
 <body>
   <div class="meal-page">
@@ -15,8 +21,13 @@
       <input type="file" id="photoInput" accept="image/*">
     </div>
 
-    <!-- 3列グリッド表示エリア -->
+    <!-- グリッド表示エリア -->
     <div id="mealGrid" class="grid-view"></div>
+  </div>
+
+  <!-- トップページへ戻るリンク（スマホ用） -->
+  <div class="back-button" style="text-align:center; margin-top: 2rem;">
+    <a href="../../index_sp.html" style="text-decoration: none; color: #e44;">← トップに戻る</a>
   </div>
 
   <script src="script.js"></script>
