@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ログイン | 美食家さん</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="login-container">
+    <h2>ログイン</h2>
+    <input type="text" id="username" placeholder="ユーザー名">
+    <input type="password" id="password" placeholder="パスワード">
+    <button onclick="login()">ログイン</button>
+    <p id="error-message"></p>
+  </div>
+  <script>
+    function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+      const errorMessage = document.getElementById("error-message");
+
+      if (username === "user" && password === "pass") {
+        window.location.href = "index.html"; // ログイン成功後、メイン画面へ
+      } else {
+        errorMessage.textContent = "ユーザー名またはパスワードが正しくありません。";
+      }
+    }
+  </script>
+</body>
+</html>
