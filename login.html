@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>ログイン | 美食家さん</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="login-style.css">
 </head>
 <body>
   <div class="login-container">
@@ -13,18 +13,6 @@
     <button onclick="login()">ログイン</button>
     <p id="error-message"></p>
   </div>
-  <script>
-    function login() {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-      const errorMessage = document.getElementById("error-message");
-
-      if (username === "user" && password === "pass") {
-        window.location.href = "index.html"; // ログイン成功後、メイン画面へ
-      } else {
-        errorMessage.textContent = "ユーザー名またはパスワードが正しくありません。";
-      }
-    }
-  </script>
+  <script src="login.js"></script>
 </body>
 </html>
