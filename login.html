@@ -5,23 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ログイン | 美食家さん</title>
   <script>
-    const head = document.getElementsByTagName('head')[0];
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-
-    if (window.innerWidth <= 600) {
-      link.href = 'login-style-sp.css'; // スマホ用CSS
-    } else {
-      link.href = 'login-style-pc.css'; // PC用CSS
-    }
-
-    head.appendChild(link);
+    link.href = (window.innerWidth <= 600)
+      ? 'login-style-sp.css'
+      : 'login-style-pc.css';
+    document.head.appendChild(link);
   </script>
 </head>
 <body>
   <div class="wrapper">
     <div class="login-container">
-      <img src="img/user-icon.png" alt="美食家さんロゴ" class="login-logo">
+      <img src="img/icon.jpg" alt="アプリアイコン" class="app-icon">
       <h2>美食家さん</h2>
       <input type="text" id="username" placeholder="ユーザー名">
       <input type="password" id="password" placeholder="パスワード">
@@ -29,7 +24,6 @@
       <p id="error-message"></p>
     </div>
   </div>
-
   <script src="login.js"></script>
 </body>
 </html>
