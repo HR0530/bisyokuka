@@ -1,10 +1,13 @@
-// ページ切り替え処理
+// ページ切り替え処理（iframeあり or ページ遷移対応）
 function switchPage(pageName) {
   const subpage = document.getElementById("subpage");
+
   if (subpage) {
+    // iframeがある場合 → iframe内のsrc切り替え
     subpage.src = `pages/${pageName}/index.html`;
   } else {
-    console.error("iframe 'subpage' が見つかりません");
+    // iframeがない場合 → 通常のページ遷移
+    window.location.href = `pages/${pageName}/index.html`;
   }
 }
 
