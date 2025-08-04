@@ -1,75 +1,39 @@
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100vh;
-  font-family: 'Segoe UI', sans-serif;
-  background-color: #f4f1ec;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-sizing: border-box;
-}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>美食家さん - スマホ版</title>
+  <link rel="stylesheet" href="style_sp.css" />
+</head>
+<body onload="checkLogin(); loadUserSettings(); loadCalorieInfo();">
+  <div class="container">
+    <div class="header-row">
+      <div class="profile-section">
+        <img id="profileIcon" src="img/user-icon.png" alt="ユーザーアイコン" class="profile-icon" />
+        <div id="userName" class="user-name">こんにちは、美食家さん！</div>
+      </div>
+      <div class="header-buttons">
+        <button class="settings-button" onclick="window.location.href='settings.html'">⚙️</button>
+        <button class="logout-button" onclick="logout()">📕</button>
+      </div>
+    </div>
 
-/* ログインボックス */
-.login-container {
-  background-color: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  width: 90%;
-  max-width: 340px;
-  text-align: center;
-  box-sizing: border-box;
-}
+    <div class="calorie-card">
+      <div class="label">本日の摂取カロリー</div>
+      <div class="calorie"><span id="calorie">0</span> kcal</div>
+      <div class="remaining">目標まであと <span id="remainingCalorie">--</span> kcal</div>
+    </div>
 
-/* アイコン画像 */
-.app-icon {
-  width: 65px;
-  height: 65px;
-  object-fit: cover;
-  border-radius: 50%;
-  margin: 0 auto 1rem;
-  display: block;
-}
+    <div class="feature-grid">
+      <button class="feature-card" onclick="switchPage('meal')">📷<br>食事記録</button>
+      <button class="feature-card" onclick="switchPage('fridge')">🧊<br>冷蔵庫管理</button>
+      <button class="feature-card" onclick="switchPage('question')">🧠<br>質問提案</button>
+      <button class="feature-card" onclick="switchPage('nutrients')">👥<br>栄養分析</button>
+      <button class="feature-card" onclick="switchPage('akinator')">🍽️<br>AI献立</button>
+    </div>
+  </div>
 
-/* タイトル */
-.login-container h2 {
-  margin-bottom: 1.2rem;
-  font-size: 1.6rem;
-  color: #444;
-}
-
-/* 入力フィールド */
-.login-container input {
-  width: 100%;
-  padding: 0.8rem;
-  margin-bottom: 1rem;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #fafafa;
-  box-sizing: border-box;
-}
-
-/* ボタン */
-.login-container button {
-  width: 100%;
-  padding: 0.8rem;
-  background-color: #f87171;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.login-container button:hover {
-  background-color: #e65b5b;
-}
-
-/* エラーメッセージ */
-#error-message {
-  color: red;
-  font-size: 0.85rem;
-  margin-top: 0.5rem;
-}
+  <script src="main.js"></script>
+</body>
+</html>
