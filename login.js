@@ -6,8 +6,8 @@ function login() {
   // 仮の認証
   if (username === "user" && password === "pass") {
     localStorage.setItem("loggedIn", "true");
-    
-    // 少し遅延を入れて確実に保存させる（index側のcheckLoginと競合を防ぐ）
+
+    // 少し遅らせて保存を確実に
     setTimeout(() => {
       window.location.href = "index.html";
     }, 100);
@@ -16,7 +16,7 @@ function login() {
   }
 }
 
-// フォームのEnterキー送信に対応
+// Enterキーでログイン
 document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Enter") login();
