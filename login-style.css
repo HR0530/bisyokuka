@@ -73,6 +73,35 @@ body {
   background-color: #e05b5b;
 }
 
+/* スマホ対応：画面幅が480px以下のとき */
+@media screen and (max-width: 480px) {
+  .login-container {
+    width: 90%;
+    padding: 1.5rem;
+  }
+
+  .login-container h2 {
+    font-size: 1.6rem;
+  }
+
+  .login-logo {
+    width: 42px !important;
+    height: 42px !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .login-container input,
+  .login-container button {
+    font-size: 1rem;
+    padding: 0.9rem;
+  }
+
+  #error-message {
+    font-size: 0.85rem;
+  }
+}
+
+
 #error-message {
   color: red;
   font-size: 0.9rem;
