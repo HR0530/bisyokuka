@@ -3,23 +3,16 @@ body {
   padding: 0;
   font-family: 'Segoe UI', sans-serif;
   background-color: #fffdf5;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   height: 100vh;
 }
 
-.login-logo {
-  width: 60px !important;
-  height: 60px !important;
-  max-width: 60px;
-  max-height: 60px;
-  border-radius: 50%;
-  object-fit: cover;
-  display: block;
-  margin: 0 auto 0.5rem;
+.wrapper {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: env(safe-area-inset-top);
 }
-
 
 .login-container {
   background-color: white;
@@ -30,15 +23,14 @@ body {
   text-align: center;
 }
 
-.login-icon {
-  width: 60px !important;
-  height: 60px !important;
-  display: block;
-  margin: 0 auto 0.3rem;
+.login-logo {
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   object-fit: cover;
+  display: block;
+  margin: 0 auto 0.5rem;
 }
-
 
 .login-container h2 {
   margin-bottom: 1.2rem;
@@ -73,7 +65,13 @@ body {
   background-color: #e05b5b;
 }
 
-/* スマホ対応：画面幅が480px以下のとき */
+#error-message {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+/* スマホ対応 */
 @media screen and (max-width: 480px) {
   .login-container {
     width: 90%;
@@ -82,12 +80,6 @@ body {
 
   .login-container h2 {
     font-size: 1.6rem;
-  }
-
-  .login-logo {
-    width: 60px !important;
-    height: 60px !important;
-    margin-bottom: 0.5rem;
   }
 
   .login-container input,
@@ -99,11 +91,4 @@ body {
   #error-message {
     font-size: 0.85rem;
   }
-}
-
-
-#error-message {
-  color: red;
-  font-size: 0.9rem;
-  margin-top: 10px;
 }
