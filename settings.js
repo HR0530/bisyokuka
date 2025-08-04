@@ -33,16 +33,16 @@ function saveSettings() {
     reader.onload = function (e) {
       localStorage.setItem("userIcon", e.target.result);
       alert("設定を保存しました！");
-      window.location.href = "index_pc.html";
+      window.location.href = "index.html";
     };
     reader.readAsDataURL(iconFile);
   } else {
     alert("設定を保存しました！");
-    window.location.href = "index_pc.html";
+    window.location.href = "index.html";
   }
 }
 
 // 戻るボタン処理
 function goBack() {
-  window.location.href = "index_pc.html";
+  window.location.href = "index.html";
 }
