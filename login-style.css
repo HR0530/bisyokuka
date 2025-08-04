@@ -9,6 +9,18 @@ body {
   height: 100vh;
 }
 
+.login-logo {
+  width: 48px !important;
+  height: 48px !important;
+  max-width: 48px;
+  max-height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 0.5rem;
+}
+
+
 .login-container {
   background-color: white;
   padding: 2rem;
