@@ -1,39 +1,57 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>美食家さん - スマホ版</title>
-  <link rel="stylesheet" href="style_sp.css" />
-</head>
-<body onload="checkLogin(); loadUserSettings(); loadCalorieInfo();">
-  <div class="container">
-    <div class="header-row">
-      <div class="profile-section">
-        <img id="profileIcon" src="img/user-icon.png" alt="ユーザーアイコン" class="profile-icon" />
-        <div id="userName" class="user-name">こんにちは、美食家さん！</div>
-      </div>
-      <div class="header-buttons">
-        <button class="settings-button" onclick="window.location.href='settings.html'">⚙️</button>
-        <button class="logout-button" onclick="logout()">📕</button>
-      </div>
-    </div>
+body {
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #fffaf6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 
-    <div class="calorie-card">
-      <div class="label">本日の摂取カロリー</div>
-      <div class="calorie"><span id="calorie">0</span> kcal</div>
-      <div class="remaining">目標まであと <span id="remainingCalorie">--</span> kcal</div>
-    </div>
+.login-container {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
 
-    <div class="feature-grid">
-      <button class="feature-card" onclick="switchPage('meal')">📷<br>食事記録</button>
-      <button class="feature-card" onclick="switchPage('fridge')">🧊<br>冷蔵庫管理</button>
-      <button class="feature-card" onclick="switchPage('question')">🧠<br>質問提案</button>
-      <button class="feature-card" onclick="switchPage('nutrients')">👥<br>栄養分析</button>
-      <button class="feature-card" onclick="switchPage('akinator')">🍽️<br>AI献立</button>
-    </div>
-  </div>
+.login-title {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+  color: #333;
+}
 
-  <script src="main.js"></script>
-</body>
-</html>
+.login-input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.login-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.login-button:hover {
+  background-color: #2563eb;
+}
+
+#error-message {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
