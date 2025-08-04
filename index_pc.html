@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>美食家さん</title>
+  <link rel="stylesheet" href="style_pc.css" />
+</head>
+<body onload="checkLogin()">
+  <div class="home-page">
+    <div class="header-row">
+      <div class="profile-section">
+        <img src="img/user-icon.png" alt="ユーザーアイコン" class="profile-icon">
+        <div class="user-name">こんにちは、美食家さん！</div>
+      </div>
+      <div class="logout-button-area">
+        <button onclick="logout()">ログアウト</button>
+      </div>
+    </div>
+
+    <div class="calorie-card">
+      <div class="rank-label">本日の摂取カロリー</div>
+      <div class="calorie-value"><span id="calorie">1580</span> kcal</div>
+      <div class="rank-sub">目標まであと <strong>420 kcal</strong></div>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card" onclick="switchPage('meal')">📷<br>食事記録</div>
+      <div class="feature-card" onclick="switchPage('fridge')">🧊<br>冷蔵庫管理</div>
+      <div class="feature-card" onclick="switchPage('question')">🧠<br>質問提案</div>
+      <div class="feature-card" onclick="switchPage('nutrients')">👥<br>栄養分析</div>
+      <div class="feature-card" onclick="switchPage('akinator')">🍽️<br>AI献立</div>
+    </div>
+  </div>
+  <script src="main.js"></script>
+</body>
+</html>
