@@ -1,14 +1,6 @@
-// ページ切り替え処理（iframeあり or ページ遷移対応）
+// ページ完全遷移（iframeを使わない）
 function switchPage(pageName) {
-  const subpage = document.getElementById("subpage");
-
-  if (subpage) {
-    // iframeがある場合 → iframe内のsrc切り替え
-    subpage.src = `pages/${pageName}/index.html`;
-  } else {
-    // iframeがない場合 → 通常のページ遷移
-    window.location.href = `pages/${pageName}/index.html`;
-  }
+  window.location.href = `pages/${pageName}/index.html`;
 }
 
 // ログイン状態チェック
@@ -25,7 +17,7 @@ function logout() {
   window.location.href = "login.html";
 }
 
-// グローバル登録（HTMLから呼び出せるように）
+// グローバル登録
 window.switchPage = switchPage;
 window.checkLogin = checkLogin;
 window.logout = logout;
