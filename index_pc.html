@@ -13,13 +13,11 @@
         <img src="img/user-icon.png" alt="ユーザーアイコン" class="profile-icon">
         <div class="user-name">こんにちは、美食家さん！</div>
       </div>
-      <div class="logout-button-area">
+      <div class="header-buttons">
+        <button onclick="location.href='settings.html'">⚙️ 設定</button>
         <button onclick="logout()">ログアウト</button>
       </div>
-        <div class="settings-button-area">
-    <button onclick="window.location.href='settings.html'">⚙️ 設定</button>
     </div>
-  </div>
 
     <div class="calorie-card">
       <div class="rank-label">本日の摂取カロリー</div>
@@ -34,8 +32,8 @@
       <div class="feature-card" onclick="switchPage('nutrients')">👥<br>栄養分析</div>
       <div class="feature-card" onclick="switchPage('akinator')">🍽️<br>AI献立</div>
     </div>
-
   </div>
+
   <script src="main.js"></script>
 </body>
 </html>
