@@ -6,14 +6,14 @@
   <title>美食家さん</title>
   <link rel="stylesheet" href="style_pc.css" />
 </head>
-<body onload="checkLogin()">
+<body onload="checkLogin(); loadUserSettings();">
   <div class="home-page">
     <div class="header-row">
       <div class="profile-section">
-        <img src="img/user-icon.png" alt="ユーザーアイコン" class="profile-icon">
-        <div class="user-name">こんにちは、美食家さん！</div>
-        </div>
-    <div class="header-buttons">
+        <img id="profileIcon" src="img/user-icon.png" alt="ユーザーアイコン" class="profile-icon">
+        <div class="user-name" id="userName">こんにちは、美食家さん！</div>
+      </div>
+      <div class="header-buttons">
         <button class="settings-button" onclick="window.location.href='settings.html'">⚙️ 設定</button>
         <button class="logout-button" onclick="logout()">ログアウト</button>
       </div>
@@ -22,7 +22,7 @@
     <div class="calorie-card">
       <div class="rank-label">本日の摂取カロリー</div>
       <div class="calorie-value"><span id="calorie">1580</span> kcal</div>
-      <div class="rank-sub">目標まであと <strong>420 kcal</strong></div>
+      <div class="rank-sub">目標まであと <strong id="remaining">420 kcal</strong></div>
     </div>
 
     <div class="feature-grid">
@@ -34,6 +34,42 @@
     </div>
   </div>
 
-  <script src="main.js"></script>
+  <script>
+    function checkLogin() {
+      if (localStorage.getItem("loggedIn") !== "true") {
+        window.location.href = "login.html";
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("loggedIn");
+      window.location.href = "login.html";
+    }
+
+    function switchPage(pageName) {
+      window.location.href = `pages/${pageName}/index.html`;
+    }
+
+    function loadUserSettings() {
+      // ユーザー名の反映
+      const userName = localStorage.getItem("username") || "美食家さん";
+      document.getElementById("userName").textContent = `こんにちは、${userName}！`;
+
+      // カロリー目標の反映
+      const calorieGoal = localStorage.getItem("calorieGoal") || "1580";
+      document.getElementById("calorie").textContent = calorieGoal;
+
+      // 残りカロリー表示（仮で現在摂取＝1160として）
+      const currentCalorie = 1160;
+      const remaining = Math.max(0, calorieGoal - currentCalorie);
+      document.getElementById("remaining").textContent = `目標まであと ${remaining} kcal`;
+
+      // プロフィール画像の反映（Base64が保存されている想定）
+      const userIcon = localStorage.getItem("userIcon");
+      if (userIcon) {
+        document.getElementById("profileIcon").src = userIcon;
+      }
+    }
+  </script>
 </body>
 </html>
