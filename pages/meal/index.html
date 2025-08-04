@@ -7,20 +7,16 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="meal-container">
+  <div class="meal-page">
     <h1>🍽 美食記録</h1>
-    <input type="file" id="photoInput" accept="image/*">
-    <div id="mealList" class="feed"></div>
-  </div>
 
-  <!-- モーダル -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h3>感想を入力</h3>
-      <textarea id="modalTextarea" placeholder="感想をここに書いてください…"></textarea>
-      <button id="saveComment">保存</button>
+    <!-- 写真アップロード -->
+    <div class="upload-section">
+      <input type="file" id="photoInput" accept="image/*">
     </div>
+
+    <!-- 3列グリッド表示エリア -->
+    <div id="mealGrid" class="grid-view"></div>
   </div>
 
   <script src="script.js"></script>
