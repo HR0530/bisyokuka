@@ -100,3 +100,61 @@ body {
   font-size: 1rem;
   cursor: pointer;
 }
+
+/* 設定ページ */
+.settings-page {
+  max-width: 600px;
+  margin: 3rem auto;
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+
+.settings-page h2 {
+  margin-bottom: 2rem;
+  text-align: center;
+  color: #333;
+}
+
+.setting-item {
+  margin-bottom: 1.5rem;
+}
+
+.setting-item label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #555;
+}
+
+.setting-item input {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.save-area {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.save-area button {
+  flex: 1;
+  padding: 0.9rem;
+  font-size: 1rem;
+  background: #f87171;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+.save-area button:hover {
+  background: #e25c5c;
+}
+
