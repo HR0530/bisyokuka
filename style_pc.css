@@ -38,7 +38,7 @@ body {
 .logout-button-area button {
   padding: 0.7rem 1.5rem;
   font-size: 0.95rem;
-  background: #f87171;
+  background: #f87171; /* 赤 */
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -88,7 +88,7 @@ body {
 }
 
 .settings-button-area button:hover {
-  background: #3b82f6;
+  background: #60a5fa; /* 青 */
 }
 
 .feature-card {
