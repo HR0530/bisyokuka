@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>設定 | 美食家さん</title>
+  <link rel="stylesheet" href="style_pc.css" />
+</head>
+<body onload="checkLogin()">
+  <div class="settings-page">
+    <h2>⚙️ 設定</h2>
+
+    <!-- プロフィール写真変更 -->
+    <div class="setting-item">
+      <label for="iconUpload">アイコン画像</label>
+      <input type="file" id="iconUpload" accept="image/*" />
+    </div>
+
+    <!-- ユーザー名変更 -->
+    <div class="setting-item">
+      <label for="usernameInput">ユーザー名</label>
+      <input type="text" id="usernameInput" value="美食家さん" />
+    </div>
+
+    <!-- カロリー目標 -->
+    <div class="setting-item">
+      <label for="calorieGoal">カロリー目標</label>
+      <input type="number" id="calorieGoal" value="1580" /> kcal
+    </div>
+
+    <!-- パスワード変更 -->
+    <div class="setting-item">
+      <label for="password">パスワード変更</label>
+      <input type="password" id="password" placeholder="新しいパスワード" />
+    </div>
+
+    <!-- 保存ボタン -->
+    <div class="save-area">
+      <button onclick="saveSettings()">保存</button>
+      <button onclick="goBack()">戻る</button>
+    </div>
+  </div>
+
+  <script>
+    function checkLogin() {
+      if (localStorage.getItem("loggedIn") !== "true") {
+        window.location.href = "login.html";
+      }
+    }
+
+    function saveSettings() {
+      alert("設定を保存しました（仮実装）");
+      // ここで保存処理を追加できます（例: localStorage.setItem 等）
+    }
+
+    function goBack() {
+      window.location.href = "index_pc.html";
+    }
+  </script>
+</body>
+</html>
