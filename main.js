@@ -22,7 +22,7 @@ function logout() {
   window.location.href = "login.html";
 }
 
-// 必要ならグローバルに登録
+// グローバル登録（HTMLから呼び出せるように）
 window.switchPage = switchPage;
 window.checkLogin = checkLogin;
 window.logout = logout;
