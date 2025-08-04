@@ -9,6 +9,11 @@
 <body>
   <h1>🥕 栄養管理 ＆ レシピ提案アプリ</h1>
 
+  <!-- トップに戻るボタン -->
+  <div style="text-align: right; margin: 0 1rem 1rem 0;">
+    <button onclick="goHome()">🏠 トップに戻る</button>
+  </div>
+
   <div class="card">
     <form id="food-form">
       <input type="text" id="food-name" list="food-options" placeholder="食材名（例：にんじん）" required>
@@ -45,6 +50,12 @@
     <div id="recipe-list"></div>
   </div>
 
+  <!-- 戻るスクリプト -->
+  <script>
+    function goHome() {
+      window.location.href = "../../index.html";
+    }
+  </script>
   <script src="script.js"></script>
 </body>
 </html>
