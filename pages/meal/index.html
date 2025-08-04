@@ -1,16 +1,26 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>食事記録 | 美食家さん</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="meal-container">
-    <h1>食事記録</h1>
-
+    <h1>🍽 美食記録</h1>
     <input type="file" id="photoInput" accept="image/*">
-    <div id="mealList"></div>
+    <div id="mealList" class="feed"></div>
+  </div>
+
+  <!-- モーダル -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>感想を入力</h3>
+      <textarea id="modalTextarea" placeholder="感想をここに書いてください…"></textarea>
+      <button id="saveComment">保存</button>
+    </div>
   </div>
 
   <script src="script.js"></script>
