@@ -76,6 +76,21 @@ body {
   gap: 1.5rem;
 }
 
+.settings-button-area button {
+  padding: 0.7rem 1.2rem;
+  font-size: 0.95rem;
+  background: #60a5fa;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  margin-left: 1rem;
+  cursor: pointer;
+}
+
+.settings-button-area button:hover {
+  background: #3b82f6;
+}
+
 .feature-card {
   background: #fff;
   border-radius: 0.8rem;
