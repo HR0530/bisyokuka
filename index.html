@@ -8,14 +8,23 @@
 </head>
 <body onload="checkLogin()">
   <div id="app">
-    <div class="calorie-display">本日の摂取カロリー: <span id="calorie">1580 kcal</span></div>
+    <!-- ログアウト -->
     <div class="logout-container">
-  <button onclick="logout()">ログアウト</button>
-</div>
+      <button onclick="logout()">ログアウト</button>
+    </div>
 
+    <!-- カロリー表示 -->
+    <div class="calorie-card">
+      <h2>本日の摂取カロリー</h2>
+      <div class="calorie-amount"><span id="calorie">1580</span> kcal</div>
+    </div>
 
-    <iframe id="subpage" src="pages/recommend/index.html" frameborder="0"></iframe>
+    <!-- iframeで各機能画面 -->
+    <div class="subpage-container">
+      <iframe id="subpage" src="pages/recommend/index.html" frameborder="0"></iframe>
+    </div>
 
+    <!-- ナビゲーション -->
     <div class="bottom-nav">
       <button onclick="switchPage('meal')">📷<br>食事記録</button>
       <button onclick="switchPage('fridge')">🧊<br>冷蔵庫</button>
@@ -24,6 +33,7 @@
       <button onclick="switchPage('akinator')">🍽️<br>アキネーター</button>
     </div>
   </div>
+
   <script src="main.js"></script>
 </body>
 </html>
