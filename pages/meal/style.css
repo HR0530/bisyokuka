@@ -1,41 +1,45 @@
 body {
-  background: #fafafa;
-  font-family: 'Yu Gothic', 'Meiryo', sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #ede9fe 100%);
+  font-family: 'Zen Kaku Gothic New', 'Yu Gothic', 'Meiryo', sans-serif;
 }
 
 .meal-page {
-  max-width: 600px;
-  margin: 30px auto;
+  max-width: 700px;
+  margin: 40px auto 10px auto;
   padding: 0 1em;
 }
 
 h1 {
   text-align: center;
   font-family: 'Montserrat', 'Arial', sans-serif;
-  margin: 1em 0 1.2em 0;
-  letter-spacing: 0.08em;
+  margin: 1.4em 0 1.2em 0;
+  font-size: 2.2em;
+  color: #4f46e5;
+  letter-spacing: 0.13em;
+  font-weight: 700;
+  text-shadow: 0 2px 8px #b4b8ee33;
 }
 
 .upload-section {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5em;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1.2em;
+  margin-bottom: 2em;
+  gap: 1.2em;
 }
 
 .insta-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 22px;
 }
 
 .meal-card {
-  background: #fff;
-  border-radius: 16px;
+  background: linear-gradient(120deg, #fff 80%, #ede9fe 100%);
+  border-radius: 22px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(220,220,220,0.10);
+  box-shadow: 0 4px 18px rgba(120,110,180,0.11), 0 1.5px 6px #4f46e519;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -45,39 +49,44 @@ h1 {
 
 .meal-card img {
   width: 100%;
-  height: 120px;
+  height: 150px;
   object-fit: cover;
   display: block;
-  border-radius: 16px 16px 0 0;
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 1.5px 8px #bbb5;
 }
 
 .meal-meta {
   width: 100%;
-  background: #fff;
-  padding: 0.7em 0.4em 0.9em 0.4em;
+  background: #fff6;
+  backdrop-filter: blur(3px);
+  padding: 0.8em 0.6em 1em 0.6em;
   text-align: center;
 }
 
 .meal-date {
   font-size: 0.85em;
-  color: #888;
+  color: #8672bc;
   font-family: 'Montserrat', 'Arial', sans-serif;
-  margin-bottom: 0.4em;
+  margin-bottom: 0.2em;
   letter-spacing: 0.05em;
+  font-weight: 500;
 }
 
 .meal-name {
-  font-size: 1.08em;
-  font-weight: 600;
-  color: #ef4444;
+  font-size: 1.12em;
+  font-weight: 700;
+  color: #4f46e5;
   font-family: 'Montserrat', 'Arial', sans-serif;
-  margin-bottom: 0.15em;
+  margin-bottom: 0.11em;
   letter-spacing: 0.04em;
+  text-shadow: 0 1.5px 7px #ece9fc99;
 }
 
 .meal-kcal {
-  font-size: 0.98em;
-  color: #8b5c2d;
+  font-size: 1em;
+  color: #b45309;
   font-family: 'Montserrat', 'Arial', sans-serif;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  font-weight: 600;
 }
