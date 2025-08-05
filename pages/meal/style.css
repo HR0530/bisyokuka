@@ -1,50 +1,83 @@
 body {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: #fdf8f3; /* カフェ風ベージュ */
+  background: #fafafa;
+  font-family: 'Yu Gothic', 'Meiryo', sans-serif;
 }
 
 .meal-page {
-  max-width: 960px;
-  margin: auto;
-  padding: 2rem 1rem;
-  background-color: #fffaf5;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  max-width: 600px;
+  margin: 30px auto;
+  padding: 0 1em;
 }
 
 h1 {
   text-align: center;
-  color: #4a3f35;
+  font-family: 'Montserrat', 'Arial', sans-serif;
+  margin: 1em 0 1.2em 0;
+  letter-spacing: 0.08em;
 }
 
 .upload-section {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-/* 投稿後グリッド（3列） */
-.grid-view {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(30%, 1fr));
-  gap: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  align-items: center;
   justify-content: center;
+  margin-bottom: 1.2em;
 }
 
-.grid-card {
-  background: white;
-  border-radius: 10px;
+.insta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.meal-card {
+  background: #fff;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: transform 0.2s ease;
+  box-shadow: 0 4px 16px rgba(220,220,220,0.10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: box-shadow 0.15s;
+  position: relative;
 }
 
-.grid-card img {
+.meal-card img {
   width: 100%;
+  height: 120px;
+  object-fit: cover;
   display: block;
-  height: auto;
+  border-radius: 16px 16px 0 0;
 }
 
-.grid-card:hover {
-  transform: scale(1.03);
+.meal-meta {
+  width: 100%;
+  background: #fff;
+  padding: 0.7em 0.4em 0.9em 0.4em;
+  text-align: center;
+}
+
+.meal-date {
+  font-size: 0.85em;
+  color: #888;
+  font-family: 'Montserrat', 'Arial', sans-serif;
+  margin-bottom: 0.4em;
+  letter-spacing: 0.05em;
+}
+
+.meal-name {
+  font-size: 1.08em;
+  font-weight: 600;
+  color: #ef4444;
+  font-family: 'Montserrat', 'Arial', sans-serif;
+  margin-bottom: 0.15em;
+  letter-spacing: 0.04em;
+}
+
+.meal-kcal {
+  font-size: 0.98em;
+  color: #8b5c2d;
+  font-family: 'Montserrat', 'Arial', sans-serif;
+  letter-spacing: 0.04em;
 }
