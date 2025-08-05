@@ -1,4 +1,3 @@
-// --- 料理名とカロリー表 ---
 const foods = [
   { name: "ラーメン", kcal: 550 },
   { name: "カレー", kcal: 700 },
@@ -14,86 +13,69 @@ const foods = [
   { name: "寿司", kcal: 450 }
 ];
 
-// --- Teachable Machineモデルのパス ---
-const MODEL_URL = "./my_model/";
-let model = null;
-
-// --- ページ読込時にAIモデルのロード＆ボタンの制御 ---
-window.addEventListener('DOMContentLoaded', () => {
-  const addMealBtn = document.getElementById("addMeal");
-  addMealBtn.disabled = true;
-  addMealBtn.textContent = "AIモデル読込中…";
-  loadModel().then(() => {
-    addMealBtn.disabled = false;
-    addMealBtn.textContent = "写真からAI判定";
-  });
-});
-
-async function loadModel() {
-  model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
-}
-
-// --- 「写真からAI判定」ボタンの処理 ---
-document.getElementById("addMeal").onclick = async function () {
-  if (!model) {
-    alert("AIモデル読み込み中です。もう一度押してください。");
-    return;
-  }
+document.getElementById("addMealBtn").onclick = function () {
   const photoInput = document.getElementById("photoInput");
+  const foodSelect = document.getElementById("foodSelect");
+  const starsInput = document.getElementById("starsInput");
+  const commentInput = document.getElementById("commentInput");
+
+  const foodName = foodSelect.value;
+  const stars = Number(starsInput.value) || 4;
+  const comment = commentInput.value;
+
   if (photoInput.files.length === 0) {
     alert("写真を選んでください");
     return;
   }
+  if (!foodName) {
+    alert("料理名を選択してください");
+    return;
+  }
 
-  // ボタンUI更新
-  const btn = document.getElementById("addMeal");
-  btn.disabled = true;
-  btn.textContent = "AIが認識中…";
+  const food = foods.find(f => f.name === foodName);
+  const kcal = food ? food.kcal : prompt("カロリーを入力してください");
 
-  // ファイル→画像化
-  const file = photoInput.files[0];
-  const img = new Image();
-  img.onload = async function () {
-    // Teachable Machineで判定
-    const prediction = await model.predict(img);
-    const top = prediction.reduce((a, b) => a.probability > b.probability ? a : b);
-    const foodName = top.className;
-    const food = foods.find(f => f.name === foodName);
-    const kcal = food ? food.kcal : "";
-
-    // 写真データも保存
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      saveMeal(foodName, kcal, e.target.result);
-      btn.disabled = false;
-      btn.textContent = "写真からAI判定";
-    };
-    reader.readAsDataURL(file);
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    saveMeal(foodName, kcal, e.target.result, stars, comment);
+    // 入力欄リセット
+    foodSelect.selectedIndex = 0;
+    starsInput.value = 4;
+    commentInput.value = "";
+    photoInput.value = "";
   };
-  img.src = URL.createObjectURL(file);
+  reader.readAsDataURL(photoInput.files[0]);
 };
 
-// --- 食事記録を保存 ---
-function saveMeal(foodName, kcal, photoData) {
+function saveMeal(foodName, kcal, photoData, stars, comment) {
   let meals = JSON.parse(localStorage.getItem("meals") || "[]");
-  meals.unshift({ foodName, kcal, photoData, date: new Date().toLocaleString() });
+  meals.unshift({
+    foodName,
+    kcal,
+    photoData,
+    stars,
+    comment,
+    date: new Date().toLocaleString()
+  });
   localStorage.setItem("meals", JSON.stringify(meals));
   showMeals();
 }
 
-// --- インスタ風グリッドで一覧表示 ---
 function showMeals() {
   let meals = JSON.parse(localStorage.getItem("meals") || "[]");
-  document.getElementById("mealGrid").innerHTML =
-    meals.map(m => `
-      <div class="meal-card">
-        ${m.photoData ? `<img src="${m.photoData}" alt="meal-photo">` : `<div style="height:150px;background:#eee;"></div>`}
-        <div class="meal-meta">
-          <div class="meal-date">${m.date}</div>
-          <div class="meal-name">${m.foodName}</div>
-          <div class="meal-kcal">🔥 ${m.kcal} kcal</div>
-        </div>
+  document.querySelector(".meal-grid").innerHTML = meals.map(m => `
+    <div class="meal-card">
+      <div class="meal-img-wrap">
+        <img src="${m.photoData}" class="meal-img" alt="meal-photo">
       </div>
-    `).join("");
+      <div class="meal-info">
+        <div class="meal-title">${m.foodName}</div>
+        <div class="meal-calorie">${m.kcal} kcal</div>
+        <div class="meal-desc">${m.comment ? m.comment : ""}</div>
+        <div class="meal-stars">${"★".repeat(m.stars || 4)}${"☆".repeat(5-(m.stars||4))}</div>
+        <div class="meal-date" style="font-size:0.88rem; color:#888; margin-top:0.4em;">${m.date}</div>
+      </div>
+    </div>
+  `).join("");
 }
 showMeals();
