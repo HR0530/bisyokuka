@@ -55,22 +55,58 @@ function saveMeal(foodName, kcal, photoData, stars, comment) {
   showMeals();
 }
 
+
+
 function showMeals() {
   let meals = JSON.parse(localStorage.getItem("meals") || "[]");
-  document.querySelector(".meal-grid").innerHTML = meals.map((m,i) => `
-    <div class="meal-card" data-idx="${i}">
-      <div class="meal-img-wrap">
-        <img src="${m.photoData}" class="meal-img" alt="meal-photo">
-      </div>
-      <div class="meal-info">
-        <div class="meal-title">${m.foodName}</div>
-        <div class="meal-calorie">${m.kcal} kcal</div>
-        <div class="meal-desc">${m.comment ? m.comment : ""}</div>
-        <div class="meal-stars">${"★".repeat(m.stars||4)}${"☆".repeat(5-(m.stars||4))}</div>
-        <div class="meal-date" style="font-size:0.88rem; color:#888; margin-top:0.4em;">${m.date}</div>
-      </div>
-    </div>
-  `).join("");
+  // 日付ごとにグループ化（例："2025/08/05"）
+  const groups = {};
+  meals.forEach((m, i) => {
+    const dateKey = m.date.split(' ')[0]; // "2025/08/05"
+    if (!groups[dateKey]) groups[dateKey] = [];
+    groups[dateKey].push({ ...m, idx: i });
+  });
+
+  let html = '';
+  Object.keys(groups).sort((a,b)=>b.localeCompare(a)).forEach(dateKey => {
+    html += `<div class="day-group"><h2>${dateKey}</h2>
+      <div class="meal-grid">` +
+      groups[dateKey].map(m => `
+        <div class="meal-card" data-idx="${m.idx}">
+          <div class="meal-img-wrap">
+            <img src="${m.photoData}" class="meal-img" alt="meal-photo">
+          </div>
+          <div class="meal-info">
+            <div class="meal-title">${m.foodName}</div>
+            <div class="meal-calorie">${m.kcal} kcal</div>
+            <div class="meal-desc">${m.comment ? m.comment : ""}</div>
+            <div class="meal-date">${m.date}</div>
+            <button class="delete-btn" data-idx="${m.idx}">🗑削除</button>
+          </div>
+        </div>
+      `).join('') +
+      `</div></div>`;
+  });
+  document.getElementById("mealsByDay").innerHTML = html;
+
+  // 削除ボタンイベント
+  document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.onclick = function(e) {
+      if (confirm('この記録を削除しますか？')) {
+        deleteMeal(Number(btn.dataset.idx));
+      }
+      e.stopPropagation();
+    };
+  });
+}
+function deleteMeal(idx) {
+  let meals = JSON.parse(localStorage.getItem("meals") || "[]");
+  meals.splice(idx, 1);
+  localStorage.setItem("meals", JSON.stringify(meals));
+  showMeals();
+}
+
+
 
   // カードクリックで詳細モーダル
   document.querySelectorAll('.meal-card').forEach(card => {
