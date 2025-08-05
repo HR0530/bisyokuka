@@ -1,28 +1,17 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>食事記録 | 美食家さん</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI食事記録（OpenAI Vision）</title>
   <link rel="stylesheet" href="style.css">
-  <script src="../../main.js"></script>
-  <script>
-    checkLogin();
-  </script>
 </head>
 <body>
-  <div class="meal-page">
-    <h1>🍽 美食記録</h1>
-    <div class="upload-section">
-      <input type="file" id="photoInput" accept="image/*">
-    </div>
-    <!-- ステータス表示 -->
-    <div id="statusMessage" style="margin: 0.5rem 0; color: #555; font-size: 0.9rem;"></div>
-    <div id="mealGrid" class="grid-view"></div>
-  </div>
-  <div class="back-button" style="text-align:center; margin-top: 2rem;">
-    <a href="../../index.html" style="text-decoration: none; color: #e44;">← トップに戻る</a>
-  </div>
+  <h2>🍽️ AI食事記録</h2>
+  <input type="file" id="photoInput" accept="image/*"><br><br>
+  <div id="statusMessage"></div>
+  <div id="result"></div>
+  <div id="mealGrid"></div>
   <script src="script.js"></script>
 </body>
 </html>
