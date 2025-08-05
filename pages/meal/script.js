@@ -1,4 +1,4 @@
-// 料理名とカロリーのテーブル（ここは好きに増やせます）
+// --- 料理名とカロリー表 ---
 const foods = [
   { name: "ラーメン", kcal: 550 },
   { name: "カレー", kcal: 700 },
@@ -14,20 +14,28 @@ const foods = [
   { name: "寿司", kcal: 450 }
 ];
 
-// Teachable Machine モデルのパス
+// --- Teachable Machineモデルのパス ---
 const MODEL_URL = "./my_model/";
-let modelLoaded = false;
 let model = null;
 
-// モデルを先に非同期でロード
+// --- ページ読込時にAIモデルのロード＆ボタンの制御 ---
+window.addEventListener('DOMContentLoaded', () => {
+  const addMealBtn = document.getElementById("addMeal");
+  addMealBtn.disabled = true;
+  addMealBtn.textContent = "AIモデル読込中…";
+  loadModel().then(() => {
+    addMealBtn.disabled = false;
+    addMealBtn.textContent = "写真からAI判定";
+  });
+});
+
 async function loadModel() {
   model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
-  modelLoaded = true;
 }
-loadModel();
 
+// --- 「写真からAI判定」ボタンの処理 ---
 document.getElementById("addMeal").onclick = async function () {
-  if (!modelLoaded) {
+  if (!model) {
     alert("AIモデル読み込み中です。もう一度押してください。");
     return;
   }
@@ -37,9 +45,10 @@ document.getElementById("addMeal").onclick = async function () {
     return;
   }
 
-  // UI演出
-  document.getElementById("addMeal").disabled = true;
-  document.getElementById("addMeal").textContent = "AIが認識中…";
+  // ボタンUI更新
+  const btn = document.getElementById("addMeal");
+  btn.disabled = true;
+  btn.textContent = "AIが認識中…";
 
   // ファイル→画像化
   const file = photoInput.files[0];
@@ -52,18 +61,19 @@ document.getElementById("addMeal").onclick = async function () {
     const food = foods.find(f => f.name === foodName);
     const kcal = food ? food.kcal : "";
 
-    // 写真データを保存
+    // 写真データも保存
     const reader = new FileReader();
     reader.onload = function (e) {
       saveMeal(foodName, kcal, e.target.result);
-      document.getElementById("addMeal").disabled = false;
-      document.getElementById("addMeal").textContent = "写真からAI判定";
+      btn.disabled = false;
+      btn.textContent = "写真からAI判定";
     };
     reader.readAsDataURL(file);
   };
   img.src = URL.createObjectURL(file);
 };
 
+// --- 食事記録を保存 ---
 function saveMeal(foodName, kcal, photoData) {
   let meals = JSON.parse(localStorage.getItem("meals") || "[]");
   meals.unshift({ foodName, kcal, photoData, date: new Date().toLocaleString() });
@@ -71,6 +81,7 @@ function saveMeal(foodName, kcal, photoData) {
   showMeals();
 }
 
+// --- インスタ風グリッドで一覧表示 ---
 function showMeals() {
   let meals = JSON.parse(localStorage.getItem("meals") || "[]");
   document.getElementById("mealGrid").innerHTML =
