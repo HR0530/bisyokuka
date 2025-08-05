@@ -3,35 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>食事記録 | 美食家さん</title>
+  <title>AI食事記録 | 美食家さん</title>
   <link rel="stylesheet" href="style.css">
-  <script src="../../main.js"></script>
-  <script>
-    checkLogin();
-  </script>
 </head>
 <body>
-  <div class="meal-page">
-    <h1>🍽 美食記録</h1>
-    <div class="upload-section">
-      <input type="file" id="photoInput" accept="image/*">
-      <select id="foodSelect">
-        <option value="">料理を選択</option>
-        <option value="ラーメン">ラーメン</option>
-        <option value="カレー">カレー</option>
-        <option value="ハンバーグ">ハンバーグ</option>
-        <option value="サラダ">サラダ</option>
-        <option value="牛丼">牛丼</option>
-        <option value="うどん">うどん</option>
-      </select>
-      <input type="text" id="foodManual" placeholder="直接入力（例：親子丼）">
-      <button id="addMeal">記録</button>
-    </div>
-    <div id="mealGrid" class="grid-view"></div>
-  </div>
-  <div class="back-button" style="text-align:center; margin-top: 2rem;">
-    <a href="../../index.html" style="text-decoration: none; color: #e44;">← トップに戻る</a>
-  </div>
+  <h2>🍽️ AI食事記録</h2>
+  <input type="file" id="photoInput" accept="image/*"><br><br>
+  <div id="statusMessage"></div>
+  <div id="result"></div>
+  <div id="mealGrid"></div>
   <script src="script.js"></script>
 </body>
 </html>
