@@ -66,6 +66,33 @@ h1 {
   border-radius: 24px 24px 0 0;
 }
 
+.meal-desc {
+  color: #f7e2c2;
+  font-size: 0.97em;
+  margin-bottom: 0.3em;
+  min-height: 1.3em;
+  max-height: 2.6em;       /* 2行分の高さに制限 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;    /* 2行でカット */
+  -webkit-box-orient: vertical;
+  word-break: break-all;
+  transition: max-height 0.2s;
+  cursor: pointer;
+}
+
+/* ホバー時に全文表示（縦に広がる） */
+.meal-card:hover .meal-desc {
+  max-height: 500px;
+  white-space: normal;
+  background: rgba(30,30,60,0.95);
+  z-index: 2;
+  position: relative;
+  border-radius: 12px;
+  padding: 0.3em 0.5em;
+}
+
 .meal-card:hover { transform: scale(1.025);}
 .meal-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .photo-preview { margin:0.7em 0; min-height: 60px; }
