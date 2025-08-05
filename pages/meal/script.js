@@ -1,32 +1,41 @@
-const calorieTable = {
-  "ラーメン": 550,
-  "カレー": 700,
-  "ハンバーグ": 480,
-  "サラダ": 90,
-  "牛丼": 800,
-  "うどん": 400,
-};
+// 擬似料理リスト（AIっぽいランダム推論）
+const foods = [
+  { name: "ラーメン", kcal: 550 },
+  { name: "カレー", kcal: 700 },
+  { name: "ハンバーグ", kcal: 480 },
+  { name: "サラダ", kcal: 90 },
+  { name: "牛丼", kcal: 800 },
+  { name: "うどん", kcal: 400 },
+  { name: "パスタ", kcal: 550 },
+  { name: "親子丼", kcal: 650 },
+  { name: "オムライス", kcal: 620 },
+  { name: "サンドイッチ", kcal: 370 },
+  { name: "パンケーキ", kcal: 420 },
+  { name: "寿司", kcal: 450 }
+];
 
 document.getElementById("addMeal").onclick = function () {
-  const select = document.getElementById("foodSelect");
-  let foodName = select.value;
-  const manual = document.getElementById("foodManual").value.trim();
-  if (manual) foodName = manual;
-  if (!foodName) return alert("料理名を入力してください");
-
-  const kcal = calorieTable[foodName] || prompt(`${foodName}のカロリーを入力してください`);
-  if (!kcal) return;
-
   const photoInput = document.getElementById("photoInput");
-  if (photoInput.files.length > 0) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      saveMeal(foodName, kcal, e.target.result);
-    };
-    reader.readAsDataURL(photoInput.files[0]);
-  } else {
-    saveMeal(foodName, kcal, "");
+  if (photoInput.files.length === 0) {
+    alert("写真を選んでください");
+    return;
   }
+
+  document.getElementById("addMeal").disabled = true;
+  document.getElementById("addMeal").textContent = "AIが認識中…";
+  
+  // 写真読み込み
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    // 擬似AI推論（ランダム選択）
+    setTimeout(() => {
+      const picked = foods[Math.floor(Math.random() * foods.length)];
+      saveMeal(picked.name, picked.kcal, e.target.result);
+      document.getElementById("addMeal").disabled = false;
+      document.getElementById("addMeal").textContent = "写真からAI判定";
+    }, 1400 + Math.random() * 900); // AIっぽくランダム遅延
+  };
+  reader.readAsDataURL(photoInput.files[0]);
 };
 
 function saveMeal(foodName, kcal, photoData) {
@@ -41,7 +50,7 @@ function showMeals() {
   document.getElementById("mealGrid").innerHTML =
     meals.map(m => `
       <div class="meal-card">
-        ${m.photoData ? `<img src="${m.photoData}" alt="meal-photo">` : `<div style="height:120px;background:#eee;"></div>`}
+        ${m.photoData ? `<img src="${m.photoData}" alt="meal-photo">` : `<div style="height:150px;background:#eee;"></div>`}
         <div class="meal-meta">
           <div class="meal-date">${m.date}</div>
           <div class="meal-name">${m.foodName}</div>
