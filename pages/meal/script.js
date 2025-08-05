@@ -47,12 +47,12 @@ async function getGptVisionLabel(file) {
   const base64 = await fileToBase64(file);
   const url = "https://api.openai.com/v1/chat/completions";
   const body = {
-    model: "gpt-4o", // または "gpt-4-vision-preview"
+    model: "gpt-4o",
     messages: [
       {
         role: "user",
         content: [
-          { type: "text", text: "この画像の料理名を日本語で短く1つだけ答えてください。" },
+          { type: "text", text: "この画像の料理名を日本語で1単語で短く答えてください（例：ラーメン、カレー、牛丼、ハンバーグ、寿司など）。" },
           { type: "image_url", image_url: { "url": base64 } }
         ]
       }
