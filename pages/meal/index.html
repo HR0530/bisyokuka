@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>食事記録 | 美食家さん</title>
   <link rel="stylesheet" href="style.css">
-  <!-- 必要ライブラリ -->
+  <!-- 必須ライブラリ（順番厳守！） -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
+  <script src="script.js"></script>
 </head>
 <body>
   <div class="meal-page">
@@ -18,6 +19,9 @@
     </div>
     <div id="mealGrid" class="insta-grid"></div>
   </div>
-  <script src="script.js"></script>
+  <!-- トップページへ戻る -->
+  <div class="back-button" style="text-align:center; margin-top: 2rem;">
+    <a href="../../index.html" style="text-decoration: none; color: #4f46e5; font-family:Montserrat;">← トップに戻る</a>
+  </div>
 </body>
 </html>
