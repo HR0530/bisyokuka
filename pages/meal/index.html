@@ -5,28 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>食事記録 | 美食家さん</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Zen+Kaku+Gothic+New:wght@500&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="meal-page">
     <h1>🍽 美食記録</h1>
     <div class="upload-section">
       <input type="file" id="photoInput" accept="image/*"><br>
-      <select id="foodSelect">
-        <option value="">料理を選択</option>
-        <option value="ラーメン">ラーメン</option>
-        <option value="カレー">カレー</option>
-        <option value="ハンバーグ">ハンバーグ</option>
-        <option value="サラダ">サラダ</option>
-        <option value="牛丼">牛丼</option>
-        <option value="うどん">うどん</option>
-      </select>
-      <input type="text" id="foodManual" placeholder="直接入力（例：親子丼）">
-      <button id="addMeal">記録</button>
+      <button id="addMeal" style="margin-top:0.8em; border-radius:22px; background:#6366f1; color:white; padding:0.5em 1.5em; border:none; font-size:1em; font-family:Montserrat,sans-serif; box-shadow:0 2px 8px #b4b8ee77;">写真からAI判定</button>
     </div>
     <div id="mealGrid" class="insta-grid"></div>
   </div>
   <div class="back-button" style="text-align:center; margin-top: 2rem;">
-    <a href="../../index.html" style="text-decoration: none; color: #e44;">← トップに戻る</a>
+    <a href="../../index.html" style="text-decoration: none; color: #4f46e5; font-family:Montserrat;">← トップに戻る</a>
   </div>
   <script src="script.js"></script>
 </body>
