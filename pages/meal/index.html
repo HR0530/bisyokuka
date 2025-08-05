@@ -5,19 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>食事記録 | 美食家さん</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Zen+Kaku+Gothic+New:wght@500&display=swap" rel="stylesheet">
+  <!-- 必要ライブラリ -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
 </head>
 <body>
   <div class="meal-page">
     <h1>🍽 美食記録</h1>
     <div class="upload-section">
       <input type="file" id="photoInput" accept="image/*"><br>
-      <button id="addMeal" style="margin-top:0.8em; border-radius:22px; background:#6366f1; color:white; padding:0.5em 1.5em; border:none; font-size:1em; font-family:Montserrat,sans-serif; box-shadow:0 2px 8px #b4b8ee77;">写真からAI判定</button>
+      <button id="addMeal" style="margin-top:0.8em; border-radius:22px; background:#6366f1; color:white; padding:0.5em 1.5em; border:none; font-size:1em;">写真からAI判定</button>
     </div>
     <div id="mealGrid" class="insta-grid"></div>
-  </div>
-  <div class="back-button" style="text-align:center; margin-top: 2rem;">
-    <a href="../../index.html" style="text-decoration: none; color: #4f46e5; font-family:Montserrat;">← トップに戻る</a>
   </div>
   <script src="script.js"></script>
 </body>
