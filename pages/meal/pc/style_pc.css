@@ -82,6 +82,29 @@ h1 {
   cursor: pointer;
 }
 
+.day-group { margin-bottom: 2.2em; }
+.day-group h2 {
+  font-size: 1.13em;
+  font-weight: 600;
+  color: #ffbb54;
+  margin: 1.3em 0 0.4em 0.2em;
+  letter-spacing: 0.03em;
+}
+.delete-btn {
+  background: #ff5252;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 0.21em 0.8em;
+  font-size: 0.96em;
+  margin-top: 0.7em;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.delete-btn:hover {
+  background: #ff0040;
+}
+
 /* ホバー時に全文表示（縦に広がる） */
 .meal-card:hover .meal-desc {
   max-height: 500px;
