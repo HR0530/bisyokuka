@@ -1,4 +1,4 @@
-const API_KEY = "fab74dd82a877c6edfac8594ef6cba7509f2592e";
+const API_KEY = "AIzaSyBZFJubdmJSCllL8NnRZ35_lAbLdCq1S5U";
 
 // サンプルカロリー表（料理名の追加OK）
 const calorieTable = {
