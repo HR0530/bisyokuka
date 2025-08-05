@@ -38,10 +38,18 @@ body {
 }
 
 /* 設定・ログアウトアイコン */
-.header-buttons {
+.header-row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.header-top-right {
   position: absolute;
-  right: 0.5rem;
-  top: 0.5rem;
+  top: 0.3rem;
+  right: 0.8rem;
   display: flex;
   gap: 0.5rem;
 }
@@ -50,14 +58,14 @@ body {
 .logout-button {
   background: none;
   border: none;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   cursor: pointer;
-  padding: 0.2rem 0.5rem;
 }
 
 .settings-button {
   color: #3b82f6;
 }
+
 .logout-button {
   color: #ef4444;
 }
