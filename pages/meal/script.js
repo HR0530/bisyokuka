@@ -1,4 +1,3 @@
-// 擬似料理リスト（AIっぽいランダム推論）
 const foods = [
   { name: "ラーメン", kcal: 550 },
   { name: "カレー", kcal: 700 },
@@ -21,19 +20,17 @@ document.getElementById("addMeal").onclick = function () {
     return;
   }
 
+  // ボタン状態変更（念のため一瞬だけ"AIが認識中..."にするならここ）
   document.getElementById("addMeal").disabled = true;
   document.getElementById("addMeal").textContent = "AIが認識中…";
-  
-  // 写真読み込み
+
   const reader = new FileReader();
   reader.onload = function (e) {
-    // 擬似AI推論（ランダム選択）
-    setTimeout(() => {
-      const picked = foods[Math.floor(Math.random() * foods.length)];
-      saveMeal(picked.name, picked.kcal, e.target.result);
-      document.getElementById("addMeal").disabled = false;
-      document.getElementById("addMeal").textContent = "写真からAI判定";
-    }, 1400 + Math.random() * 900); // AIっぽくランダム遅延
+    // すぐにAI判定（ランダム選択）
+    const picked = foods[Math.floor(Math.random() * foods.length)];
+    saveMeal(picked.name, picked.kcal, e.target.result);
+    document.getElementById("addMeal").disabled = false;
+    document.getElementById("addMeal").textContent = "写真からAI判定";
   };
   reader.readAsDataURL(photoInput.files[0]);
 };
