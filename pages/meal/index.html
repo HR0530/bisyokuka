@@ -3,25 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>食事記録 | 美食家さん</title>
+  <title>美食家さん 食事記録</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap">
   <link rel="stylesheet" href="style.css">
-  <!-- 必須ライブラリ（順番厳守！） -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
-  <script src="script.js"></script>
 </head>
 <body>
-  <div class="meal-page">
-    <h1>🍽 美食記録</h1>
-    <div class="upload-section">
-      <input type="file" id="photoInput" accept="image/*"><br>
-      <button id="addMeal" style="margin-top:0.8em; border-radius:22px; background:#6366f1; color:white; padding:0.5em 1.5em; border:none; font-size:1em;">写真からAI判定</button>
+  <div class="meal-app-container">
+    <h1>🍽️ 美食家さん 食事記録</h1>
+    <div class="meal-upload-area">
+      <input type="file" id="photoInput" accept="image/*">
+      <select id="foodSelect">
+        <option value="">料理名を選択してください</option>
+        <option value="ラーメン">ラーメン</option>
+        <option value="カレー">カレー</option>
+        <option value="ハンバーグ">ハンバーグ</option>
+        <option value="サラダ">サラダ</option>
+        <option value="牛丼">牛丼</option>
+        <option value="うどん">うどん</option>
+        <option value="パスタ">パスタ</option>
+        <option value="親子丼">親子丼</option>
+        <option value="オムライス">オムライス</option>
+        <option value="サンドイッチ">サンドイッチ</option>
+        <option value="パンケーキ">パンケーキ</option>
+        <option value="寿司">寿司</option>
+      </select>
+      <input type="number" id="starsInput" min="1" max="5" value="4" style="width:70px;" title="星評価">
+      <input type="text" id="commentInput" maxlength="32" placeholder="コメント(任意)" style="width:170px;">
+      <button id="addMealBtn">記録する</button>
     </div>
-    <div id="mealGrid" class="insta-grid"></div>
+    <div class="meal-grid"></div>
+    <div class="back-button" style="text-align:center; margin-top: 2.5rem;">
+      <a href="../../index.html" style="text-decoration: none; color: #ffbb54; font-family:Poppins;">← トップに戻る</a>
+    </div>
   </div>
-  <!-- トップページへ戻る -->
-  <div class="back-button" style="text-align:center; margin-top: 2rem;">
-    <a href="../../index.html" style="text-decoration: none; color: #4f46e5; font-family:Montserrat;">← トップに戻る</a>
-  </div>
+  <script src="script.js"></script>
 </body>
 </html>
