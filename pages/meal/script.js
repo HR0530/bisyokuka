@@ -13,26 +13,50 @@ const foods = [
   { name: "寿司", kcal: 450 }
 ];
 
-document.getElementById("addMeal").onclick = function () {
+// Teachable Machineモデルのパス
+const MODEL_URL = "./my_model/";
+let model;
+async function loadModel() {
+  model = await tmImage.load(MODEL_URL + "model.json", MODEL_URL + "metadata.json");
+}
+loadModel();
+
+document.getElementById("addMeal").onclick = async function () {
   const photoInput = document.getElementById("photoInput");
   if (photoInput.files.length === 0) {
     alert("写真を選んでください");
     return;
   }
 
-  // ボタン状態変更（念のため一瞬だけ"AIが認識中..."にするならここ）
   document.getElementById("addMeal").disabled = true;
   document.getElementById("addMeal").textContent = "AIが認識中…";
 
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    // すぐにAI判定（ランダム選択）
-    const picked = foods[Math.floor(Math.random() * foods.length)];
-    saveMeal(picked.name, picked.kcal, e.target.result);
-    document.getElementById("addMeal").disabled = false;
-    document.getElementById("addMeal").textContent = "写真からAI判定";
+  const file = photoInput.files[0];
+  const img = new Image();
+  img.onload = async function () {
+    // Teachable Machineで推論
+    if (!model) {
+      alert("AIモデルの読み込み中です。もう一度お試しください。");
+      document.getElementById("addMeal").disabled = false;
+      document.getElementById("addMeal").textContent = "写真からAI判定";
+      return;
+    }
+    const prediction = await model.predict(img);
+    const top = prediction.reduce((a, b) => a.probability > b.probability ? a : b);
+    const foodName = top.className;
+    const food = foods.find(f => f.name === foodName);
+    const kcal = food ? food.kcal : "";
+
+    // 画像（base64）も保存する
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      saveMeal(foodName, kcal, e.target.result);
+      document.getElementById("addMeal").disabled = false;
+      document.getElementById("addMeal").textContent = "写真からAI判定";
+    };
+    reader.readAsDataURL(file);
   };
-  reader.readAsDataURL(photoInput.files[0]);
+  img.src = URL.createObjectURL(file);
 };
 
 function saveMeal(foodName, kcal, photoData) {
