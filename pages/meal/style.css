@@ -48,69 +48,39 @@ h1 {
 }
 .meal-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 26px;
-  max-width: 370px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 19px;
+  max-width: 600px;
   margin: 0 auto;
 }
 .meal-card {
   background: #262a45;
-  border-radius: 22px;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+  border-radius: 20px;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.12);
   overflow: hidden;
   color: #fff;
-  padding-bottom: 1.7rem;
-  position: relative;
-  transition: transform .15s;
+  padding-bottom: 0.5rem;
+  cursor: pointer;
+  transition: transform .14s;
+  aspect-ratio: 1/1.25;
 }
-.meal-card:hover {
-  transform: translateY(-5px) scale(1.012);
-  box-shadow: 0 7px 30px rgba(0,0,0,0.18);
+.meal-card:hover { transform: scale(1.025);}
+.meal-img-wrap { width: 100%; aspect-ratio: 1/1; overflow: hidden; }
+.meal-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-preview { margin:0.7em 0; min-height: 60px; }
+.photo-preview img { width: 100px; border-radius: 10px; box-shadow: 0 1px 4px #2223; }
+.file-label { cursor:pointer; }
+.file-btn { background: #fa6566; color:#fff; border-radius:8px; padding:0.3em 1.1em; font-weight:bold; margin-right:1em;}
+/* モーダル */
+.modal-overlay {
+  position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+  background: rgba(20,24,40,0.82); z-index: 999; display: flex; align-items: center; justify-content: center;
 }
-.meal-img-wrap {
-  width: 100%;
-  aspect-ratio: 1.3/1;
-  overflow: hidden;
-  border-radius: 22px 22px 0 0;
-  background: #18192d;
-  min-height: 130px;
+.modal-content {
+  background: #262a45; color: #fff; border-radius: 18px; padding: 2em 2.1em 1.5em 2.1em; max-width: 370px; width: 90vw; position: relative;
+  box-shadow: 0 6px 38px #0008;
+  text-align: center;
 }
-.meal-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.meal-info {
-  padding: 1.1rem 1.4rem 0.3rem 1.4rem;
-}
-.meal-title {
-  font-size: 1.22rem;
-  font-weight: bold;
-  margin-bottom: 0.17em;
-}
-.meal-calorie {
-  font-size: 1.12rem;
-  color: #ffbb54;
-  margin-top: 0.2rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-.meal-desc {
-  font-size: 0.92rem;
-  color: #ccc;
-  margin-top: 0.4rem;
-  line-height: 1.4;
-  letter-spacing: 0.01em;
-}
-.meal-stars {
-  margin-top: 0.68rem;
-  font-size: 1.2rem;
-  color: #fa6566;
-  letter-spacing: 0.09em;
-}
-@media (max-width: 530px) {
-  .meal-app-container { padding: 0.5em 0.1em 0 0.1em; }
-  .meal-upload-area, .meal-card, .meal-grid { max-width: 99vw; }
-  .meal-info { padding: 1em 0.9em 0.3em 0.9em; }
-}
+.modal-photo { max-width: 88%; border-radius: 11px; margin-bottom: 1em;}
+.close-modal { position: absolute; top: 1em; right: 1.4em; font-size: 2em; cursor: pointer; color: #ffbb54;}
+
