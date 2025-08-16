@@ -1,0 +1,23 @@
+[
+  {
+    "className": "ラーメン",
+    "ingredients": [
+      { "food": "中華麺(ゆで)", "grams": 200 },
+      { "food": "鶏ガラスープ", "grams": 300 },
+      { "food": "チャーシュー", "grams": 40 },
+      { "food": "ねぎ", "grams": 10 },
+      { "food": "メンマ", "grams": 20 }
+    ]
+  },
+  {
+    "className": "ハンバーグ",
+    "ingredients": [
+      { "food": "ハンバーグ用合い挽き肉", "grams": 150 },
+      { "food": "玉ねぎ", "grams": 50 },
+      { "food": "パン粉", "grams": 10 },
+      { "food": "卵", "grams": 30 },
+      { "food": "サラダ油", "grams": 10 },
+      { "food": "デミグラスソース", "grams": 30 }
+    ]
+  }
+]
