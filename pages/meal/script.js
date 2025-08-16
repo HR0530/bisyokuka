@@ -1,16 +1,7 @@
-// ===== 美食家さん 食事記録（画像プレビュー + 料理選択 + カロリー自動計算 + 編集モーダル） =====
-// 必要ファイル（同じディレクトリに置くか、パスを調整してください）
-//  - foods.json : 100gあたりの栄養（今回はkcalのみ）
-//  - dishes.json: 料理テンプレート（ingredients: foodとgramsの組）
-//  - ../../my_model/ : Teachable Machine のモデル一式 (model.json, metadata.json, weights.bin)
+// ===== 美食家さん 食事記録（GPT版：画像→{food,kcal}） =====
+// ※ foods.json / dishes.json / TeachableMachine は使いません。
 
-const MODEL_DIR = "../../my_model/";
-const FOODS_JSON = "./foods.json";
-const DISHES_JSON = "./dishes.json";
-
-let model = null;
-let foods = [];   // [{ name, per100g:{cal} }]
-let dishes = [];  // [{ className, ingredients:[{food, grams}] }]
+const API_URL = "http://localhost:3000/api/calc-calorie"; // 公開時は自分のサーバURLに変更
 
 // DOM
 const els = {
@@ -32,75 +23,34 @@ const els = {
 };
 
 // ---- 小ユーティリティ ----
-const fmt = (n) => new Intl.NumberFormat('ja-JP', { maximumFractionDigits: 0 }).format(n);
-const todayKey = (d) => d.toISOString().slice(0,10); // YYYY-MM-DD
-const readAsDataURL = (file) => new Promise((res, rej) => {
-  const fr = new FileReader();
-  fr.onload = () => res(fr.result);
-  fr.onerror = rej;
-  fr.readAsDataURL(file);
-});
+const fmt = (n) => new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 0 }).format(n);
+const readAsDataURL = (file) =>
+  new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(fr.result);
+    fr.onerror = rej;
+    fr.readAsDataURL(file);
+  });
 function groupByDay(items) {
   const map = new Map();
   for (const m of items) {
-    const k = m.date.slice(0,10);
+    const k = m.date.slice(0, 10);
     if (!map.has(k)) map.set(k, []);
     map.get(k).push(m);
   }
-  // 日付降順
-  return Array.from(map.entries()).sort((a,b) => b[0].localeCompare(a[0]));
+  return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]));
 }
 
-// ---- JSON読み込み & モデル読み込み ----
-async function loadJSONs() {
-  const [foodsRes, dishesRes] = await Promise.all([fetch(FOODS_JSON), fetch(DISHES_JSON)]);
-  if (!foodsRes.ok || !dishesRes.ok) throw new Error("foods.json/dishes.json が読み込めません");
-  foods = await foodsRes.json();
-  dishes = await dishesRes.json();
-
-  // セレクトに dishes を反映（既存の option を保ちつつ追加）
-  const currentSet = new Set(Array.from(els.foodSelect.options).map(o => o.value));
-  for (const d of dishes) {
-    if (!currentSet.has(d.className)) {
-      const opt = document.createElement("option");
-      opt.value = d.className;
-      opt.textContent = d.className;
-      els.foodSelect.appendChild(opt);
-    }
+// ---- API呼び出し ----
+async function getCalorieFromGPT(file) {
+  const fd = new FormData();
+  fd.append("photo", file);
+  const res = await fetch(API_URL, { method: "POST", body: fd });
+  if (!res.ok) {
+    // サーバ側が429等でフォールバックJSONを返す実装なら、そのままJSON読みにいく
+    try { return await res.json(); } catch { throw new Error("API error"); }
   }
-  // モーダル側も同じものを投入（都度クリアして再作成）
-  els.modalFoodSelect.innerHTML = "";
-  for (const o of els.foodSelect.options) {
-    const opt = document.createElement("option");
-    opt.value = o.value; opt.textContent = o.textContent;
-    els.modalFoodSelect.appendChild(opt);
-  }
-}
-
-async function initModel() {
-  if (model) return;
-  const modelURL = MODEL_DIR + "model.json";
-  const metadataURL = MODEL_DIR + "metadata.json";
-  model = await tmImage.load(modelURL, metadataURL);
-}
-
-// ---- カロリー計算 ----
-function per100Cal(foodName) {
-  const f = foods.find(x => x.name === foodName);
-  return f?.per100g?.cal ?? null;
-}
-function calcDishKcal(className) {
-  const dish = dishes.find(d => d.className === className);
-  if (!dish) return { total: null, rows: [] };
-  let total = 0;
-  const rows = [];
-  for (const it of dish.ingredients) {
-    const c = per100Cal(it.food);
-    const kcal = c != null ? c * (it.grams / 100) : null;
-    if (kcal != null) total += kcal;
-    rows.push({ food: it.food, grams: it.grams, kcal });
-  }
-  return { total: Math.round(total), rows };
+  return res.json(); // { food:"...", kcal: 123 }
 }
 
 // ---- ストレージ ----
@@ -127,7 +77,12 @@ function render() {
     sec.className = "day-block";
     const h = document.createElement("h2");
     h.className = "day-title";
-    h.textContent = new Date(date+"T00:00:00").toLocaleDateString('ja-JP', { weekday:"short", year:"numeric", month:"2-digit", day:"2-digit" });
+    h.textContent = new Date(date + "T00:00:00").toLocaleDateString("ja-JP", {
+      weekday: "short",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
     sec.appendChild(h);
 
     const grid = document.createElement("div");
@@ -157,11 +112,17 @@ function render() {
 let editingId = null;
 function openModal(id) {
   const items = loadMeals();
-  const m = items.find(x => x.id === id);
+  const m = items.find((x) => x.id === id);
   if (!m) return;
-
   editingId = id;
   els.modalPhoto.src = m.photo;
+  els.modalFoodSelect.innerHTML = ""; // 元のセレクト内容を複製
+  for (const o of els.foodSelect.options) {
+    const opt = document.createElement("option");
+    opt.value = o.value;
+    opt.textContent = o.textContent;
+    els.modalFoodSelect.appendChild(opt);
+  }
   els.modalFoodSelect.value = m.food;
   els.modalStarsInput.value = m.stars;
   els.modalCommentInput.value = m.comment ?? "";
@@ -172,80 +133,69 @@ function closeModal() {
   els.modalOverlay.style.display = "none";
 }
 els.closeModal.addEventListener("click", closeModal);
-els.modalOverlay.addEventListener("click", (e) => { if (e.target === els.modalOverlay) closeModal(); });
-
+els.modalOverlay.addEventListener("click", (e) => {
+  if (e.target === els.modalOverlay) closeModal();
+});
 els.saveModalBtn.addEventListener("click", () => {
   if (!editingId) return;
   const items = loadMeals();
-  const idx = items.findIndex(x => x.id === editingId);
+  const idx = items.findIndex((x) => x.id === editingId);
   if (idx < 0) return;
 
   const food = els.modalFoodSelect.value || items[idx].food;
   const stars = Math.max(1, Math.min(5, parseInt(els.modalStarsInput.value || "3", 10)));
   const comment = els.modalCommentInput.value.trim();
 
-  // kcal再計算（料理が変わった可能性）
-  const { total } = calcDishKcal(food);
-  items[idx] = { ...items[idx], food, stars, comment, kcal: total ?? items[idx].kcal };
+  // GPT版では編集でkcal再計算はしない（写真がないため）
+  items[idx] = { ...items[idx], food, stars, comment };
   saveMeals(items);
   render();
   closeModal();
 });
 
-// ---- 画像選択（プレビュー＆自動判定） ----
+// ---- 画像選択（プレビューのみ） ----
 els.photoInput.addEventListener("change", async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
-
   const dataURL = await readAsDataURL(file);
   els.photoPreview.innerHTML = `<img src="${dataURL}" alt="preview">`;
-
-  // 料理未選択の場合はモデルで推定 → セレクトに反映
-  try {
-    await loadJSONs();              // dishes を先に読み込む（候補反映）
-    await initModel();              // モデル準備
-    const img = document.createElement("img");
-    img.src = dataURL;
-    await new Promise(r => img.onload = r);
-    const pred = await model.predict(img);
-    pred.sort((a,b) => b.probability - a.probability);
-    const guess = pred[0]?.className;
-    if (guess) {
-      // セレクトに存在しない場合もあるので、存在すればセット
-      const optValues = Array.from(els.foodSelect.options).map(o => o.value);
-      if (optValues.includes(guess)) {
-        els.foodSelect.value = guess;
-      }
-    }
-  } catch (err) {
-    console.warn("自動判定エラー:", err);
-  }
 });
 
-// ---- 記録 ----
+// ---- 記録（GPTで自動判定） ----
 els.addMealBtn.addEventListener("click", async () => {
   const file = els.photoInput.files?.[0];
-  if (!file) { alert("写真を選択してください"); return; }
+  if (!file) {
+    alert("写真を選択してください");
+    return;
+  }
+  // まずプレビュー取得
+  const photo = await readAsDataURL(file);
 
-  const food = els.foodSelect.value;
-  if (!food) { alert("料理名を選択してください"); return; }
+  // GPTに問い合わせ
+  let gptFood = "不明";
+  let gptKcal = 0;
+  try {
+    const res = await getCalorieFromGPT(file); // { food, kcal, ... }
+    if (res?.food) gptFood = res.food;
+    if (typeof res?.kcal === "number") gptKcal = res.kcal;
+  } catch (e) {
+    console.warn("GPT API失敗:", e);
+  }
 
+  // UI上でユーザーが食名を選んでいれば優先、なければGPTの推定を使う
+  const food = els.foodSelect.value || gptFood;
   const stars = Math.max(1, Math.min(5, parseInt(els.starsInput.value || "3", 10)));
   const comment = els.commentInput.value.trim();
 
-  await loadJSONs();
-  const { total } = calcDishKcal(food);
-
-  const photo = await readAsDataURL(file);
   const now = new Date();
   const item = {
     id: "m_" + now.getTime(),
     date: now.toISOString(),
     food,
-    kcal: total ?? 0,
+    kcal: gptKcal, // GPTの値（失敗時は 0）
     stars,
     comment,
-    photo
+    photo,
   };
 
   const items = loadMeals();
@@ -262,7 +212,6 @@ els.addMealBtn.addEventListener("click", async () => {
 });
 
 // 初期化
-(async function init() {
-  try { await loadJSONs(); } catch (e) { console.warn(e); }
+(function init() {
   render();
 })();
