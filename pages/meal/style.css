@@ -1,4 +1,4 @@
-/* ====== meal page styles ====== */
+/* ====== meal page styles (GPT版) ====== */
 :root {
   --bg:#0f172a;
   --card:#111827;
@@ -85,8 +85,9 @@ select, input[type="number"], input[type="text"] {
 .meal-meta .name { color: var(--ink); font-weight:700; font-size: 13px; }
 .kcal-badge { display:inline-block; padding:2px 6px; border-radius:999px; background:#0ea5e9; color:#031422; font-weight:800; }
 .star { color:#fde047; }
+.badge { display:inline-block; padding:4px 8px; border-radius:999px; background:#1f2937; font-size:12px; }
+.hint { color: var(--muted); font-size: 12px; }
 
-/* modal */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,.5);
   display:flex; align-items:center; justify-content:center; z-index:1000;
@@ -102,11 +103,5 @@ select, input[type="number"], input[type="text"] {
 }
 .close-modal { position:absolute; top:10px; right:14px; font-size:24px; cursor:pointer; }
 .modal-photo { width:100%; max-height: 300px; object-fit: cover; border-radius: 12px; }
-.modal-content select, .modal-content input { margin-top: 10px; margin-right: 8px; }
-.modal-actions { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
+.modal-actions { display:flex; gap:10px; margin: 12px 0; flex-wrap:wrap; }
 .save-btn { background:#22c55e; color:#0a0a0a; border:none; padding:10px 16px; border-radius:12px; font-weight:800; cursor:pointer; }
-.delete-btn { background:#ef4444; color:#0a0a0a; border:none; padding:10px 16px; border-radius:12px; font-weight:800; cursor:pointer; }
-
-/* helper */
-.hint { color: var(--muted); font-size: 12px; }
-.badge { display:inline-block; padding:4px 8px; border-radius:999px; background:#1f2937; font-size:12px; }
