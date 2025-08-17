@@ -1,9 +1,5 @@
 // ===== script.js 完成版 =====
-
-// ▼ Pages(https)から呼ぶため、必ず https の公開APIにする（ngrok/Render等）
-// 置き換え
-const API_URL = "https://a314ce1f9eb4.ngrok-free.app/api/calc-calorie";
-
+const API_URL = "https://7fca61b18c0c.ngrok-free.app/api/calc-calorie"; // ←今のngrok URLに置換
 
 // ---- DOM ----
 const els = {
@@ -13,7 +9,6 @@ const els = {
   commentInput: document.getElementById("commentInput"),
   addMealBtn: document.getElementById("addMealBtn"),
   mealsByDay: document.getElementById("mealsByDay"),
-  // modal
   modalOverlay: document.getElementById("modalOverlay"),
   closeModal: document.getElementById("closeModal"),
   modalPhoto: document.getElementById("modalPhoto"),
@@ -37,7 +32,17 @@ function groupByDay(items) {
 }
 function toObjectURL(file) { return URL.createObjectURL(file); }
 
-// API送信用に最大辺1280pxへ縮小（表示はオリジナルでぼやけ防止）
+// File → DataURL（永続）
+async function fileToDataURL(file) {
+  return await new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(String(fr.result));
+    fr.onerror = rej;
+    fr.readAsDataURL(file);
+  });
+}
+
+// API送信用: 最大辺1280pxへ縮小
 async function downscaleForApi(file, max = 1280) {
   const img = new Image();
   img.src = URL.createObjectURL(file);
@@ -66,7 +71,7 @@ async function analyzeByAI(fileForApi) {
   return await res.json(); // { food, ingredients?, totals?, note? } or fallback
 }
 
-// ★ 旧/新どちらのレスポンスでも統一形に
+// レスポンス正規化
 function normalizeNutrition(data) {
   if (data?.totals || data?.ingredients) {
     const sums = (data.ingredients || []).reduce((a, it) => ({
@@ -97,6 +102,32 @@ function normalizeNutrition(data) {
 const STORAGE_KEY = "bisyokuka_meals_v2";
 function loadMeals() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch { return []; } }
 function saveMeals(items) { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+
+// 旧データを新形式へ
+function migrateMeals(items) {
+  let changed = false;
+  for (const m of items) {
+    if (m.photo && typeof m.photo === "string" && m.photo.startsWith("blob:")) {
+      m.photo = ""; // 復元不可。今後はdataURL保存
+      changed = true;
+    }
+    if (!m.totals) {
+      m.totals = { protein:0, fat:0, carbs:0, kcal: Number(m.kcal || 0) };
+      changed = true;
+    }
+    if (Array.isArray(m.ingredients) && m.ingredients.length > 0) {
+      const sums = m.ingredients.reduce((a, it) => ({
+        protein:a.protein+(+it.protein||0),
+        fat:a.fat+(+it.fat||0),
+        carbs:a.carbs+(+it.carbs||0),
+        kcal:a.kcal+(+it.kcal||0),
+      }), {protein:0,fat:0,carbs:0,kcal:0});
+      if (!m.totals || (m.totals.kcal||0)===0) m.totals = sums;
+      changed = true;
+    }
+  }
+  if (changed) saveMeals(items);
+}
 
 // ---- Render ----
 function render() {
@@ -132,7 +163,7 @@ function render() {
       `).join("") ?? "";
 
       card.innerHTML = `
-        <img class="meal-img" src="${m.photo}" alt="${m.food}">
+        <img class="meal-img" src="${m.photo}" alt="${m.food}" onerror="this.style.display='none'">
         <div class="meal-meta">
           <div class="name">${m.food}</div>
           <div class="badges">
@@ -178,7 +209,7 @@ function openModal(id) {
   if (!m) return;
 
   editingId = id;
-  els.modalPhoto.src = m.photo;
+  els.modalPhoto.src = m.photo || "";
   els.modalFoodInput.value = m.food;
   els.modalStarsInput.value = m.stars;
   els.modalCommentInput.value = m.comment ?? "";
@@ -209,7 +240,7 @@ let originalFile = null;
 els.photoInput.addEventListener("change", (e) => {
   originalFile = e.target.files?.[0] || null;
   if (!originalFile) return;
-  const url = toObjectURL(originalFile); // 高解像度のまま表示（ぼやけ防止）
+  const url = toObjectURL(originalFile); // プレビュー高解像度
   els.photoPreview.innerHTML = `<img src="${url}" alt="preview" style="max-height: 240px; border-radius:12px;">`;
 });
 
@@ -228,12 +259,12 @@ els.addMealBtn.addEventListener("click", async () => {
     const norm = normalizeNutrition(raw);
     els.helperText.textContent = raw?.note ? String(raw.note) : "";
 
-    const photoURL = toObjectURL(originalFile); // 表示はオリジナル
+    const photoDataURL = await fileToDataURL(originalFile); // 永続保存
     const now = new Date();
     const item = {
       id: "m_" + now.getTime(),
       date: now.toISOString(),
-      photo: photoURL,
+      photo: photoDataURL,
       food: norm.food,
       stars: Math.max(1, Math.min(5, parseInt(els.starsInput.value || "3", 10))),
       comment: els.commentInput.value.trim(),
@@ -252,7 +283,6 @@ els.addMealBtn.addEventListener("click", async () => {
     els.photoPreview.innerHTML = "";
 
     render();
-
   } catch (e) {
     console.warn("AI解析失敗", e);
     els.helperText.textContent = "解析に失敗しました。時間をおいて再試行してください。";
@@ -263,4 +293,8 @@ els.addMealBtn.addEventListener("click", async () => {
 });
 
 // init
-(function init(){ render(); })();
+(function init(){
+  const items = loadMeals();
+  migrateMeals(items);   // 旧データ自動補正
+  render();
+})();
