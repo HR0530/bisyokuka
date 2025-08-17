@@ -1,7 +1,9 @@
 // ===== script.js 完成版 =====
 
 // ▼ Pages(https)から呼ぶため、必ず https の公開APIにする（ngrok/Render等）
-const API_URL = "https://<あなたの公開API>/api/calc-calorie";
+// 置き換え
+const API_URL = "https://a314ce1f9eb4.ngrok-free.app/api/calc-calorie";
+
 
 // ---- DOM ----
 const els = {
