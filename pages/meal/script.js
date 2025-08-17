@@ -1,5 +1,7 @@
-// script.js（差し替え）
-const API_URL = "http://localhost:3000/api/calc-calorie"; // デプロイ先に合わせて変更
+// ===== script.js 完成版 =====
+
+// ▼ Pages(https)から呼ぶため、必ず https の公開APIにする（ngrok/Render等）
+const API_URL = "https://<あなたの公開API>/api/calc-calorie";
 
 // ---- DOM ----
 const els = {
@@ -31,31 +33,21 @@ function groupByDay(items) {
   }
   return Array.from(map.entries()).sort((a,b)=> b[0].localeCompare(a[0]));
 }
+function toObjectURL(file) { return URL.createObjectURL(file); }
 
-// 表示用の高解像度URL（オリジナル）
-function toObjectURL(file) {
-  return URL.createObjectURL(file);
-}
-
-// API送信用、最大辺 1280px へ縮小
+// API送信用に最大辺1280pxへ縮小（表示はオリジナルでぼやけ防止）
 async function downscaleForApi(file, max = 1280) {
   const img = new Image();
   img.src = URL.createObjectURL(file);
   await new Promise(r => img.onload = r);
-
   const { width, height } = img;
   const scale = Math.min(1, max / Math.max(width, height));
-  if (scale === 1) {
-    // 縮小不要：そのままBlobを返す
-    return file;
-  }
+  if (scale === 1) return file;
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(width * scale);
   canvas.height = Math.round(height * scale);
   const ctx = canvas.getContext("2d");
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-  // 画質90%のJPEGに（PNGが良ければ型に応じて変更可）
   const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.9));
   return new File([blob], "resized.jpg", { type: "image/jpeg" });
 }
@@ -65,20 +57,44 @@ async function analyzeByAI(fileForApi) {
   const fd = new FormData();
   fd.append("photo", fileForApi);
   const res = await fetch(API_URL, { method:"POST", body: fd });
-  let data;
-  try { data = await res.json(); } catch { throw new Error("API parse error"); }
-  return data; // { food, ingredients:[...], totals:{protein,fat,carbs,kcal}, note? }
+  if (!res.ok) {
+    const txt = await res.text().catch(()=> "");
+    throw new Error(`API ${res.status}: ${txt.slice(0,200)}`);
+  }
+  return await res.json(); // { food, ingredients?, totals?, note? } or fallback
+}
+
+// ★ 旧/新どちらのレスポンスでも統一形に
+function normalizeNutrition(data) {
+  if (data?.totals || data?.ingredients) {
+    const sums = (data.ingredients || []).reduce((a, it) => ({
+      protein: a.protein + (Number(it.protein) || 0),
+      fat:     a.fat     + (Number(it.fat)     || 0),
+      carbs:   a.carbs   + (Number(it.carbs)   || 0),
+      kcal:    a.kcal    + (Number(it.kcal)    || 0),
+    }), { protein:0, fat:0, carbs:0, kcal:0 });
+    return {
+      food: String(data?.food ?? "不明"),
+      ingredients: Array.isArray(data?.ingredients) ? data.ingredients : [],
+      totals: {
+        protein: Number(data?.totals?.protein) || sums.protein,
+        fat:     Number(data?.totals?.fat)     || sums.fat,
+        carbs:   Number(data?.totals?.carbs)   || sums.carbs,
+        kcal:    Number(data?.totals?.kcal)    || sums.kcal,
+      }
+    };
+  }
+  if (typeof data?.kcal !== "undefined") {
+    const kcal = Number(data.kcal) || 0;
+    return { food: String(data?.food ?? "不明"), ingredients: [], totals: { protein:0, fat:0, carbs:0, kcal } };
+  }
+  return { food: "（推定不可）", ingredients: [], totals: { protein:0, fat:0, carbs:0, kcal:0 } };
 }
 
 // ---- Storage ----
 const STORAGE_KEY = "bisyokuka_meals_v2";
-function loadMeals() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
-  catch { return []; }
-}
-function saveMeals(items) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
+function loadMeals() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch { return []; } }
+function saveMeals(items) { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
 
 // ---- Render ----
 function render() {
@@ -102,7 +118,6 @@ function render() {
       card.className = "meal-card";
       card.dataset.id = m.id;
 
-      // 食材テーブル
       const rows = m.ingredients?.map(it => `
         <tr>
           <td>${it.name}</td>
@@ -119,7 +134,7 @@ function render() {
         <div class="meal-meta">
           <div class="name">${m.food}</div>
           <div class="badges">
-            <span class="kcal-badge">${fmt(m.totals?.kcal ?? m.kcal ?? 0)} kcal</span>
+            <span class="kcal-badge">${fmt(m.totals?.kcal ?? 0)} kcal</span>
             <span class="badge">P ${fmt(m.totals?.protein ?? 0)} g</span>
             <span class="badge">F ${fmt(m.totals?.fat ?? 0)} g</span>
             <span class="badge">C ${fmt(m.totals?.carbs ?? 0)} g</span>
@@ -141,7 +156,6 @@ function render() {
       `;
 
       card.addEventListener("click", (e) => {
-        // detailsクリックは許可、他は編集モーダル
         if (e.target.closest("details")) return;
         openModal(m.id);
       });
@@ -177,13 +191,11 @@ els.saveModalBtn.addEventListener("click", () => {
   const items = loadMeals();
   const idx = items.findIndex(x=>x.id===editingId);
   if (idx<0) return;
-
   items[idx] = {
     ...items[idx],
     food: (els.modalFoodInput.value || items[idx].food).trim(),
     stars: Math.max(1, Math.min(5, parseInt(els.modalStarsInput.value || "3", 10))),
     comment: els.modalCommentInput.value.trim()
-    // 再解析はしない。必要なら保存時に analyzeByAI(items[idx].originalBlob?) を追加可
   };
   saveMeals(items);
   render();
@@ -195,8 +207,7 @@ let originalFile = null;
 els.photoInput.addEventListener("change", (e) => {
   originalFile = e.target.files?.[0] || null;
   if (!originalFile) return;
-  // 表示は高解像度（ぼやけ防止）
-  const url = toObjectURL(originalFile);
+  const url = toObjectURL(originalFile); // 高解像度のまま表示（ぼやけ防止）
   els.photoPreview.innerHTML = `<img src="${url}" alt="preview" style="max-height: 240px; border-radius:12px;">`;
 });
 
@@ -210,25 +221,22 @@ els.addMealBtn.addEventListener("click", async () => {
   els.helperText.textContent = "AIが食材内訳と栄養素を推定しています…";
 
   try {
-    // APIには縮小版を送る
-    const resized = await downscaleForApi(originalFile, 1280);
-    const data = await analyzeByAI(resized);
-    if (data?.note) els.helperText.textContent = data.note; else els.helperText.textContent = "";
+    const resized = await downscaleForApi(originalFile, 1280); // APIは縮小版
+    const raw = await analyzeByAI(resized);
+    const norm = normalizeNutrition(raw);
+    els.helperText.textContent = raw?.note ? String(raw.note) : "";
 
-    // 表示は高解像度（オリジナル）
-    const photoURL = toObjectURL(originalFile);
+    const photoURL = toObjectURL(originalFile); // 表示はオリジナル
     const now = new Date();
-
     const item = {
       id: "m_" + now.getTime(),
       date: now.toISOString(),
       photo: photoURL,
-      food: data?.food ?? "不明",
+      food: norm.food,
       stars: Math.max(1, Math.min(5, parseInt(els.starsInput.value || "3", 10))),
       comment: els.commentInput.value.trim(),
-      // 新フィールド
-      ingredients: Array.isArray(data?.ingredients) ? data.ingredients : [],
-      totals: data?.totals ?? { protein:0, fat:0, carbs:0, kcal:0 }
+      ingredients: norm.ingredients,
+      totals: norm.totals
     };
 
     const items = loadMeals();
