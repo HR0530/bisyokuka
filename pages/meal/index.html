@@ -19,12 +19,14 @@
 
       <div id="photoPreview" class="photo-preview"></div>
 
-      <!-- 料理名のドロップダウンは廃止。AIの推定をそのまま使う -->
-      <!-- 必要なら後でテキスト入力を追加できます -->
-
+      <!-- 料理名のドロップダウンは廃止。AI推定をそのまま採用 -->
       <input type="number" id="starsInput" min="1" max="5" value="4" title="星評価" style="width:70px;">
       <input type="text" id="commentInput" maxlength="32" placeholder="コメント(任意)" style="width:170px;">
-      <button id="addMealBtn">記録する</button>
+
+      <div class="actions-row">
+        <button id="addMealBtn">記録する</button>
+        <button id="resetBtn" class="danger-btn" title="全データを削除">リセット</button>
+      </div>
 
       <div id="helperText" class="hint"></div>
     </div>
