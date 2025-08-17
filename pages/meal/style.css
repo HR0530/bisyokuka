@@ -1,4 +1,4 @@
-/* ====== meal page styles (GPT版・完全) ====== */
+/* ====== meal page styles (完成) ====== */
 :root {
   --bg:#0f172a;
   --card:#111827;
@@ -61,6 +61,8 @@ h1 {
 .file-btn:active { transform: translateY(1px) scale(.99); }
 .file-btn:hover { filter: brightness(1.05); }
 
+.actions-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
 .photo-preview {
   display:flex;
   align-items:center;
@@ -100,6 +102,18 @@ input::placeholder { color:#6b7280; }
 #addMealBtn:disabled { opacity:.6; cursor:not-allowed; }
 #addMealBtn:active { transform: translateY(1px) scale(.99); }
 #addMealBtn:hover:not(:disabled) { filter: brightness(1.05); }
+
+.danger-btn{
+  background:#ef4444;
+  color:#0a0a0a;
+  border:none;
+  border-radius:12px;
+  padding:10px 16px;
+  font-weight:800;
+  cursor:pointer;
+  transition: filter .15s ease;
+}
+.danger-btn:hover{ filter: brightness(1.05); }
 
 .hint { color: var(--muted); font-size: 12px; }
 
