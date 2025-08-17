@@ -1,18 +1,41 @@
-/* ====== meal page styles (GPT版) ====== */
+/* ====== meal page styles (GPT版・完全) ====== */
 :root {
   --bg:#0f172a;
   --card:#111827;
   --ink:#e5e7eb;
   --accent:#f59e0b;
   --muted:#9ca3af;
+  --line:#1f2937;
+  --brand:#0ea5e9;
+  --ok:#22c55e;
+  --warn:#f59e0b;
+  --err:#ef4444;
 }
 
 * { box-sizing: border-box; }
-body { margin:0; background:var(--bg); color:var(--ink); font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+html, body { height: 100%; }
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Poppins", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
 
-.meal-app-container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
-h1 { margin: 0 0 16px; font-size: 22px; font-weight: 700; }
+.meal-app-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
 
+h1 {
+  margin: 0 0 16px;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* ========== Upload / Controls ========== */
 .meal-upload-area {
   background: var(--card);
   border-radius: 16px;
@@ -22,6 +45,7 @@ h1 { margin: 0 0 16px; font-size: 22px; font-weight: 700; }
   grid-template-columns: 1fr;
   gap: 12px;
 }
+
 .file-label { display:inline-block; }
 .file-btn {
   display:inline-block;
@@ -31,27 +55,55 @@ h1 { margin: 0 0 16px; font-size: 22px; font-weight: 700; }
   color:#111;
   cursor:pointer;
   font-weight:700;
+  user-select: none;
+  transition: transform .05s ease, filter .15s ease;
 }
-.photo-preview { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.photo-preview img { max-height: 160px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.35); }
+.file-btn:active { transform: translateY(1px) scale(.99); }
+.file-btn:hover { filter: brightness(1.05); }
 
-select, input[type="number"], input[type="text"] {
+.photo-preview {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  min-height: 10px;
+}
+.photo-preview img {
+  max-height: 240px; /* 表示は高解像度のまま縮小表示（拡大時もぼやけにくい） */
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.35);
+  image-rendering: auto; /* なめらかに縮小 */
+}
+
+select,
+input[type="number"],
+input[type="text"] {
   background:#0b1220;
   color:var(--ink);
-  border:1px solid #1f2937;
+  border:1px solid var(--line);
   border-radius:10px;
   padding:10px 12px;
+  outline:none;
 }
+input::placeholder { color:#6b7280; }
+
 #addMealBtn {
-  background:#22c55e;
+  background:var(--ok);
   color:#0a0a0a;
   border:none;
   border-radius:12px;
   padding:10px 16px;
   font-weight:800;
   cursor:pointer;
+  transition: transform .05s ease, filter .15s ease, opacity .15s ease;
 }
+#addMealBtn:disabled { opacity:.6; cursor:not-allowed; }
+#addMealBtn:active { transform: translateY(1px) scale(.99); }
+#addMealBtn:hover:not(:disabled) { filter: brightness(1.05); }
 
+.hint { color: var(--muted); font-size: 12px; }
+
+/* ========== Meals list ========== */
 #mealsByDay { margin-top: 20px; display: grid; gap: 16px; }
 
 .day-block {
@@ -66,34 +118,120 @@ select, input[type="number"], input[type="text"] {
   font-size: 16px;
   color: var(--ink);
 }
+
 .meal-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
 }
+
 .meal-card {
   background:#0b1220;
-  border:1px solid #1f2937;
+  border:1px solid var(--line);
   border-radius:14px;
   overflow:hidden;
   cursor:pointer;
-  transition: transform .1s ease;
+  transition: transform .1s ease, box-shadow .2s ease, border-color .2s ease;
 }
-.meal-card:hover { transform: translateY(-2px); }
-.meal-img { width:100%; height:120px; object-fit:cover; display:block; }
-.meal-meta { padding: 8px; font-size: 12px; color: var(--muted); display:flex; flex-direction:column; gap:4px; }
-.meal-meta .name { color: var(--ink); font-weight:700; font-size: 13px; }
-.kcal-badge { display:inline-block; padding:2px 6px; border-radius:999px; background:#0ea5e9; color:#031422; font-weight:800; }
-.star { color:#fde047; }
-.badge { display:inline-block; padding:4px 8px; border-radius:999px; background:#1f2937; font-size:12px; }
-.hint { color: var(--muted); font-size: 12px; }
+.meal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  border-color:#273447;
+}
 
+/* カード内の画像は比率を保ってトリミング（ボケ対策：元ファイルは高解像度を使う） */
+.meal-img {
+  width:100%;
+  aspect-ratio: 4 / 3;
+  object-fit:cover;
+  display:block;
+  image-rendering:auto;
+}
+
+.meal-meta {
+  padding: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.meal-meta .name {
+  color: var(--ink);
+  font-weight:700;
+  font-size: 13px;
+}
+
+.badges { display:flex; gap:6px; flex-wrap:wrap; }
+.kcal-badge {
+  display:inline-block;
+  padding:2px 8px;
+  border-radius:999px;
+  background:var(--brand);
+  color:#031422;
+  font-weight:800;
+}
+.badge {
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:999px;
+  background:#1f2937;
+  font-size:12px;
+  color:#cbd5e1;
+}
+
+.star { color:#fde047; }
+
+/* ========== Ingredients table (details) ========== */
+.ing-details { margin: 0 10px 10px; }
+.ing-details > summary {
+  list-style: none;
+  cursor: pointer;
+  color:#cbd5e1;
+  font-weight: 600;
+  margin: 6px 0;
+}
+.ing-details > summary::-webkit-details-marker { display:none; }
+.ing-details > summary::before {
+  content: "▶";
+  display:inline-block;
+  margin-right:8px;
+  transition: transform .2s ease;
+  font-size: 10px;
+}
+.ing-details[open] > summary::before { transform: rotate(90deg); }
+
+.ing-table {
+  width:100%;
+  border-collapse: collapse;
+  font-size:12px;
+  background:#0b1220;
+  border:1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.ing-table thead th {
+  text-align:left;
+  color:#cbd5e1;
+  background:#0e1626;
+  border-bottom:1px solid var(--line);
+  padding:8px;
+}
+.ing-table td {
+  border-bottom:1px solid var(--line);
+  padding:8px;
+  color:#d1d5db;
+}
+.ing-table tr:last-child td { border-bottom:none; }
+.ing-table th.num, .ing-table td.num { text-align:right; }
+
+/* ========== Modal ========== */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,.5);
   display:flex; align-items:center; justify-content:center; z-index:1000;
 }
 .modal-content {
-  width: min(720px, 92vw);
+  width: min(760px, 92vw);
   background: var(--card);
   color: var(--ink);
   border-radius: 16px;
@@ -101,7 +239,54 @@ select, input[type="number"], input[type="text"] {
   position: relative;
   box-shadow: 0 16px 64px rgba(0,0,0,.6);
 }
-.close-modal { position:absolute; top:10px; right:14px; font-size:24px; cursor:pointer; }
-.modal-photo { width:100%; max-height: 300px; object-fit: cover; border-radius: 12px; }
-.modal-actions { display:flex; gap:10px; margin: 12px 0; flex-wrap:wrap; }
-.save-btn { background:#22c55e; color:#0a0a0a; border:none; padding:10px 16px; border-radius:12px; font-weight:800; cursor:pointer; }
+.close-modal {
+  position:absolute; top:10px; right:14px; font-size:24px; cursor:pointer;
+  color:#e5e7eb;
+}
+.close-modal:hover { color:#fff; }
+
+.modal-photo {
+  width:100%;
+  max-height: 60vh;
+  object-fit: contain;  /* 元画像をそのまま表示（ぼやけにくい） */
+  border-radius: 12px;
+  background:#0b1220;
+  image-rendering:auto;
+}
+
+.modal-actions {
+  display:flex;
+  gap:10px;
+  margin: 12px 0;
+  flex-wrap:wrap;
+}
+
+.save-btn {
+  background:var(--ok);
+  color:#0a0a0a;
+  border:none;
+  padding:10px 16px;
+  border-radius:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+.save-btn:hover { filter: brightness(1.05); }
+
+/* ========== Helpers ========== */
+.back-button a {
+  text-decoration: none;
+  color: #ffbb54;
+  font-family:Poppins, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ========== Responsive tweaks ========== */
+@media (max-width: 720px) {
+  .meal-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .photo-preview img { max-height: 200px; }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size:20px; }
+  .meal-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .ing-table { font-size:11px; }
+}
