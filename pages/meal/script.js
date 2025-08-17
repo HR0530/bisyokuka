@@ -1,5 +1,6 @@
 // ===== script.js 完成版 =====
-const API_URL = "https://7fca61b18c0c.ngrok-free.app/api/calc-calorie"; // ←今のngrok URLに置換
+// ★必ず “今の ngrok URL” に置き換える
+const API_URL = "https://7fca61b18c0c.ngrok-free.app/api/calc-calorie";
 
 // ---- DOM ----
 const els = {
@@ -8,6 +9,7 @@ const els = {
   starsInput: document.getElementById("starsInput"),
   commentInput: document.getElementById("commentInput"),
   addMealBtn: document.getElementById("addMealBtn"),
+  resetBtn: document.getElementById("resetBtn"),
   mealsByDay: document.getElementById("mealsByDay"),
   modalOverlay: document.getElementById("modalOverlay"),
   closeModal: document.getElementById("closeModal"),
@@ -259,7 +261,7 @@ els.addMealBtn.addEventListener("click", async () => {
     const norm = normalizeNutrition(raw);
     els.helperText.textContent = raw?.note ? String(raw.note) : "";
 
-    const photoDataURL = await fileToDataURL(originalFile); // 永続保存
+    const photoDataURL = await fileToDataURL(originalFile); // 永続保存（拡大してもボケにくい）
     const now = new Date();
     const item = {
       id: "m_" + now.getTime(),
@@ -285,12 +287,28 @@ els.addMealBtn.addEventListener("click", async () => {
     render();
   } catch (e) {
     console.warn("AI解析失敗", e);
-    els.helperText.textContent = "解析に失敗しました。時間をおいて再試行してください。";
+    els.helperText.textContent = "解析に失敗しました: " + (e?.message || "ネットワーク/サーバ停止の可能性");
   } finally {
     els.addMealBtn.disabled = false;
     els.addMealBtn.textContent = defaultText;
   }
 });
+
+// ---- Reset (全削除) ----
+if (els.resetBtn) {
+  els.resetBtn.addEventListener("click", () => {
+    const ok = confirm("保存されている全ての食事記録を削除します。よろしいですか？");
+    if (!ok) return;
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      els.helperText.textContent = "すべての記録を削除しました。";
+    } catch (e) {
+      console.warn("reset error", e);
+      els.helperText.textContent = "削除に失敗しました。ブラウザの権限をご確認ください。";
+    }
+    render();
+  });
+}
 
 // init
 (function init(){
