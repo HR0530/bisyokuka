@@ -1,28 +1,207 @@
-// デモ用データ（本来はlocalStorageやAPIから取得）
-const nutritionData = [
-  { date: "2025-08-15", kcal: 1800, protein: 75, fat: 60, carbs: 220 },
-  { date: "2025-08-16", kcal: 1950, protein: 80, fat: 65, carbs: 250 },
-  { date: "2025-08-17", kcal: 1600, protein: 70, fat: 55, carbs: 200 },
-];
+// ===== 分析ページ：折り畳み式ダッシュボード =====
+const STORAGE_KEY = "bisyokuka_meals_v2";
 
-// 表を生成
-function fillTable(id, key) {
-  const tbody = document.getElementById(id);
-  nutritionData.forEach(item => {
-    const row = `<tr><td>${item.date}</td><td>${item[key]}</td></tr>`;
-    tbody.insertAdjacentHTML("beforeend", row);
-  });
+// DOM
+const els = {
+  sumKcal: document.getElementById("sumKcal"),
+  sumP: document.getElementById("sumP"),
+  sumF: document.getElementById("sumF"),
+  sumC: document.getElementById("sumC"),
+  daysRoot: document.getElementById("daysRoot"),
+  chips: Array.from(document.querySelectorAll(".chip")),
+  expandAll: document.getElementById("expandAll"),
+  collapseAll: document.getElementById("collapseAll"),
+};
+
+// Utils
+const fmt = (n) => new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 0 }).format(n);
+const ymd = (d) => d.toISOString().slice(0,10);
+
+function loadMeals() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+  catch { return []; }
 }
 
-fillTable("calorieTable", "kcal");
-fillTable("proteinTable", "protein");
-fillTable("fatTable", "fat");
-fillTable("carbTable", "carbs");
+// 旧データも安全に使えるよう最低限の正規化
+function normalizeMeal(m) {
+  const totals = m.totals || { protein:0, fat:0, carbs:0, kcal: Number(m.kcal || 0) };
+  return {
+    ...m,
+    food: m.food || "不明",
+    ingredients: Array.isArray(m.ingredients) ? m.ingredients : [],
+    totals: {
+      protein: Number(totals.protein) || 0,
+      fat: Number(totals.fat) || 0,
+      carbs: Number(totals.carbs) || 0,
+      kcal: Number(totals.kcal) || 0,
+    }
+  };
+}
 
-// アコーディオン処理
-document.querySelectorAll(".accordion-header").forEach(button => {
-  button.addEventListener("click", () => {
-    const content = button.nextElementSibling;
-    content.classList.toggle("open");
-  });
+// 期間フィルタ
+function rangeFilter(range) {
+  const now = new Date();
+  const start = new Date(now);
+  start.setHours(0,0,0,0);
+
+  if (range === "today") {
+    // その日 00:00〜
+    return (d) => d >= start;
+  }
+  if (range === "week") {
+    // 月曜は1、日曜は0 -> 月曜起点
+    const day = start.getDay(); // 0..6
+    const diff = (day + 6) % 7; // 月:0, 火:1 ... 日:6
+    start.setDate(start.getDate() - diff);
+    return (d) => d >= start;
+  }
+  if (range === "month") {
+    start.setDate(1);
+    return (d) => d >= start;
+  }
+  // all
+  return () => true;
+}
+
+// 集計
+function sumTotals(items) {
+  return items.reduce((a, m) => ({
+    kcal: a.kcal + (m.totals?.kcal || 0),
+    protein: a.protein + (m.totals?.protein || 0),
+    fat: a.fat + (m.totals?.fat || 0),
+    carbs: a.carbs + (m.totals?.carbs || 0),
+  }), { kcal:0, protein:0, fat:0, carbs:0 });
+}
+
+// 日別グループ化（降順）
+function groupByDay(items) {
+  const map = new Map();
+  for (const m of items) {
+    const k = m.date.slice(0,10);
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(m);
+  }
+  return Array.from(map.entries()).sort((a,b)=> b[0].localeCompare(a[0]));
+}
+
+// 描画
+function render(range = "today") {
+  // chipアクティブ
+  els.chips.forEach(c => c.classList.toggle("active", c.dataset.range === range));
+
+  const meals = loadMeals().map(normalizeMeal);
+  const inRange = meals.filter(m => rangeFilter(range)(new Date(m.date)));
+  const grouped = groupByDay(inRange);
+
+  // トップ合計
+  const total = sumTotals(inRange);
+  els.sumKcal.textContent = fmt(total.kcal);
+  els.sumP.textContent = fmt(total.protein);
+  els.sumF.textContent = fmt(total.fat);
+  els.sumC.textContent = fmt(total.carbs);
+
+  // 日別描画
+  els.daysRoot.innerHTML = "";
+  if (grouped.length === 0) {
+    els.daysRoot.innerHTML = `<p class="muted">この期間の記録はありません。</p>`;
+    return;
+  }
+
+  for (const [date, arr] of grouped) {
+    const daySum = sumTotals(arr);
+    const d = new Date(date + "T00:00:00");
+
+    const day = document.createElement("details");
+    day.className = "day";
+    day.open = false; // デフォルトは畳む（必要なら true）
+
+    day.innerHTML = `
+      <summary class="day-summary">
+        <span class="date">${d.toLocaleDateString('ja-JP', { year:"numeric", month:"2-digit", day:"2-digit", weekday:"short" })}</span>
+        <span class="chips">
+          <span class="chip k">合計 ${fmt(daySum.kcal)} kcal</span>
+          <span class="chip p">P ${fmt(daySum.protein)} g</span>
+          <span class="chip f">F ${fmt(daySum.fat)} g</span>
+          <span class="chip c">C ${fmt(daySum.carbs)} g</span>
+        </span>
+      </summary>
+      <div class="meals">
+        ${arr.map(m => renderMealRow(m)).join("")}
+      </div>
+    `;
+    els.daysRoot.appendChild(day);
+  }
+}
+
+function renderMealRow(m) {
+  // 食材テーブル（必要なときだけ展開）
+  const rows = m.ingredients.map(it => `
+    <tr>
+      <td>${it.name}</td>
+      <td class="num">${fmt(it.grams ?? 0)}</td>
+      <td class="num">${fmt(it.protein ?? 0)}</td>
+      <td class="num">${fmt(it.fat ?? 0)}</td>
+      <td class="num">${fmt(it.carbs ?? 0)}</td>
+      <td class="num">${fmt(it.kcal ?? 0)}</td>
+    </tr>
+  `).join("");
+
+  return `
+    <details class="meal" open>
+      <summary class="meal-summary">
+        ${m.photo ? `<img src="${m.photo}" alt="" class="thumb" />` : `<div class="thumb ph"></div>`}
+        <div class="meta">
+          <div class="title">${escapeHtml(m.food)}</div>
+          <div class="badges">
+            <span class="kcal">${fmt(m.totals.kcal)} kcal</span>
+            <span class="p">たんぱく質 ${fmt(m.totals.protein)} g</span>
+            <span class="f">脂質 ${fmt(m.totals.fat)} g</span>
+            <span class="c">炭水化物 ${fmt(m.totals.carbs)} g</span>
+          </div>
+          ${m.comment ? `<div class="comment">「${escapeHtml(m.comment)}」</div>` : ""}
+        </div>
+      </summary>
+
+      ${rows ? `
+      <details class="ingredients">
+        <summary>🍖 食材ごとの栄養一覧</summary>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>食材</th>
+                <th class="num">グラム</th>
+                <th class="num">たんぱく質</th>
+                <th class="num">脂質</th>
+                <th class="num">炭水化物</th>
+                <th class="num">カロリー</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </details>` : ``}
+    </details>
+  `;
+}
+
+function escapeHtml(s) {
+  return String(s || "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  }[ch]));
+}
+
+// すべて展開/畳む
+function setAllDetails(open) {
+  document.querySelectorAll("details.day, details.meal, details.ingredients").forEach(d => d.open = open);
+}
+
+// イベント
+els.chips.forEach(chip => {
+  chip.addEventListener("click", () => render(chip.dataset.range));
 });
+els.expandAll.addEventListener("click", () => setAllDetails(true));
+els.collapseAll.addEventListener("click", () => setAllDetails(false));
+
+// 初期表示：今日
+render("today");
