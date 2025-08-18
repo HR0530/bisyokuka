@@ -7,6 +7,17 @@
   <link rel="stylesheet" href="style.mobile.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
 </head>
+
+  <script>
+  (function () {
+    // 画面が十分広いならPC版へ戻す
+    var w = Math.max(window.screen.width, window.innerWidth || 0);
+    if (w >= 900) {
+      location.replace('index.html');
+    }
+  })();
+</script>
+
 <body>
   <div class="app">
     <header class="topbar">
