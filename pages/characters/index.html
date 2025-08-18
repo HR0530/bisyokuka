@@ -7,48 +7,157 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- ヘッダー -->
   <header class="topbar">
     <a class="btn ghost" href="../../index.html">← ホーム</a>
     <h1>🎮 キャラ育成</h1>
     <a class="btn accent" href="./dex/index.html">📚 図鑑</a>
   </header>
 
-  <!-- 育成ゲージ -->
+  <!-- きょうの育成ゲージ -->
   <section class="gauge-card">
     <div class="gauge-title">きょうの育成ゲージ <span id="gaugePct">0%</span></div>
-    <div class="gauge-rail"><div id="gaugeBar" class="gauge-bar"></div></div>
+    <div class="gauge-rail"><div id="gaugeBar" class="gauge-bar" style="width:0%"></div></div>
     <div id="gaugeHint" class="gauge-hint">まずは1食記録してみよう！</div>
   </section>
 
+  <!-- 左右 1:1 レイアウト -->
   <main class="two-col">
     <!-- 左：キャラ -->
     <section class="hero-col">
       <div class="bubble" id="heroBubble">今日のPFCバランス、いい感じ？</div>
 
       <div class="hero-stage">
-        <!-- スプライト本体（CSSスプライトアニメ） -->
-        <div id="hero" class="hero"
-             data-sprite="project-root/男_スーツ1.png"
-             aria-label="キャラクター">
-        </div>
+        <!-- 3×4 スプライト（1コマ 32×32 想定） -->
+        <div
+          id="hero"
+          class="hero"
+          style="background-image:url('./project-root/男_スーツ1.png')"
+        ></div>
         <div class="shadow"></div>
       </div>
     </section>
 
-    <!-- 右：クエスト/イベント（4列=4行表示） -->
+    <!-- 右：クエスト／イベント（4行見切り） -->
     <section class="quest-col">
       <div class="panel">
         <h2>⏳ クエスト</h2>
-        <ul id="quests" class="task-list"></ul>
+        <ul class="task-list">
+          <li class="task">
+            <div>
+              <p class="task-title">たんぱく質 50–120g を目指す</p>
+              <div class="meta">現在 <span id="metaP">0</span> g</div>
+            </div>
+            <a class="action view" href="../insights/index.html">確認する</a>
+          </li>
+          <li class="task">
+            <div>
+              <p class="task-title">脂質 40–70g に収める</p>
+              <div class="meta">現在 <span id="metaF">0</span> g</div>
+            </div>
+            <a class="action view" href="../insights/index.html">確認する</a>
+          </li>
+          <li class="task">
+            <div>
+              <p class="task-title">炭水化物 180–300g をキープ</p>
+              <div class="meta">現在 <span id="metaC">0</span> g</div>
+            </div>
+            <a class="action view" href="../insights/index.html">確認する</a>
+          </li>
+          <li class="task">
+            <div>
+              <p class="task-title">総カロリー 目標±10% に</p>
+              <div class="meta">現在 <span id="metaK">0</span> kcal</div>
+            </div>
+            <a class="action view" href="../insights/index.html">確認する</a>
+          </li>
+        </ul>
       </div>
 
       <div class="panel">
         <h2>🎉 イベント</h2>
-        <ul id="events" class="task-list"></ul>
+        <ul class="task-list">
+          <li class="task">
+            <div>
+              <p class="task-title">新食材に挑戦（未登録の食材を1つ）</p>
+              <div class="meta">挑戦度：<span id="evt1">0</span>/1</div>
+            </div>
+            <a class="action view" href="../insights/index.html">確認する</a>
+          </li>
+          <li class="task">
+            <div>
+              <p class="task-title">野菜をもう1品追加してみよう</p>
+              <div class="meta">本日の野菜品目：<span id="evt2">0</span></div>
+            </div>
+            <a class="action view" href="../insights/index.html">確認する</a>
+          </li>
+          <li class="task">
+            <div>
+              <p class="task-title">水分 1.5L を目指す</p>
+              <div class="meta">推定：<span id="evt3">0</span> mL</div>
+            </div>
+            <a class="action view" href="../insights/index.html">確認する</a>
+          </li>
+          <li class="task">
+            <div>
+              <p class="task-title">20時以降の間食は控えめに</p>
+              <div class="meta">今日は… <span id="evt4">判定待ち</span></div>
+            </div>
+            <a class="action view" href="../insights/index.html">確認する</a>
+          </li>
+        </ul>
       </div>
     </section>
   </main>
 
-  <script src="script.js"></script>
+  <!-- 最小限のJS：方向切替（正面中心→時々横向き）とゲージざっくり計算 -->
+  <script>
+    // ===== スプライトの行（0=正面, 1=左, 2=右, 3=後ろ）をCSSカスタムプロパティで制御 =====
+    const hero = document.getElementById('hero');
+    const setRow = (r) => hero.style.setProperty('--row', r);
+
+    // 初期は正面
+    setRow(0);
+
+    // 2〜4秒ごとに「正面70% / 左15% / 右15%」でふわっと切替
+    (function idleLoop(){
+      const r = Math.random();
+      if (r < 0.7) setRow(0);
+      else if (r < 0.85) setRow(1);
+      else setRow(2);
+      setTimeout(idleLoop, 2000 + Math.random()*2000);
+    })();
+
+    // ===== ざっくりゲージ（ローカル保存の meal を参照）=====
+    try{
+      const items = JSON.parse(localStorage.getItem("bisyokuka_meals_v2")||"[]");
+      const today = new Date().toISOString().slice(0,10);
+      const todayItems = items.filter(m => (m.date||"").slice(0,10) === today);
+
+      const sums = todayItems.reduce((a, m)=>({
+        kcal:a.kcal + +(m.totals?.kcal||0),
+        p:a.p + +(m.totals?.protein||0),
+        f:a.f + +(m.totals?.fat||0),
+        c:a.c + +(m.totals?.carbs||0),
+      }), {kcal:0,p:0,f:0,c:0});
+
+      // 目安（適宜アプリ側と合わせてね）
+      const target = { kcal: 1800, p: 80, f: 60, c: 240 };
+      const ratio = Math.min(1,
+        (sums.kcal/target.kcal + sums.p/target.p + sums.f/target.f + sums.c/target.c) / 4
+      );
+      const pct = Math.round(ratio*100);
+      document.getElementById('gaugeBar').style.width = pct + '%';
+      document.getElementById('gaugePct').textContent = pct + '%';
+      document.getElementById('gaugeHint').textContent =
+        `今日の合計：${sums.kcal} kcal / P${sums.p}g F${sums.f}g C${sums.c}g`;
+
+      // 右パネルの現在値
+      document.getElementById('metaP').textContent = sums.p;
+      document.getElementById('metaF').textContent = sums.f;
+      document.getElementById('metaC').textContent = sums.c;
+      document.getElementById('metaK').textContent = sums.kcal;
+    }catch(e){}
+  </script>
 </body>
 </html>
