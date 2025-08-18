@@ -2,31 +2,28 @@
   --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --muted:#94a3b8;
   --line:#1f2937; --accent:#ff9800; --brand:#0ea5e9; --ok:#22c55e;
 
-  /* スプライト 3×4（1コマの元サイズ）*/
-  --frame-w: 32px;
-  --frame-h: 32px;
-
-  /* 表示スケールと枠の高さ（全体を1画面に収めるため控えめ） */
-  --hero-scale: 1.8;      /* キャラの大きさ */
-  --hero-stage-h: 220px;  /* キャラ舞台の高さ */
+  /* 全体バランス（スクロール無しで収める前提） */
+  --hero-stage-h: 200px;   /* キャラ舞台の高さ */
+  --hero-scale: 0.9;       /* キャラ画像の拡大率（必要に応じて 0.8〜1.1 程度で調整） */
 }
 
 *{box-sizing:border-box}
-html,body{height:100svh}         /* ← 端末セーフなvh */
+html,body{height:100svh}
 body{
   margin:0; background:var(--bg); color:var(--ink);
   font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;
-  display:flex; flex-direction:column;       /* 全体を縦フレックス */
-  overflow:hidden;                            /* ← 画面スクロール禁止 */
+  display:flex; flex-direction:column;
+  overflow:hidden; /* ← ページスクロール無し */
 }
 
 /* ヘッダー */
 .topbar{
   display:flex; align-items:center; justify-content:space-between;
   padding:10px 14px; gap:10px; background:#0b1220; border-bottom:1px solid var(--line);
-  flex:0 0 auto;                              /* 高さ固定 */
+  flex:0 0 auto;
 }
 .topbar h1{margin:0; font-size:18px; line-height:1}
+.actions{display:flex; gap:8px}
 
 /* 共通ボタン */
 .btn{
@@ -37,36 +34,33 @@ body{
 .btn.ghost{ background:var(--brand); color:#031422; }
 .btn.accent{ background:var(--accent); color:#111; }
 
-/* ===== ゲージ（高さ控えめ） ===== */
+/* ゲージ */
 .gauge-card{
   margin:10px auto 8px; width:min(1200px, 96%);
   background:var(--card); border:1px solid var(--line);
-  border-radius:14px; padding:12px 14px;
-  flex:0 0 auto;                              /* 高さ固定 */
+  border-radius:14px; padding:10px 14px;
+  flex:0 0 auto;
 }
 .gauge-title{font-weight:800; margin-bottom:6px; font-size:14px}
-.gauge-title span{font-weight:800}
-.gauge-rail{background:#0b1220; border:1px solid var(--line); height:14px; border-radius:999px; overflow:hidden}
+.gauge-rail{background:#0b1220; border:1px solid var(--line); height:12px; border-radius:999px; overflow:hidden}
 .gauge-bar{height:100%; width:0; background:linear-gradient(90deg,#4ade80,#22c55e)}
 .gauge-hint{margin-top:6px; color:var(--muted); font-size:12px}
 
-/* ===== 2カラム 1:1（画面の残りをすべて使う） ===== */
+/* 2カラム（残り領域をすべて消費） */
 .two-col{
   width:min(1200px, 96%); margin:0 auto 12px;
   display:grid; grid-template-columns: 1fr 1fr; gap:14px;
-  flex:1 1 auto;              /* ← ここが残り高さを全部受け取る */
-  min-height:0;               /* ← 内側のoverflow制御のため必須 */
+  flex:1 1 auto; min-height:0;
 }
 @media (max-width: 980px){
   .two-col{ grid-template-columns: 1fr; }
 }
 
-/* ===== 左：キャラ枠（内部スクロール禁止） ===== */
+/* 左：キャラ */
 .hero-col{
   background:var(--card); border:1px solid var(--line);
   border-radius:16px; padding:12px; position:relative;
-  display:flex; flex-direction:column;
-  min-height:0;              /* ← 高さ計算を正しく */
+  display:flex; flex-direction:column; min-height:0;
 }
 .bubble{
   position:absolute; left:12px; top:10px;
@@ -76,60 +70,48 @@ body{
 }
 .hero-stage{
   height: var(--hero-stage-h);
-  display:flex; align-items:center; justify-content:center;
-  margin-top: 26px; position:relative; overflow:hidden; border-radius:14px;
+  display:flex; align-items:flex-end; justify-content:center;
+  margin-top: 22px; position:relative; overflow:hidden; border-radius:14px;
   background: radial-gradient(900px 160px at 50% 110%, rgba(0,0,0,.26), transparent 60%);
-  flex:0 0 auto;             /* ← 高さ固定 */
+  flex:0 0 auto;
 }
+
+/* キャラ画像2枚を重ねて切り替え（正面/横） */
+.hero-img{
+  position:absolute; bottom:24px; left:50%; transform: translateX(-50%) scale(var(--hero-scale));
+  transform-origin: center bottom;
+  width: 180px; height:auto; /* 基準サイズ：ここを下げるとより小さくなる */
+  image-rendering: auto;
+  transition: opacity .25s ease, transform .25s ease;
+}
+.hero-img.side{ opacity:0; pointer-events:none }
+.hero-moving .hero-img.side{ opacity:1 }   /* 横向き表示中 */
+.hero-moving .hero-img.front{ opacity:0 }
+
 .shadow{
-  position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
+  position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
   width:42%; height:12px;
   background: radial-gradient(closest-side, rgba(0,0,0,.42), transparent 70%);
   filter: blur(2px); opacity:.7; border-radius:50%;
 }
 
-/* === スプライト（横向きで消えない設定） === */
-.hero{
-  --row: 0;
-  width: var(--frame-w);
-  height: var(--frame-h);
-  image-rendering: pixelated;
-  transform: scale(var(--hero-scale));
-  transform-origin: center bottom;
-  background-repeat: no-repeat;
-  background-size: calc(var(--frame-w) * 3) calc(var(--frame-h) * 4);
-  background-position-x: 0;
-  background-position-y: calc(-1 * var(--frame-h) * var(--row)); /* ← 固定式で消えない */
-  animation: walk 0.6s steps(3) infinite;
-}
-@keyframes walk{
-  0%   { background-position-x: 0; }
-  100% { background-position-x: calc(var(--frame-w) * -3); }
-}
-
-/* ===== 右：クエスト/イベント（内部スクロール無し・4行きっちり） ===== */
+/* 右：クエスト/イベント（4行固定・スクロール無し） */
 .quest-col{
-  display:grid; grid-template-rows: 1fr 1fr; gap:14px;
-  min-height:0;             /* ← 重要 */
+  display:grid; grid-template-rows: 1fr 1fr; gap:14px; min-height:0;
 }
 .panel{
   background:var(--card); border:1px solid var(--line);
-  border-radius:16px; padding:12px;
-  display:flex; flex-direction:column;
-  min-height:0;             /* ← 重要 */
+  border-radius:16px; padding:12px; display:flex; flex-direction:column; min-height:0;
 }
-.panel h2{
-  margin:0 0 8px; font-size:16px;
-}
+.panel h2{ margin:0 0 8px; font-size:16px }
 
-/* 4行固定。超えた分は“表示しない”＝スクロール無し */
 .task-list{
   list-style:none; margin:0; padding:0;
   display:grid; gap:8px;
-  grid-template-rows: repeat(4, 1fr);   /* ← 4分割固定 */
-  height: 100%;                         /* ← パネル高さにフィット */
+  grid-template-rows: repeat(4, 1fr); /* ← 4行きっちり */
+  height:100%;
 }
-.task-list > li:nth-child(n+5){ display:none } /* ← 5行目以降は非表示 */
+.task-list > li:nth-child(n+5){ display:none } /* 5行目以降は非表示 */
 
 .task{
   display:grid; grid-template-columns: 1fr auto; align-items:center;
@@ -137,14 +119,32 @@ body{
   border-radius:12px; padding:10px;
 }
 .task-title{ margin:0; font-size:14px; line-height:1.25 }
-.task .meta{ color:var(--muted); font-size:12px }
+.meta{ color:var(--muted); font-size:12px }
 
 /* 右ボタン：青=確認する / 緑=達成！ */
-.task .action{
+.action{
   border:none; border-radius:12px; font-weight:800;
   padding:10px 14px; cursor:pointer; min-width:104px;
   text-decoration:none; display:inline-flex; justify-content:center; align-items:center;
+  background:#3bb2ff; color:#03223a;  /* デフォルト青 */
 }
-.task .action.view{ background:#3bb2ff; color:#03223a }     /* ← 青 */
-.task.done .action{ background:var(--ok); color:#06260f }   /* ← 緑 */
+.task.done .action{
+  background:var(--ok); color:#06260f; pointer-events:none; /* 達成時は無効化 */
+}
 .task.done{ outline:2px dashed rgba(34,197,94,.25) }
+
+/* 凡例 */
+.mini-legend{ margin-top:10px; color:var(--muted); font-size:12px }
+.mini-legend .dot{ display:inline-block; width:10px; height:10px; border-radius:50%; margin:0 6px 0 2px; vertical-align:middle }
+.mini-legend .blue{ background:#3bb2ff }
+.mini-legend .green{ background:#22c55e }
+
+/* 横向き“歩き”アニメ（左右にゆっくり） */
+@keyframes walkSide {
+  0%   { transform: translate(-50%, 0) scale(var(--hero-scale)); }
+  50%  { transform: translate(calc(-50% + 40px), 0) scale(var(--hero-scale)); }
+  100% { transform: translate(-50%, 0) scale(var(--hero-scale)); }
+}
+.hero-moving .hero-img.side{
+  animation: walkSide 3.4s ease-in-out forwards;
+}
