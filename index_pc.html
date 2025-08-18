@@ -35,42 +35,59 @@
   </div>
 
   <script>
+    // ========= 共通 =========
     function checkLogin() {
       if (localStorage.getItem("loggedIn") !== "true") {
         window.location.href = "login.html";
       }
     }
-
     function logout() {
       localStorage.removeItem("loggedIn");
       window.location.href = "login.html";
     }
-
     function switchPage(pageName) {
       window.location.href = `pages/${pageName}/index.html`;
     }
-
     function loadUserSettings() {
-      // ユーザー名の反映
       const userName = localStorage.getItem("username") || "美食家さん";
       document.getElementById("userName").textContent = `こんにちは、${userName}！`;
-
-      // プロフィール画像の反映
       const userIcon = localStorage.getItem("userIcon");
-      if (userIcon) {
-        document.getElementById("profileIcon").src = userIcon;
-      }
+      if (userIcon) document.getElementById("profileIcon").src = userIcon;
     }
 
+    // mealページは date を ISO 文字列(UTC)で保存しているので、それに合わせて判定
+    function isoToday() {
+      return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    }
+
+    // ========= 本日のカロリー合計（mealの合計だけを集計） =========
     function loadCalorieInfo() {
       const calorieGoal = parseInt(localStorage.getItem("calorieGoal")) || 1580;
-      const today = new Date().toLocaleDateString();
-      const todayCalorie = parseInt(localStorage.getItem("calorie_" + today)) || 0;
+      const todayKey = isoToday();
 
-      document.getElementById("currentCalorie").textContent = todayCalorie;
-      const remaining = Math.max(0, calorieGoal - todayCalorie);
-      document.getElementById("remainingCalorie").textContent = remaining;
+      let totalKcal = 0;
+      try {
+        const meals = JSON.parse(localStorage.getItem("bisyokuka_meals_v2") || "[]");
+        totalKcal = meals
+          .filter(m => (m.date || "").slice(0, 10) === todayKey)
+          .reduce((sum, m) => sum + Number(m.totals?.kcal ?? m.kcal ?? 0), 0);
+      } catch {
+        totalKcal = 0;
+      }
+
+      document.getElementById("currentCalorie").textContent = totalKcal;
+      document.getElementById("remainingCalorie").textContent = Math.max(0, calorieGoal - totalKcal);
     }
+
+    // 他タブで meal を追加した場合も更新（任意）
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bisyokuka_meals_v2" || e.key === "calorieGoal") {
+        loadCalorieInfo();
+      }
+      if (e.key === "username" || e.key === "userIcon") {
+        loadUserSettings();
+      }
+    });
   </script>
 </body>
 </html>
