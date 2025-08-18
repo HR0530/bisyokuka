@@ -25,17 +25,20 @@
       <a class="back" href="../../index.html">ホーム</a>
     </header>
 
-    <!-- 入力エリア（モバイル最適化） -->
-    <section class="input-card">
-      <div class="row">
-        <label class="file">
-          <input type="file" id="photoInput" accept="image/*" capture="environment" />
-          <span>写真を選択 / 撮影</span>
-        </label>
-        <button id="resetBtn" class="ghost" aria-label="すべて削除">全削除</button>
-      </div>
+    <div class="meal-upload-area">
+      <!-- カメラで撮る -->
+      <label class="file-label full">
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
+        <span class="file-btn large">📷 カメラで撮る</span>
+      </label>
 
-      <div id="photoPreview" class="preview" aria-live="polite"></div>
+      <!-- ライブラリから選ぶ -->
+      <label class="file-label full">
+        <input type="file" id="libraryInput" accept="image/*" multiple style="display:none;">
+        <span class="file-btn outline large">🖼 ライブラリから選ぶ</span>
+      </label>
+
+      <div id="photoPreview" class="photo-preview"></div>
 
       <div class="row compact">
         <label class="stars">
