@@ -1,4 +1,4 @@
-// ===== script.js 完成版 =====
+// ===== pages/meal/script.js（完成版） =====
 // ★必ず “今の ngrok URL” に置き換える
 const API_URL = "https://7fca61b18c0c.ngrok-free.app/api/calc-calorie";
 
@@ -33,6 +33,21 @@ function groupByDay(items) {
   return Array.from(map.entries()).sort((a,b)=> b[0].localeCompare(a[0]));
 }
 function toObjectURL(file) { return URL.createObjectURL(file); }
+
+// ★ 追加：今日(UTC)のYYYY-MM-DD（mealの保存形式と揃える）
+function isoToday() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// ★ 追加：mealデータから当日の合計kcalを再計算して保存（ホームで使用）
+function storeTodayCalorieFromMeals() {
+  const items = loadMeals();
+  const key = isoToday();
+  const sum = items
+    .filter(m => (m.date || "").slice(0,10) === key)
+    .reduce((s, m) => s + (m.totals?.kcal ?? m.kcal ?? 0), 0);
+  localStorage.setItem("calorie_" + key, String(sum));
+}
 
 // File → DataURL（永続）
 async function fileToDataURL(file) {
@@ -278,6 +293,9 @@ els.addMealBtn.addEventListener("click", async () => {
     items.push(item);
     saveMeals(items);
 
+    // ★ 追加：当日の合計kcalを更新してホームへ渡す
+    storeTodayCalorieFromMeals();
+
     // 片付け
     els.commentInput.value = "";
     els.starsInput.value = "4";
@@ -301,6 +319,10 @@ if (els.resetBtn) {
     if (!ok) return;
     try {
       localStorage.removeItem(STORAGE_KEY);
+
+      // ★ 追加：本日の合計もリセット
+      localStorage.setItem("calorie_" + isoToday(), "0");
+
       els.helperText.textContent = "すべての記録を削除しました。";
     } catch (e) {
       console.warn("reset error", e);
@@ -314,5 +336,9 @@ if (els.resetBtn) {
 (function init(){
   const items = loadMeals();
   migrateMeals(items);   // 旧データ自動補正
+
+  // ★ 追加：キーが未作成でも当日の合計を生成
+  storeTodayCalorieFromMeals();
+
   render();
 })();
