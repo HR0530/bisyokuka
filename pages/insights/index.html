@@ -1,58 +1,62 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>美食家さん 分析</title>
-  <link rel="stylesheet" href="../shared.css"/>
-  <style>
-    body { background:#0f172a; color:#e5e7eb; font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; margin:0; }
-    .wrap { max-width:1000px; margin:0 auto; padding:20px 14px 48px; }
-    h1 { margin:0 0 16px; font-size:22px; font-weight:700; }
-    .card { background:#111827; border:1px solid #1f2937; border-radius:16px; padding:14px; margin-bottom:14px; box-shadow:0 8px 24px rgba(0,0,0,.25); }
-    .row { display:grid; grid-template-columns:1fr; gap:14px; }
-    .ctrls { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px; }
-    .btn { background:#1f2937; color:#e5e7eb; border:1px solid #273447; padding:8px 12px; border-radius:10px; cursor:pointer; }
-    .btn.active { background:#0ea5e9; color:#031422; border-color:#0ea5e9; }
-    .hint { color:#9ca3af; font-size:12px; }
-    a.back { color:#ffbb54; text-decoration:none; }
-    .kpi { display:flex; gap:10px; flex-wrap:wrap; }
-    .kpi .pill { background:#0b1220; border:1px solid #1f2937; border-radius:999px; padding:6px 10px; font-size:12px; }
-  </style>
-  <!-- Chart.js CDN -->
-  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script defer src="./script.js"></script>
+  <title>美食家さん 食事記録</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="wrap">
-    <h1>📊 分析</h1>
-    <div class="card kpi" id="kpiBar">
-      <!-- 今日の合計/目標/達成率/連続達成 などをJSで差し込む -->
+  <div class="meal-app-container">
+    <h1>🍽️ 美食家さん 食事記録</h1>
+
+    <div class="meal-upload-area">
+      <label class="file-label">
+        <input type="file" id="photoInput" accept="image/*" style="display:none;">
+        <span class="file-btn">写真を選択</span>
+      </label>
+
+      <div id="photoPreview" class="photo-preview"></div>
+
+      <input type="number" id="starsInput" min="1" max="5" value="4" title="星評価" style="width:70px;">
+      <input type="text" id="commentInput" maxlength="32" placeholder="コメント(任意)" style="width:170px;">
+      <div class="actions-row">
+        <button id="addMealBtn">記録する</button>
+        <button id="resetBtn" class="ghost">リセット（全削除）</button>
+        <div class="inline-controls">
+          <button id="expandAllBtn" class="ghost small">すべて展開</button>
+          <button id="collapseAllBtn" class="ghost small">すべて畳む</button>
+        </div>
+      </div>
+
+      <div id="helperText" class="hint"></div>
     </div>
 
-    <div class="card">
-      <div class="ctrls">
-        <button class="btn active" data-range="7" id="btn7">直近7日</button>
-        <button class="btn" data-range="30" id="btn30">直近30日</button>
-        <span class="hint">※ 右肩の線は目標カロリー</span>
-      </div>
-      <canvas id="calorieChart" height="140"></canvas>
-    </div>
+    <div id="mealsByDay"></div>
 
-    <div class="row">
-      <div class="card">
-        <div class="ctrls"><span class="hint">PFC（直近選択期間の平均）</span></div>
-        <canvas id="pfcDonut" height="180"></canvas>
-      </div>
-      <div class="card">
-        <div class="ctrls"><span class="hint">P / F / C の推移（1日合計）</span></div>
-        <canvas id="pfcStacked" height="180"></canvas>
-      </div>
-    </div>
-
-    <div style="text-align:center; margin-top:20px;">
-      <a class="back" href="../../index.html">← トップに戻る</a>
+    <div class="back-button" style="text-align:center; margin-top: 2.5rem;">
+      <a href="../../index.html" style="text-decoration: none; color: #ffbb54; font-family:Poppins;">← トップに戻る</a>
     </div>
   </div>
+
+  <!-- 詳細・編集モーダル（料理名はテキスト編集方式） -->
+  <div id="modalOverlay" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+      <span id="closeModal" class="close-modal">&times;</span>
+      <img id="modalPhoto" class="modal-photo" src="" alt="写真">
+      <div class="modal-actions">
+        <input type="text" id="modalFoodInput" placeholder="料理名" />
+        <input type="number" id="modalStarsInput" min="1" max="5" style="width:70px;">
+        <input type="text" id="modalCommentInput" maxlength="32" placeholder="コメント(任意)" style="width:170px;">
+      </div>
+      <div class="hint">※ 料理名を編集してもカロリーは自動再計算されません（写真が無いため）。</div>
+      <div style="margin-top:10px;">
+        <button id="saveModalBtn" class="save-btn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
