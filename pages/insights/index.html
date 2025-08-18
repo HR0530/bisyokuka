@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>美食家さん 分析</title>
+  <link rel="stylesheet" href="../shared.css"/>
+  <style>
+    body { background:#0f172a; color:#e5e7eb; font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; margin:0; }
+    .wrap { max-width:1000px; margin:0 auto; padding:20px 14px 48px; }
+    h1 { margin:0 0 16px; font-size:22px; font-weight:700; }
+    .card { background:#111827; border:1px solid #1f2937; border-radius:16px; padding:14px; margin-bottom:14px; box-shadow:0 8px 24px rgba(0,0,0,.25); }
+    .row { display:grid; grid-template-columns:1fr; gap:14px; }
+    .ctrls { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px; }
+    .btn { background:#1f2937; color:#e5e7eb; border:1px solid #273447; padding:8px 12px; border-radius:10px; cursor:pointer; }
+    .btn.active { background:#0ea5e9; color:#031422; border-color:#0ea5e9; }
+    .hint { color:#9ca3af; font-size:12px; }
+    a.back { color:#ffbb54; text-decoration:none; }
+    .kpi { display:flex; gap:10px; flex-wrap:wrap; }
+    .kpi .pill { background:#0b1220; border:1px solid #1f2937; border-radius:999px; padding:6px 10px; font-size:12px; }
+  </style>
+  <!-- Chart.js CDN -->
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script defer src="./script.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <h1>📊 分析</h1>
+    <div class="card kpi" id="kpiBar">
+      <!-- 今日の合計/目標/達成率/連続達成 などをJSで差し込む -->
+    </div>
+
+    <div class="card">
+      <div class="ctrls">
+        <button class="btn active" data-range="7" id="btn7">直近7日</button>
+        <button class="btn" data-range="30" id="btn30">直近30日</button>
+        <span class="hint">※ 右肩の線は目標カロリー</span>
+      </div>
+      <canvas id="calorieChart" height="140"></canvas>
+    </div>
+
+    <div class="row">
+      <div class="card">
+        <div class="ctrls"><span class="hint">PFC（直近選択期間の平均）</span></div>
+        <canvas id="pfcDonut" height="180"></canvas>
+      </div>
+      <div class="card">
+        <div class="ctrls"><span class="hint">P / F / C の推移（1日合計）</span></div>
+        <canvas id="pfcStacked" height="180"></canvas>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:20px;">
+      <a class="back" href="../../index.html">← トップに戻る</a>
+    </div>
+  </div>
+</body>
+</html>
