@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>美食家さん - キャラ育成</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --muted:#9ca3af; --line:#1f2937;
+      --brand:#0ea5e9; --ok:#22c55e; --warn:#f59e0b; --accent:#f97316;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    a{color:#ffbb54;text-decoration:none}
+    .wrap{width:92%;max-width:880px;margin:16px auto 28px;display:grid;gap:14px}
+
+    /* Top: gauge + title */
+    .top{
+      background:var(--card);border:1px solid var(--line);border-radius:14px;
+      padding:14px; display:grid; gap:10px
+    }
+    .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .title{font-weight:800;font-size:18px}
+    .badge{display:inline-block;background:#0b1220;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;color:#cbd5e1}
+
+    .gauge{position:relative;height:14px;border-radius:999px;background:#0b1220;border:1px solid var(--line);overflow:hidden}
+    .gbar{position:absolute;inset:0;height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#0ea5e9)}
+    .glabel{font-size:12px;color:#cbd5e1}
+
+    /* Middle: character + bubble */
+    .stage{
+      background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;
+      display:grid;justify-items:center;gap:12px; text-align:center
+    }
+    .char{
+      width:140px;height:140px; background:#0b1220;border:1px solid var(--line);border-radius:16px;
+      display:grid;place-items:center; overflow:hidden; position:relative; box-shadow:0 8px 28px rgba(0,0,0,.28)
+      animation:bob 3s ease-in-out infinite;
+    }
+    .char img{width:72px;image-rendering:pixelated}
+    @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    .bubble{
+      position:relative; background:#0ea5e9; color:#031422; border-radius:12px; padding:10px 12px; max-width:580px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25); font-weight:700
+    }
+    .bubble::after{
+      content:""; position:absolute; left:50%; transform:translateX(-50%); top:100%;
+      border:8px solid transparent; border-top-color:#0ea5e9;
+    }
+
+    /* Quests / Challenges */
+    .section{display:grid;gap:10px}
+    .section h2{margin:2px 0 0;font-size:16px}
+    .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+    .card{
+      background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px
+    }
+    .card .head{display:flex;gap:8px;align-items:center;justify-content:space-between}
+    .label{color:#cbd5e1;font-weight:700}
+    .small{font-size:12px;color:#94a3b8}
+    .cta{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{background:var(--brand);color:#031422;border:none;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+    .btn.secondary{background:#0e1626;color:#e5e7eb;border:1px solid var(--line)}
+    .ok{color:#22c55e}
+    .warn{color:#fbbf24}
+    .danger{color:#f87171}
+    .footer{display:flex;gap:10px;justify-content:center;margin-top:6px}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <!-- ===== Top ===== -->
+  <section class="top">
+    <div class="row">
+      <div class="title">👤 キャラ育成</div>
+      <div>
+        <span class="badge" id="titleBadge">称号: ビギナー美食家</span>
+        <span class="badge">解放キャラ <span id="unlockedNum">0</span>/32</span>
+      </div>
+    </div>
+    <div class="gauge"><div id="gbar" class="gbar"></div></div>
+    <div class="glabel">本日のバランス度: <b id="balanceScore">0</b> / 100（目標PFCに近いほどUP）</div>
+  </section>
+
+  <!-- ===== Stage ===== -->
+  <section class="stage">
+    <div class="char">
+      <!-- 好きなスプライトに差し替えてOK -->
+      <img id="charImg" src="../dex/../characters/img/char01.png" alt="キャラ">
+    </div>
+    <div id="bubble" class="bubble">こんにちは！今日もおいしく、バランスよく食べよう。</div>
+    <div class="cta">
+      <button class="btn" onclick="goMeal()">📷 食事を記録する</button>
+      <button class="btn secondary" onclick="goInsights()">📊 分析を見る</button>
+      <button class="btn secondary" onclick="goDex()">📚 図鑑を見る</button>
+    </div>
+  </section>
+
+  <!-- ===== Daily Quests ===== -->
+  <section class="section">
+    <h2>🎯 デイリークエスト（今日）</h2>
+    <div id="questList" class="cards"></div>
+  </section>
+
+  <!-- ===== Weekly Challenges ===== -->
+  <section class="section">
+    <h2>🏆 ウィークリーチャレンジ</h2>
+    <div id="challengeList" class="cards"></div>
+  </section>
+
+  <div class="footer">
+    <a href="../../index.html">← ホーム</a>
+  </div>
+</div>
+
+<script>
+/* ========== 既存データの読込 ========== */
+const MEAL_KEY   = "bisyokuka_meals_v2";
+const UNLOCK_KEY = "bisyokuka_unlocked_chars";
+const meals = JSON.parse(localStorage.getItem(MEAL_KEY) || "[]");
+const unlockedChars = parseInt(localStorage.getItem(UNLOCK_KEY) || "0", 10);
+
+/* 目標値（kcalは設定画面の値。PFC比率は未設定なら 20/25/55） */
+const calorieGoal = parseInt(localStorage.getItem("calorieGoal") || "1580", 10);
+const ratio = JSON.parse(localStorage.getItem("pfcRatio") || "{\"p\":0.20,\"f\":0.25,\"c\":0.55}");
+const target = {
+  kcal: calorieGoal,
+  protein: Math.round((calorieGoal*ratio.p)/4),
+  fat:     Math.round((calorieGoal*ratio.f)/9),
+  carbs:   Math.round((calorieGoal*ratio.c)/4),
+};
+
+/* ========== 集計（今日） ========== */
+const todayKey = new Date().toISOString().slice(0,10);
+const todayMeals = meals.filter(m => (m.date||"").slice(0,10) === todayKey);
+
+const today = todayMeals.reduce((a,m)=>({
+  kcal:   a.kcal   + Number(m.totals?.kcal   || 0),
+  protein:a.protein+ Number(m.totals?.protein|| 0),
+  fat:    a.fat    + Number(m.totals?.fat    || 0),
+  carbs:  a.carbs  + Number(m.totals?.carbs  || 0),
+}), {kcal:0,protein:0,fat:0,carbs:0});
+
+/* ========== バランス度（0-100） ==========
+   各栄養素の “目標に対する達成率” を平均。
+   達成率 = clamp( 1 - |実績-目標| / 目標 , 0, 1 )
+*/
+function score(actual, target){
+  if(target<=0) return 100;
+  const acc = Math.max(0, 1 - Math.abs(actual-target)/target);
+  return acc*100;
+}
+const sP = score(today.protein, target.protein);
+const sF = score(today.fat,     target.fat);
+const sC = score(today.carbs,   target.carbs);
+const balance = Math.round((sP + sF + sC) / 3);
+
+/* ========== 称号 ========== */
+function calcTitle(unlocked, bal){
+  if(unlocked >= 32) return "図鑑コンプリートの達人";
+  if(unlocked >= 20) return "味覚マスター";
+  if(unlocked >= 10) return "グルメ研究員";
+  if(unlocked >= 5 ) return "食探検家";
+  if(bal >= 85)      return "栄養バランサー";
+  return "ビギナー美食家";
+}
+
+/* ========== 吹き出しメッセージ ========== */
+function talk(){
+  const lack = {
+    protein: target.protein - today.protein,
+    fat:     target.fat     - today.fat,
+    carbs:   target.carbs   - today.carbs,
+  };
+  const tips = [];
+  if(lack.protein > 10) tips.push(`たんぱく質をあと ${Math.round(lack.protein)}g！鶏むね・豆腐・ヨーグルトがおすすめ`);
+  if(lack.carbs   > 20) tips.push(`炭水化物をあと ${Math.round(lack.carbs)}g。ごはんや全粒粉パンを少し追加しよう`);
+  if(lack.fat     > 10) tips.push(`脂質は ${Math.round(lack.fat)}g 不足。ナッツやオリーブオイルで質の良い脂を`);
+  if(tips.length===0){
+    if(balance>=85) return "バランス最高！この調子でいこう✨";
+    if(balance>=60) return "悪くないよ。もう一品でさらに整うかも！";
+    return "今日はまだこれから。軽く1品記録してみよう！";
+  }
+  return tips[0];
+}
+
+/* ========== クエスト生成（今日） ========== */
+function makeQuests(){
+  const quests = [];
+
+  // 不足を補うクエスト（最大3件）
+  const diff = [
+    {key:"protein", label:"たんぱく質", need: target.protein - today.protein, unit:"g", hint:"卵・魚・鶏・豆類がおすすめ", goto:"meal"},
+    {key:"fat",     label:"脂質",       need: target.fat     - today.fat,     unit:"g", hint:"ナッツ・オリーブオイルなど良質な脂を", goto:"meal"},
+    {key:"carbs",   label:"炭水化物",   need: target.carbs   - today.carbs,   unit:"g", hint:"ごはん・麺・いも類でエネルギー補給", goto:"meal"},
+  ].filter(x=>x.need>8).sort((a,b)=>b.need-a.need).slice(0,3)
+   .forEach(x => quests.push({
+      title:`${x.label}を補給（${Math.round(x.need)}${x.unit}）`,
+      desc:x.hint,
+      action:x.goto
+   }));
+
+  // 汎用クエスト
+  if(todayMeals.length === 0){
+    quests.unshift({title:"まずは1枚記録しよう", desc:"写真を撮って登録！", action:"meal"});
+  }else if(todayMeals.length < 3){
+    quests.push({title:`今日はあと ${3-todayMeals.length} 食 記録`, desc:"こまめに記録して自己分析", action:"meal"});
+  }
+  return quests;
+}
+
+/* ========== ウィークリーチャレンジ ========== */
+function getWeekDates(n=7){
+  const out=[]; const now=new Date();
+  for(let i=0;i<n;i++){ const d=new Date(now); d.setDate(now.getDate()-i); out.push(d.toISOString().slice(0,10)); }
+  return out;
+}
+function makeChallenges(){
+  // 直近7日でユニーク料理数
+  const weekDates = new Set(getWeekDates());
+  const names = new Set();
+  let daysWithAny = 0;
+  for(const m of meals){
+    const d = (m.date||"").slice(0,10);
+    if(weekDates.has(d)){ names.add(String(m.food||"不明")); }
+  }
+  // 連続記録（今日から過去へ）
+  let streak=0;
+  for(const d of getWeekDates(7)){
+    const has = meals.some(m => (m.date||"").slice(0,10)===d);
+    if(has) streak++; else break;
+  }
+  const list = [
+    { title:"今週 新しい料理を 5 種 集める", desc:`現在 ${names.size} / 5 種`, done:names.size>=5, action:"dex" },
+    { title:"3日連続で記録", desc:`現在 ${streak} 日`, done:streak>=3, action:"meal" },
+    { title:"バランス度80以上を達成", desc:`今日 ${balance} / 80`, done:balance>=80, action:"insights" },
+  ];
+  return list;
+}
+
+/* ========== 描画 ========== */
+document.getElementById("unlockedNum").textContent = unlockedChars;
+document.getElementById("balanceScore").textContent = balance;
+document.getElementById("titleBadge").textContent = "称号: " + calcTitle(unlockedChars, balance);
+document.getElementById("gbar").style.width = balance + "%";
+document.getElementById("bubble").textContent = talk();
+
+// デイリークエスト
+const qRoot = document.getElementById("questList");
+makeQuests().forEach(q=>{
+  const el = document.createElement("div");
+  el.className="card";
+  el.innerHTML = `
+    <div class="head"><div class="label">🎯 ${q.title}</div></div>
+    <div class="small">${q.desc}</div>
+    <div class="cta">
+      <button class="btn" data-goto="${q.action}">やってみる</button>
+    </div>`;
+  qRoot.appendChild(el);
+});
+
+// チャレンジ
+const cRoot = document.getElementById("challengeList");
+makeChallenges().forEach(c=>{
+  const el = document.createElement("div");
+  el.className="card";
+  el.innerHTML = `
+    <div class="head">
+      <div class="label">${c.done ? "✅" : "🏆"} ${c.title}</div>
+      <div class="small ${c.done?'ok':'warn'}">${c.desc}</div>
+    </div>
+    <div class="cta">
+      <button class="btn ${c.done?'secondary':''}" data-goto="${c.action}">
+        ${c.done ? "確認する" : "目指す"}
+      </button>
+    </div>`;
+  cRoot.appendChild(el);
+});
+
+// 画面遷移
+function goMeal(){ location.href = "../meal/index.html"; }
+function goInsights(){ location.href = "../insights/index.html"; }
+function goDex(){ location.href = "../dex/index.html"; }
+document.addEventListener("click", (e)=>{
+  const b = e.target.closest("button[data-goto]");
+  if(!b) return;
+  const to = b.dataset.goto;
+  if(to==="meal") goMeal();
+  else if(to==="insights") goInsights();
+  else if(to==="dex") goDex();
+});
+
+// キャラ画像（選択保存に対応・なければデフォルト）
+(function initChar(){
+  const chosen = localStorage.getItem("bisyokuka_char_img"); // 任意: 設定画面で保存できるように想定
+  if(chosen){ document.getElementById("charImg").src = chosen; }
+})();
+</script>
+</body>
+</html>
