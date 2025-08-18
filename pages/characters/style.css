@@ -1,11 +1,13 @@
 :root{
   --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --muted:#94a3b8;
   --line:#1f2937; --accent:#ff9800; --brand:#0ea5e9; --ok:#22c55e;
-  /* スプライト1コマの元サイズ（3×4 の 96×128想定） */
+
+  /* スプライト 3×4（1コマ） */
   --frame-w: 32px;
   --frame-h: 32px;
-  /* 表示スケール：ここを下げればキャラが小さくなる（例 3→2.5） */
-  --hero-scale: 3;
+
+  /* キャラ表示倍率（大きければ上げる / 小さければ下げる）*/
+  --hero-scale: 2.8; /* 2.6〜3.2 で好み調整 */
 }
 
 *{box-sizing:border-box}
@@ -31,36 +33,49 @@ body{
 .btn.ghost{ background:var(--brand); color:#031422; }
 .btn.accent{ background:var(--accent); color:#111; }
 
-/* ゲージ */
+/* ===== ゲージ（横長・細め） ===== */
 .gauge-card{
-  margin:14px auto 10px; width:min(1100px, 94%); background:var(--card);
-  border:1px solid var(--line); border-radius:14px; padding:12px;
+  margin:14px auto 10px;
+  width:min(1300px, 96%);                 /* すこしワイドに */
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:16px 18px;                      /* 余白↓ */
 }
-.gauge-title{font-weight:800; margin-bottom:6px}
-.gauge-rail{background:#0b1220; border:1px solid var(--line); height:14px; border-radius:999px; overflow:hidden}
+.gauge-title{font-weight:800; margin-bottom:8px}
+.gauge-rail{
+  background:#0b1220; border:1px solid var(--line);
+  height:16px;                            /* 細長いバー */
+  border-radius:999px; overflow:hidden
+}
 .gauge-bar{height:100%; width:0; background:linear-gradient(90deg, #4ade80, #22c55e)}
 .gauge-hint{margin-top:8px; color:var(--muted); font-size:12px}
 
-/* 2カラム */
+/* ===== 2カラム：左(3) : 右(2) ===== */
 .two-col{
   width:min(1200px, 96%); margin:0 auto 20px;
-  display:grid; grid-template-columns: 1fr 1fr; gap:16px;
+  display:grid; grid-template-columns: 3fr 2fr; /* 見本比率 */
+  gap:20px;
 }
-@media (max-width: 980px){ .two-col{ grid-template-columns: 1fr; }}
+@media (max-width: 980px){
+  .two-col{ grid-template-columns: 1fr; }
+}
 
-/* 左：ヒーロー */
+/* ===== 左：キャラ枠 ===== */
 .hero-col{
-  background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px;
-  position:relative; min-height: 420px;
+  background:var(--card); border:1px solid var(--line);
+  border-radius:16px; padding:18px; position:relative;
+  min-height: 520px;                      /* 余白・縦ゆったり */
 }
 .bubble{
-  position:absolute; left:18px; top:12px;
+  position:absolute; left:24px; top:20px;
   background:#0b1220; border:1px solid var(--line); color:#e5e7eb;
   padding:8px 12px; border-radius:12px; font-size:13px;
   box-shadow:0 10px 30px rgba(0,0,0,.35);
 }
 .hero-stage{
-  height: 340px; display:flex; align-items:center; justify-content:center;
+  height: 430px;                          /* 舞台を広く */
+  display:flex; align-items:center; justify-content:center;
   margin-top: 28px; position:relative; overflow:hidden; border-radius:16px;
   background: radial-gradient(1200px 220px at 50% 110%, rgba(0,0,0,.28), transparent 60%);
 }
@@ -70,7 +85,7 @@ body{
   filter: blur(2px); opacity:.75; border-radius:50%;
 }
 
-/* スプライト（3×4シートをCSSでアニメ） */
+/* スプライト（3×4） */
 .hero{
   width: var(--frame-w);
   height: var(--frame-h);
@@ -79,40 +94,56 @@ body{
   transform-origin: center bottom;
   background-repeat:no-repeat;
   background-size: calc(var(--frame-w) * 3) calc(var(--frame-h) * 4);
-  /* 正面（2行目=down row）を初期値に */
-  background-position: 0 calc(var(--frame-h) * 0); /* 後でJSが行を切り替える */
+  background-position: 0 calc(var(--frame-h) * 0); /* 初期：正面列（JSで切替） */
   animation: walk 0.6s steps(3) infinite;
 }
-/* 3コマ横送り */
 @keyframes walk{
   0%   { background-position-x: 0; }
   100% { background-position-x: calc(var(--frame-w) * -3); }
 }
 
-/* 右：クエスト/イベント */
-.quest-col{ display:grid; grid-template-rows: auto auto; gap:16px; }
+/* ===== 右：クエスト / イベント ===== */
+.quest-col{
+  display:grid; grid-template-rows: 1fr 1fr;  /* 上下同じ高さ */
+  gap:18px;
+}
 .panel{
-  background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px;
+  background:var(--card); border:1px solid var(--line);
+  border-radius:16px; padding:14px;
+  display:flex; flex-direction:column;
+  min-height: 340px;                        /* 背を確保 */
 }
-.panel h2{ margin:0 0 10px; font-size:16px }
+.panel h2{
+  margin:0 0 8px; font-size:16px;
+  position:sticky; top:0; z-index:1;       /* タイトル固定 */
+  background:var(--card); padding-bottom:8px;
+}
 
+/* 中身だけスクロール、常に4行見せる */
 .task-list{
-  list-style:none; margin:0; padding:0; display:grid; gap:10px;
-  /* 4行きっちり見せる（高さ固定）。中身が長い時だけ内部スクロール */
-  grid-auto-rows: 1fr; max-height: 4 * 70px; /* 読みやすさ重視、1行≒70px */
+  list-style:none; margin:0; padding:0;
+  display:grid; gap:12px;
+  grid-auto-rows: 72px;                     /* 1行の高さ */
+  max-height: calc(72px * 4);               /* 4行固定 */
+  overflow:auto; padding-right:4px;
 }
+
+/* 行 */
 .task{
-  display:grid; grid-template-columns: 1fr auto; align-items:center;
-  gap:12px; background:#0b1220; border:1px solid var(--line); border-radius:12px; padding:10px 12px;
+  display:grid; grid-template-columns: 1fr auto;
+  align-items:center; gap:12px;
+  background:#0b1220; border:1px solid var(--line);
+  border-radius:12px; padding:12px 14px;
 }
 .task-title{ margin:0; font-size:14px }
 .task .meta{ color:var(--muted); font-size:12px }
 
-/* 状態別ボタン */
+/* ボタン（青=確認 / 緑=達成） */
 .task .action{
-  border:none; border-radius:10px; font-weight:800; padding:8px 12px; cursor:pointer;
+  border:none; border-radius:12px; font-weight:800;
+  padding:10px 14px; cursor:pointer; min-width:104px;
   color:#0b0b0b; background:#ffd166;
 }
-.task .action.view{ background:var(--brand); color:#031422 }
+.task .action.view{ background:#3bb2ff; color:#03223a; } /* 確認する */
+.task.done .action{ background:var(--ok); color:#06260f; } /* 達成！ */
 .task.done    { outline:2px dashed rgba(34,197,94,.25) }
-.task.done .action{ background:var(--ok); color:#04210d }
