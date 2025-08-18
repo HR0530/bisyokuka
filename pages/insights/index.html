@@ -1,43 +1,253 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>美食家さん 分析</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>美食家さん - 栄養インサイト</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg:#111827; --card:#1f2937; --ink:#e5e7eb; --line:#374151;
+      --accent:#ff9800; --muted:#9ca3af;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial}
+    h1{margin:16px 0;text-align:center}
+    .container{width:92%;max-width:960px;margin:0 auto 24px}
+    .controls{display:flex;gap:8px;justify-content:flex-end;margin:8px 0 12px}
+    .btn{
+      background:var(--accent);color:#111;padding:8px 12px;border:none;border-radius:10px;
+      font-weight:700;cursor:pointer
+    }
+    .btn.secondary{background:#0ea5e9;color:#031422}
+    .accordion{display:grid;gap:10px}
+    details{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+    summary{cursor:pointer;font-weight:700}
+    table{width:100%;border-collapse:collapse;margin-top:8px;background:#0b1220;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+    th,td{border:1px solid var(--line);padding:8px;text-align:center}
+    th{background:#0e1626}
+    .charts{display:none;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px}
+    .chart-wrap{display:grid;gap:16px}
+    .chart-card{background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:12px}
+    .chart-card h3{margin:0 0 8px;font-size:14px;color:#fff}
+    .muted{color:var(--muted);font-size:12px;text-align:center;margin-top:6px}
+  </style>
 </head>
 <body>
-  <div class="page">
-    <header class="header">
-      <h1>📊 分析</h1>
-      <nav class="nav">
-        <button class="chip" data-range="today">今日</button>
-        <button class="chip" data-range="week">今週</button>
-        <button class="chip" data-range="month">今月</button>
-        <button class="chip" data-range="all">すべて</button>
-        <span class="spacer"></span>
-        <button id="expandAll" class="ghost small">すべて展開</button>
-        <button id="collapseAll" class="ghost small">すべて畳む</button>
-      </nav>
-    </header>
+  <h1>栄養インサイト</h1>
+  <div class="container">
+    <!-- 操作ボタン -->
+    <div class="controls">
+      <button id="toggleAllBtn" class="btn">すべて畳む</button>
+      <button id="toggleChartsBtn" class="btn secondary">詳細なグラフ</button>
+    </div>
 
-    <!-- 合計サマリー -->
-    <section class="summary-cards" id="summaryCards">
-      <div class="card"><div class="label">合計カロリー</div><div class="value"><span id="sumKcal">0</span> kcal</div></div>
-      <div class="card"><div class="label">たんぱく質</div><div class="value"><span id="sumP">0</span> g</div></div>
-      <div class="card"><div class="label">脂質</div><div class="value"><span id="sumF">0</span> g</div></div>
-      <div class="card"><div class="label">炭水化物</div><div class="value"><span id="sumC">0</span> g</div></div>
-    </section>
+    <!-- 折り畳みセクション -->
+    <div class="accordion" id="accordion">
+      <details>
+        <summary>カロリー</summary>
+        <table>
+          <thead><tr><th>日付</th><th>合計カロリー (kcal)</th></tr></thead>
+          <tbody id="calorieTable"></tbody>
+        </table>
+      </details>
 
-    <!-- 日別アコーディオン -->
-    <section id="daysRoot" class="days-root"></section>
+      <details>
+        <summary>たんぱく質</summary>
+        <table>
+          <thead><tr><th>日付</th><th>合計 (g)</th></tr></thead>
+          <tbody id="proteinTable"></tbody>
+        </table>
+      </details>
 
-    <footer class="footer">
-      <a class="back" href="../../index.html">← ホームへ戻る</a>
-    </footer>
+      <details>
+        <summary>脂質</summary>
+        <table>
+          <thead><tr><th>日付</th><th>合計 (g)</th></tr></thead>
+          <tbody id="fatTable"></tbody>
+        </table>
+      </details>
+
+      <details>
+        <summary>炭水化物</summary>
+        <table>
+          <thead><tr><th>日付</th><th>合計 (g)</th></tr></thead>
+          <tbody id="carbTable"></tbody>
+        </table>
+      </details>
+    </div>
+
+    <!-- 詳細グラフパネル（初回クリック時に描画） -->
+    <div id="chartsPanel" class="charts">
+      <div class="chart-wrap">
+        <div class="chart-card">
+          <h3>本日の栄養バランス（P/F/C）</h3>
+          <canvas id="chartTodayPFC" height="220"></canvas>
+          <div class="muted">今日の食事から算出した比率です。</div>
+        </div>
+
+        <div class="chart-card">
+          <h3>直近7日：総カロリー</h3>
+          <canvas id="chartKcal7" height="220"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>直近7日：P/F/C（スタック）</h3>
+          <canvas id="chartPFC7" height="220"></canvas>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    // ===== データ取得（meal の保存フォーマットを集計） =====
+    const meals = JSON.parse(localStorage.getItem("bisyokuka_meals_v2") || "[]");
+
+    function groupByDate(meals){
+      const g = {};
+      for(const m of meals){
+        const d = (m.date || "").slice(0,10);
+        if(!d) continue;
+        if(!g[d]) g[d] = { kcal:0, protein:0, fat:0, carbs:0 };
+        g[d].kcal   += Number(m.totals?.kcal   || 0);
+        g[d].protein+= Number(m.totals?.protein|| 0);
+        g[d].fat    += Number(m.totals?.fat    || 0);
+        g[d].carbs  += Number(m.totals?.carbs  || 0);
+      }
+      return g;
+    }
+
+    const grouped = groupByDate(meals);
+    const datesAsc = Object.keys(grouped).sort(); // 古い→新しい
+
+    // ===== テーブル描画 =====
+    const nf0 = new Intl.NumberFormat("ja-JP", { maximumFractionDigits:0 });
+    const nf1 = new Intl.NumberFormat("ja-JP", { maximumFractionDigits:1 });
+
+    function fillTable(tbodyId, mapper){
+      const tbody = document.getElementById(tbodyId);
+      tbody.innerHTML = datesAsc.map(d => {
+        const v = mapper(grouped[d]);
+        return `<tr><td>${d}</td><td>${v}</td></tr>`;
+      }).join("");
+    }
+    fillTable("calorieTable",  o => nf0.format(o.kcal));
+    fillTable("proteinTable",  o => nf1.format(o.protein));
+    fillTable("fatTable",      o => nf1.format(o.fat));
+    fillTable("carbTable",     o => nf1.format(o.carbs));
+
+    // ===== すべて畳む / 展開 =====
+    const toggleAllBtn = document.getElementById("toggleAllBtn");
+    const allDetails = () => Array.from(document.querySelectorAll("#accordion details"));
+    function anyOpen(){ return allDetails().some(d => d.open); }
+    function setAll(open){
+      allDetails().forEach(d => d.open = open);
+      toggleAllBtn.textContent = open ? "すべて畳む" : "すべて展開";
+    }
+    // 初期は「畳む」表示にして、クリックでトグル
+    toggleAllBtn.addEventListener("click", () => setAll(!anyOpen()));
+    // ページ初回はすべて畳んでおく
+    setAll(false);
+
+    // ===== 詳細なグラフ：トグル＆初回描画 =====
+    const chartsPanel = document.getElementById("chartsPanel");
+    const toggleChartsBtn = document.getElementById("toggleChartsBtn");
+    let chartsDrawn = false;
+    let charts = {};
+
+    toggleChartsBtn.addEventListener("click", () => {
+      const show = chartsPanel.style.display !== "block";
+      chartsPanel.style.display = show ? "block" : "none";
+      toggleChartsBtn.textContent = show ? "グラフを隠す" : "詳細なグラフ";
+      if(show && !chartsDrawn){ drawCharts(); chartsDrawn = true; }
+    });
+
+    function lastNDatesAsc(n){
+      // 「grouped」に無い日も出したいので、今日から遡ってn日分作る
+      const res = [];
+      const today = new Date();
+      for(let i=n-1;i>=0;i--){
+        const d = new Date(today); d.setDate(today.getDate()-i);
+        res.push(d.toISOString().slice(0,10));
+      }
+      return res; // 古い→新しい
+    }
+
+    function drawCharts(){
+      const todayKey = new Date().toISOString().slice(0,10);
+      const t = grouped[todayKey] || {kcal:0,protein:0,fat:0,carbs:0};
+
+      // 今日のPFCドーナツ
+      const ctx1 = document.getElementById("chartTodayPFC").getContext("2d");
+      charts.todayPFC = new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+          labels: ['たんぱく質','脂質','炭水化物'],
+          datasets: [{
+            data: [t.protein, t.fat, t.carbs],
+            backgroundColor: ['#34d399','#fbbf24','#60a5fa']
+          }]
+        },
+        options: {
+          plugins:{
+            legend:{ position:'bottom', labels:{ color:'#e5e7eb' } },
+            tooltip:{ callbacks:{
+              label:(c)=>{
+                const v = Number(c.raw)||0;
+                const total = (t.protein+t.fat+t.carbs)||1;
+                const pct = (v/total*100).toFixed(1);
+                return `${c.label}: ${v} g (${pct}%)`;
+              }
+            }}
+          }
+        }
+      });
+
+      // 直近7日の配列
+      const d7 = lastNDatesAsc(7);
+      const kcal7 = d7.map(d => grouped[d]?.kcal || 0);
+      const p7    = d7.map(d => grouped[d]?.protein || 0);
+      const f7    = d7.map(d => grouped[d]?.fat || 0);
+      const c7    = d7.map(d => grouped[d]?.carbs || 0);
+
+      // 総カロリー棒
+      const ctx2 = document.getElementById("chartKcal7").getContext("2d");
+      charts.kcal7 = new Chart(ctx2, {
+        type:'bar',
+        data:{
+          labels:d7,
+          datasets:[{ label:'kcal', data:kcal7, backgroundColor:'#0ea5e9' }]
+        },
+        options:{
+          scales:{
+            x:{ ticks:{ color:'#e5e7eb' }, grid:{ color:'rgba(255,255,255,.06)' } },
+            y:{ ticks:{ color:'#e5e7eb' }, grid:{ color:'rgba(255,255,255,.06)' } }
+          },
+          plugins:{ legend:{ labels:{ color:'#e5e7eb' } } }
+        }
+      });
+
+      // P/F/C スタック棒
+      const ctx3 = document.getElementById("chartPFC7").getContext("2d");
+      charts.pfc7 = new Chart(ctx3, {
+        type:'bar',
+        data:{
+          labels:d7,
+          datasets:[
+            { label:'たんぱく質', data:p7, backgroundColor:'#34d399' },
+            { label:'脂質',       data:f7, backgroundColor:'#fbbf24' },
+            { label:'炭水化物',   data:c7, backgroundColor:'#60a5fa' },
+          ]
+        },
+        options:{
+          scales:{
+            x:{ stacked:true, ticks:{ color:'#e5e7eb' }, grid:{ color:'rgba(255,255,255,.06)' } },
+            y:{ stacked:true, ticks:{ color:'#e5e7eb' }, grid:{ color:'rgba(255,255,255,.06)' } },
+          },
+          plugins:{ legend:{ labels:{ color:'#e5e7eb' } } }
+        }
+      });
+    }
+  </script>
 </body>
 </html>
