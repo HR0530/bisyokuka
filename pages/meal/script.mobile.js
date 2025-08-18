@@ -11,7 +11,7 @@ const els = {
   addMealBtn: document.getElementById("addMealBtn"),
   resetBtn: document.getElementById("resetBtn"),
   mealsByDay: document.getElementById("mealsByDay"),
-  helperText: document.getElementById("helperText"),
+  helperText: document.getElementById("helperText")
 };
 
 // ---- Utils ----
