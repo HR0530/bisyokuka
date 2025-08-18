@@ -1,0 +1,50 @@
+:root{
+  --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --line:#1f2937;
+  --brand:#0ea5e9; --accent:#f59e0b; --ok:#22c55e; --muted:#9ca3af;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial}
+a{color:#ffbb54;text-decoration:none}
+
+.page{width:92%;max-width:960px;margin:16px auto 40px;display:grid;gap:12px}
+.header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+h1{margin:0;font-size:22px}
+.nav{display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:var(--accent);color:#111;padding:8px 12px;border:none;border-radius:10px;font-weight:700;cursor:pointer}
+.btn.ghost{background:var(--brand);color:#031422}
+.muted{color:var(--muted)}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.hero{display:grid;justify-items:center;gap:10px;position:relative;padding-top:24px}
+
+.rank-row .title{display:flex;gap:10px;align-items:baseline}
+.rank{font-weight:700}
+.lvl{background:#0b1220;border:1px solid var(--line);padding:2px 8px;border-radius:999px}
+.gauge{height:14px;border-radius:999px;background:#0b1220;border:1px solid var(--line);overflow:hidden;margin:6px 0}
+.fill{height:100%;background:linear-gradient(90deg,#22c55e,#0ea5e9)}
+.xp-text{font-size:12px;color:#cbd5e1}
+
+.sprite{
+  width:96px; height:128px;
+  background-image:url("./assets/男_スーツ1.png");
+  image-rendering:pixelated;
+  background-repeat:no-repeat;
+  /* 1コマは32x32、3列×4行の想定で並んでいるスプライト */
+  transform:scale(2); /* 少し拡大表示 */
+}
+.bubble{
+  position:absolute; top:8px; left:50%; transform:translateX(-50%);
+  background:#162235; color:#e5e7eb; border:1px solid #233044;
+  padding:8px 10px; border-radius:10px; max-width:70%; text-align:center; font-size:13px;
+}
+.hint{font-size:12px;color:var(--muted)}
+
+.quests,.challenges{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
+.quest-item,.challenge-item{
+  background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;justify-content:space-between;align-items:center;gap:8px
+}
+.badge{background:#1f2937;color:#cbd5e1;border-radius:999px;padding:2px 8px;font-size:12px}
+.badge.ok{background:#22c55e;color:#031422}
+.badge.warn{background:#f59e0b;color:#0a0a0a}
+
+.footer{display:flex;justify-content:space-between;align-items:center}
