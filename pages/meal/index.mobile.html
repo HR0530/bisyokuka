@@ -2,28 +2,15 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-  <title>美食家さん 食事記録（スマホ）</title>
-  <link rel="stylesheet" href="style.mobile.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>美食家さん 食事記録（モバイル）</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
 </head>
-
-  <script>
-  (function () {
-    // 画面が十分広いならPC版へ戻す
-    var w = Math.max(window.screen.width, window.innerWidth || 0);
-    if (w >= 900) {
-      location.replace('index.html');
-    }
-  })();
-</script>
-
 <body>
-  <div class="app">
-    <header class="topbar">
-      <h1>🍽️ 食事記録</h1>
-      <a class="back" href="../../index.html">ホーム</a>
-    </header>
+  <div class="meal-app-container mobile">
+    <h1>🍽️ 食事記録</h1>
 
     <div class="meal-upload-area">
       <!-- カメラで撮る -->
@@ -40,17 +27,29 @@
 
       <div id="photoPreview" class="photo-preview"></div>
 
-      <div class="row compact">
-        <label class="stars">
-          <span>評価</span>
-          <input type="number" id="starsInput" min="1" max="5" value="4" inputmode="numeric">
-        </label>
-        <input type="text" id="commentInput" maxlength="32" placeholder="コメント (任意)">
+      <div class="controls-row">
+        <input type="number" id="starsInput" min="1" max="5" value="4" title="星評価" inputmode="numeric">
+        <input type="text" id="commentInput" maxlength="32" placeholder="コメント(任意)">
       </div>
 
-      <button id="addMealBtn" class="primary">記録する</button>
-      <p id="helperText" class="hint" role="status"></p>
-    </section>
+      <button id="addMealBtn" class="primary large">記録する</button>
+      <button id="resetBtn" class="danger subtle">全てリセット</button>
+
+      <div id="helperText" class="hint"></div>
+    </div>
+
+    <div id="mealsByDay"></div>
+
+    <div class="back-button">
+      <a href="../../index.html">← ホームへ戻る</a>
+    </div>
+  </div>
+
+  <!-- iPhoneのHEIC/HEIF → JPEG 変換 -->
+  <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
+  <script src="script.mobile.js"></script>
+</body>
+</html>
 
     <!-- 日付ごとの一覧 -->
     <main id="mealsByDay" class="days"></main>
