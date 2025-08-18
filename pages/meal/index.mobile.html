@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>美食家さん 食事記録（スマホ）</title>
+  <link rel="stylesheet" href="style.mobile.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <h1>🍽️ 食事記録</h1>
+      <a class="back" href="../../index.html">ホーム</a>
+    </header>
+
+    <!-- 入力エリア（モバイル最適化） -->
+    <section class="input-card">
+      <div class="row">
+        <label class="file">
+          <input type="file" id="photoInput" accept="image/*" capture="environment" />
+          <span>写真を選択 / 撮影</span>
+        </label>
+        <button id="resetBtn" class="ghost" aria-label="すべて削除">全削除</button>
+      </div>
+
+      <div id="photoPreview" class="preview" aria-live="polite"></div>
+
+      <div class="row compact">
+        <label class="stars">
+          <span>評価</span>
+          <input type="number" id="starsInput" min="1" max="5" value="4" inputmode="numeric">
+        </label>
+        <input type="text" id="commentInput" maxlength="32" placeholder="コメント (任意)">
+      </div>
+
+      <button id="addMealBtn" class="primary">記録する</button>
+      <p id="helperText" class="hint" role="status"></p>
+    </section>
+
+    <!-- 日付ごとの一覧 -->
+    <main id="mealsByDay" class="days"></main>
+
+    <!-- 編集モーダル（テキスト編集式）-->
+    <div id="modalOverlay" class="modal" hidden>
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+        <header class="sheet-head">
+          <h2 id="editTitle">記録の編集</h2>
+          <button id="closeModal" class="icon-btn" aria-label="閉じる">✕</button>
+        </header>
+        <img id="modalPhoto" class="sheet-photo" alt="料理写真のプレビュー">
+        <div class="sheet-body">
+          <label>料理名<input id="modalFoodInput" type="text" placeholder="料理名" /></label>
+          <label>評価<input id="modalStarsInput" type="number" min="1" max="5" inputmode="numeric" /></label>
+          <label>コメント<input id="modalCommentInput" type="text" maxlength="32" placeholder="コメント (任意)" /></label>
+          <p class="hint">※ 料理名を編集しても栄養は自動再計算されません。</p>
+        </div>
+        <footer class="sheet-foot">
+          <button id="saveModalBtn" class="primary">保存</button>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.mobile.js"></script>
+</body>
+</html>
