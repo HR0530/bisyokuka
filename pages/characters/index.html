@@ -14,7 +14,7 @@
       <a class="btn" href="dex/index.html">📚 図鑑</a>
     </header>
 
-    <!-- 育成ゲージ -->
+    <!-- ゲージ（全幅） -->
     <section class="gauge-card">
       <div class="gauge-head">
         <div class="title">きょうの育成ゲージ</div>
@@ -24,33 +24,55 @@
       <div id="gaugeNote" class="note">食事を記録すると育成が進みます</div>
     </section>
 
-    <!-- キャラ＆吹き出し -->
-    <section class="stage">
-      <canvas id="charCanvas" width="288" height="288"></canvas>
-      <div id="speech" class="speech">こんにちは！</div>
-    </section>
+    <!-- 左：キャラ / 右：クエスト＋イベント -->
+    <section class="main-grid">
+      <!-- 左：キャラ -->
+      <div class="stage card">
+        <canvas id="charCanvas" width="288" height="288"></canvas>
+        <div id="speech" class="speech">こんにちは！</div>
+      </div>
 
-    <!-- クエスト（1列×4行） -->
-    <section class="quests">
-      <div class="q">
-        <div class="name">たんぱく質 50–120g を目指す</div>
-        <div class="mini">今日の達成度に応じてゲージUP</div>
-        <div class="act"><button class="btn tiny" data-quest="protein">チェック</button></div>
-      </div>
-      <div class="q">
-        <div class="name">脂質 40–70g に収める</div>
-        <div class="mini">オーバー/不足も評価</div>
-        <div class="act"><button class="btn tiny" data-quest="fat">チェック</button></div>
-      </div>
-      <div class="q">
-        <div class="name">炭水化物 180–300g をキープ</div>
-        <div class="mini">主食でエネルギー確保</div>
-        <div class="act"><button class="btn tiny" data-quest="carbs">チェック</button></div>
-      </div>
-      <div class="q">
-        <div class="name">総カロリーを目標±10%に</div>
-        <div class="mini">設定はホーム「設定」で変更可</div>
-        <div class="act"><button class="btn tiny" data-quest="kcal">チェック</button></div>
+      <!-- 右：クエスト＆イベント（各4行） -->
+      <div class="tasks card">
+        <h2>🧭 クエスト</h2>
+        <div class="list">
+          <div class="item">
+            <div class="name">たんぱく質 50–120g を目指す</div>
+            <a class="btn tiny" href="../insights/index.html">チェック</a>
+          </div>
+          <div class="item">
+            <div class="name">脂質 40–70g に収める</div>
+            <a class="btn tiny" href="../insights/index.html">チェック</a>
+          </div>
+          <div class="item">
+            <div class="name">炭水化物 180–300g をキープ</div>
+            <a class="btn tiny" href="../insights/index.html">チェック</a>
+          </div>
+          <div class="item">
+            <div class="name">総カロリーを目標±10%に</div>
+            <a class="btn tiny" href="../insights/index.html">チェック</a>
+          </div>
+        </div>
+
+        <h2>🎉 イベント</h2>
+        <div class="list">
+          <div class="item">
+            <div class="name">新食材に挑戦（未登録の食材を1つ）</div>
+            <a class="btn tiny" href="../insights/index.html">チェック</a>
+          </div>
+          <div class="item">
+            <div class="name">野菜をもう1品追加してみよう</div>
+            <a class="btn tiny" href="../insights/index.html">チェック</a>
+          </div>
+          <div class="item">
+            <div class="name">水分 1.5L 以上を目指す</div>
+            <a class="btn tiny" href="../insights/index.html">チェック</a>
+          </div>
+          <div class="item">
+            <div class="name">低脂質・高たんぱくメニューの日</div>
+            <a class="btn tiny" href="../insights/index.html">チェック</a>
+          </div>
+        </div>
       </div>
     </section>
   </div>
