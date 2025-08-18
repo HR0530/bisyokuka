@@ -1,44 +1,71 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>美食家さん - 図鑑</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>図鑑</title>
+<style>
+  :root{ --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --line:#1f2937; --muted:#9ca3af; }
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Poppins,Arial}
+  .wrap{max-width:1100px;margin:0 auto;padding:16px}
+  h1{margin:0 0 12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+  .cell{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;position:relative}
+  .thumb{
+    width:96px;height:128px;margin:4px auto 8px;image-rendering:pixelated;
+    background-repeat:no-repeat;background-size:300% 400%; /* 3x4 */
+    background-position: 50% 66.666%; /* 正面(ROW_FRONT=2), 中央(COL_CENTER=1) */
+  }
+  .name{font-size:13px;text-align:center;color:#e5e7eb}
+  .locked::after{
+    content:"LOCKED"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:800; letter-spacing:.5px;
+    background:linear-gradient(0deg, rgba(0,0,0,.55), rgba(0,0,0,.35));
+    border-radius:12px;
+  }
+</style>
 </head>
 <body>
-  <div class="page">
-    <header class="header">
-      <h1>📔 図鑑</h1>
-      <nav class="nav">
-        <a class="btn" href="../index.html">← 育成</a>
-        <a class="btn ghost" href="../../index.html">ホーム</a>
-      </nav>
-    </header>
-
-    <section class="panel">
-      <div id="grid" class="grid"></div>
-    </section>
-
-    <footer class="footer">
-      <small class="muted">タップで拡大／ロック中はヒントのみ表示</small>
-    </footer>
+  <div class="wrap">
+    <h1>📚 図鑑</h1>
+    <div id="dex" class="grid"></div>
   </div>
 
-  <div id="modal" class="modal" hidden>
-    <div class="sheet">
-      <button id="close" class="close">×</button>
-      <img id="mimg" class="big" alt="">
-      <div class="meta">
-        <div class="name" id="mname"></div>
-        <div class="rarity" id="mrarity"></div>
-        <div class="hint" id="mhint"></div>
-      </div>
-    </div>
-  </div>
+<script>
+  // 32キャラ分の例（画像は必要な分だけ用意できればOK）
+  const BASE = "project-root/";
+  const characters = [
+    { id:1,  name:"キャラ#1",  src:"男_スーツ1.png", unlocked:true },
+    { id:2,  name:"キャラ#2",  src:"女_スーツ1.png" },
+    { id:3,  name:"キャラ#3",  src:"女_スーツ2.png" },
+    { id:4,  name:"キャラ#4",  src:"女_スーツ白衣.png" },
+    { id:5,  name:"キャラ#5",  src:"女_学生1.png" },
+    { id:6,  name:"キャラ#6",  src:"女_学生2.png" },
+    { id:7,  name:"キャラ#7",  src:"女_学生3.png" },
+    { id:8,  name:"キャラ#8",  src:"女_学生ホラー.png" },
+    { id:9,  name:"キャラ#9",  src:"女_水着1.png" },
+    { id:10, name:"キャラ#10", src:"女_水着2.png" },
+    { id:11, name:"キャラ#11", src:"女_水着3.png" },
+    // ... 32体まで増やしてOK
+  ];
 
-  <script src="../data/characters.js"></script>
-  <script src="script.js"></script>
+  const dex = document.getElementById('dex');
+  for(const ch of characters){
+    const cell = document.createElement('div');
+    cell.className = 'cell' + (ch.unlocked ? '' : ' locked');
+
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb';
+    thumb.style.backgroundImage = `url(${BASE}${ch.src})`;
+
+    const name = document.createElement('div');
+    name.className = 'name';
+    name.textContent = ch.name;
+
+    cell.appendChild(thumb);
+    cell.appendChild(name);
+    dex.appendChild(cell);
+  }
+</script>
 </body>
 </html>
