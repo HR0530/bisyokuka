@@ -1,82 +1,41 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>図鑑 | 美食家さん</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
-<style>
-  :root{ --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --line:#1f2937; --muted:#9ca3af; }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:Poppins,system-ui,Segoe UI,Roboto,Arial}
-  .wrap{max-width:1100px;margin:0 auto;padding:14px}
-  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-  .btn{background:#1f2937;border:1px solid var(--line);color:#e5e7eb;padding:8px 12px;border-radius:10px;text-decoration:none;font-weight:700}
-  .title{font-size:20px;font-weight:800}
-
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
-  .cell{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;position:relative}
-  .thumb{
-    width:96px;height:128px;margin:4px auto 8px;image-rendering:pixelated;
-    background-repeat:no-repeat;background-size:300% 400%;
-    background-position:50% 66.666%; /* 正面(行2) 中央(列1) */
-  }
-  .name{font-size:13px;text-align:center}
-  .locked::after{
-    content:"LOCKED"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    color:#fff; font-weight:800; letter-spacing:.4px;
-    background:linear-gradient(0deg, rgba(0,0,0,.55), rgba(0,0,0,.35));
-    border-radius:12px;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>キャラ図鑑</title>
+  <style>
+    :root{--bg:#0f172a;--card:#111827;--ink:#e5e7eb;--line:#1f2937;--brand:#0ea5e9;--accent:#f59e0b}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);
+      font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial}
+    .wrap{max-width:1100px;margin:0 auto;padding:16px}
+    .topbar{display:grid;grid-template-columns:140px 1fr 140px;gap:8px;align-items:center;margin-bottom:12px}
+    h1{margin:0;text-align:center;font-size:20px}
+    .btn{background:var(--accent);color:#111;padding:8px 10px;border:none;border-radius:10px;
+      font-weight:700;text-decoration:none;text-align:center;display:inline-block}
+    .btn.ghost{background:var(--brand);color:#031422}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;
+      display:grid;place-items:center}
+    .card img{width:96px;image-rendering:pixelated}
+    .name{margin-top:8px;font-weight:700}
+  </style>
 </head>
 <body>
   <div class="wrap">
     <div class="topbar">
-      <div class="title">📚 図鑑</div>
-      <div>
-        <a class="btn" href="index.html">🧑‍🍳 育成へ</a>
-        <a class="btn" href="../../index.html">🏠 ホーム</a>
-      </div>
+      <a class="btn ghost" href="../../index.html">← ホーム</a>
+      <h1>📚 キャラ図鑑</h1>
+      <a class="btn" href="../index.html">育成に戻る</a>
     </div>
 
-    <div id="dex" class="grid"></div>
+    <div class="grid">
+      <!-- 例：スプライトを並べる（必要に応じて増やしてください） -->
+      <div class="card"><img src="../project-root/男_スーツ1.png" alt=""><div class="name">キャラ#1</div></div>
+      <div class="card"><img src="../project-root/女_スーツ1.png" alt=""><div class="name">キャラ#2</div></div>
+      <div class="card"><img src="../project-root/女_学生1.png" alt=""><div class="name">キャラ#3</div></div>
+      <!-- ... -->
+    </div>
   </div>
-
-<script>
-  const BASE = "project-root/";
-  const characters = [
-    { id:1,  name:"キャラ#1",  src:"男_スーツ1.png", unlocked:true },
-    { id:2,  name:"キャラ#2",  src:"女_スーツ1.png" },
-    { id:3,  name:"キャラ#3",  src:"女_スーツ2.png" },
-    { id:4,  name:"キャラ#4",  src:"女_スーツ白衣.png" },
-    { id:5,  name:"キャラ#5",  src:"女_学生1.png" },
-    { id:6,  name:"キャラ#6",  src:"女_学生2.png" },
-    { id:7,  name:"キャラ#7",  src:"女_学生3.png" },
-    { id:8,  name:"キャラ#8",  src:"女_学生ホラー.png" },
-    { id:9,  name:"キャラ#9",  src:"女_水着1.png" },
-    { id:10, name:"キャラ#10", src:"女_水着2.png" },
-    { id:11, name:"キャラ#11", src:"女_水着3.png" },
-    // …必要分 32体まで
-  ];
-
-  const dex = document.getElementById('dex');
-  for(const ch of characters){
-    const cell = document.createElement('div');
-    cell.className = 'cell' + (ch.unlocked ? '' : ' locked');
-
-    const thumb = document.createElement('div');
-    thumb.className = 'thumb';
-    thumb.style.backgroundImage = `url(${BASE}${ch.src})`;
-
-    const name = document.createElement('div');
-    name.className = 'name';
-    name.textContent = ch.name;
-
-    cell.appendChild(thumb);
-    cell.appendChild(name);
-    dex.appendChild(cell);
-  }
-</script>
 </body>
 </html>
