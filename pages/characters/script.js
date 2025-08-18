@@ -1,154 +1,103 @@
-// ------------- データ取得（meal の保存形式） ----------------
-const STORAGE_KEY = "bisyokuka_meals_v2";
-const meals = (() => {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+// ===== データ読み込み：mealの保存形式 =====
+function loadMeals(){
+  try { return JSON.parse(localStorage.getItem("bisyokuka_meals_v2") || "[]"); }
   catch { return []; }
-})();
-const todayKey = new Date().toISOString().slice(0,10);
+}
+function todayKey(){ return new Date().toISOString().slice(0,10); }
+function sumToday(){
+  const meals = loadMeals();
+  const tkey = todayKey();
+  return meals.reduce((acc,m)=>{
+    if ((m.date||"").slice(0,10)!==tkey) return acc;
+    acc.kcal += Number(m.totals?.kcal||0);
+    acc.p    += Number(m.totals?.protein||0);
+    acc.f    += Number(m.totals?.fat||0);
+    acc.c    += Number(m.totals?.carbs||0);
+    return acc;
+  }, {kcal:0,p:0,f:0,c:0});
+}
 
-function totalsOf(dateKey){
-  const t = { kcal:0, protein:0, fat:0, carbs:0, count:0 };
-  for (const m of meals){
-    const d = (m.date||"").slice(0,10);
-    if (d !== dateKey) continue;
-    t.kcal   += Number(m.totals?.kcal   || 0);
-    t.protein+= Number(m.totals?.protein|| 0);
-    t.fat    += Number(m.totals?.fat    || 0);
-    t.carbs  += Number(m.totals?.carbs  || 0);
-    t.count++;
+// ===== ゲージ（P/F/C 目標にどれだけ近いか）=====
+const target = { kcal: 1800, p: 100, f: 60, c: 250 };
+function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+function updateGauge(){
+  const s = sumToday();
+  const closenessP = 1 - Math.min(1, Math.abs(s.p - target.p) / target.p);
+  const closenessF = 1 - Math.min(1, Math.abs(s.f - target.f) / target.f);
+  const closenessC = 1 - Math.min(1, Math.abs(s.c - target.c) / target.c);
+  const pct = Math.round((closenessP + closenessF + closenessC)/3 * 100);
+
+  const bar = document.getElementById("gaugeBar");
+  const label = document.getElementById("gaugePct");
+  bar.style.width = `${pct}%`;
+  label.textContent = `${pct}%`;
+}
+
+// ===== クエスト達成状態（達成なら緑＆無効化、未達成は青で分析へ）=====
+function setDone(id, done){
+  const li = document.getElementById(id);
+  if (!li) return;
+  const btn = li.querySelector('.action');
+  if (done){
+    li.classList.add('done');
+    if (btn){ btn.textContent = '達成！'; btn.removeAttribute('href'); }
+  }else{
+    li.classList.remove('done');
+    if (btn){ btn.textContent = '確認する'; btn.setAttribute('href','../insights/index.html'); }
   }
-  return t;
 }
-const T = totalsOf(todayKey);
+function updateQuests(){
+  const s = sumToday();
+  setDone('q1', s.p >= 50 && s.p <= 120);
+  setDone('q2', s.f >= 40 && s.f <= 70);
+  setDone('q3', s.c >= 180 && s.c <= 300);
+  setDone('q4', Math.abs(s.kcal - 1800) <= 180);
 
-// ------------- 育成ゲージ（同じ計算式を踏襲） ----------------
-// 目安レンジ
-const R = {
-  P:[50,120],
-  F:[40,70],
-  C:[180,300],
-  K:[1400, 2000] // kcal ざっくり
-};
-function scoreInRange(val, [lo,hi]){
-  if (val<=0) return 0;
-  if (val>=lo && val<=hi) return 1;
-  const d = val<lo ? (lo-val)/lo : (val-hi)/hi;
-  // 乖離100%で0点に落ちるよう緩やかに
-  const s = Math.max(0, 1 - d);
-  return s;
+  // イベント側は例（必要があれば置き換え）
+  setDone('e1', false);
+  setDone('e2', s.p >= 80);
+  setDone('e3', false);
+  setDone('e4', false);
 }
-// 1食でも記録があればベース25%、PFC+Kの平均で最大+75%
-const base = T.count>0 ? 25 : 0;
-const macro = (
-  scoreInRange(T.protein, R.P) +
-  scoreInRange(T.fat,     R.F) +
-  scoreInRange(T.carbs,   R.C) +
-  scoreInRange(T.kcal,    R.K)
-) / 4;
-const gaugePct = Math.round(base + macro * 75);
 
-// UI反映
-const bar = document.getElementById("gaugeBar");
-const pct = document.getElementById("gaugePct");
-const hint = document.getElementById("gaugeHint");
-bar.style.width = `${gaugePct}%`;
-pct.textContent = `${gaugePct}%`;
-hint.textContent = T.count>0
-  ? `今日の合計：${Math.round(T.kcal)} kcal / P${Math.round(T.protein)}g F${Math.round(T.fat)}g C${Math.round(T.carbs)}g`
-  : "まずは1食記録してみよう！";
+// ===== キャラ：正面→横向きへ時々切替（数秒間）=====
+function initHeroMotion(){
+  const stage = document.querySelector('.hero-stage');
+  const front = document.getElementById('heroFront');
+  const side  = document.getElementById('heroSide');
+  const bubble= document.getElementById('bubbleText');
 
-// ------------- ヒーローのアニメ（正面基準＋時々横向き） -------------
-const hero = document.getElementById("hero");
-const spritePath = hero.dataset.sprite || "project-root/男_スーツ1.png";
-hero.style.backgroundImage = `url("${spritePath}")`;
+  // 横向き画像が読み込めない場合は“横向き演出”をスキップ
+  let sideUsable = true;
+  side.addEventListener('error', ()=> sideUsable = false, {once:true});
 
-// シートは 3×4（列×行）想定：行0=下/正面, 行1=左, 行2=右, 行3=後ろ
-// 通常は正面で歩行アニメ。時々、横向きに切り替えて1～2秒歩く
-let facingRow = 0;          // 0:正面
-let sideTimer = null;
+  const lines = [
+    "いい感じのペース！",
+    "水分補給も忘れずに。",
+    "バランスが大事だよ。",
+    "今日の目標、いけそう！",
+  ];
 
-function setRow(row){
-  facingRow = row;
-  hero.style.backgroundPositionY = `calc(var(--frame-h) * ${row})`;
-}
-setRow(0);
-
-function sometimesTurnSide(){
-  const nextIn = 3000 + Math.random()*5000; // 3～8秒後に横向き
-  setTimeout(() => {
-    const sideRow = Math.random() < 0.5 ? 1 : 2; // 左か右
-    setRow(sideRow);
-    // 1.2～2.2秒は横を向いて歩き続ける
-    const keep = 1200 + Math.random()*1000;
-    sideTimer = setTimeout(()=> setRow(0), keep);
-    // 次の予約
-    sometimesTurnSide();
-  }, nextIn);
-}
-sometimesTurnSide();
-
-// ------------- クエスト/イベント（4行表示・状態に応じたボタン） -------------
-const goInsights = () => location.href = "../insights/index.html";
-
-function makeTask(title, ok, meta=""){
-  const li = document.createElement("li");
-  li.className = "task" + (ok ? " done" : "");
-
-  const left = document.createElement("div");
-  const h = document.createElement("p");
-  h.className = "task-title"; h.textContent = title;
-  left.appendChild(h);
-  if (meta) {
-    const m = document.createElement("div");
-    m.className = "meta"; m.textContent = meta;
-    left.appendChild(m);
+  function randomSpeak(){
+    bubble.textContent = lines[Math.floor(Math.random()*lines.length)];
   }
 
-  const btn = document.createElement("button");
-  btn.className = "action " + (ok ? "" : "view");
-  btn.textContent = ok ? "達成！" : "確認する";
-  btn.addEventListener("click", goInsights);
+  function goSideWalk(){
+    if (!sideUsable) return;                 // 横向き無しなら何もしない
+    stage.classList.add('hero-moving');
+    randomSpeak();
+    // 3〜4秒ほど横向きウォーク
+    setTimeout(()=> stage.classList.remove('hero-moving'), 3400);
+  }
 
-  li.appendChild(left);
-  li.appendChild(btn);
-  return li;
+  // 最初は正面、9〜14秒ごとに横向きウォーク
+  setInterval(()=> goSideWalk(), 9000 + Math.random()*5000);
 }
 
-// 判定
-const okP = T.protein>=R.P[0] && T.protein<=R.P[1];
-const okF = T.fat    >=R.F[0] && T.fat    <=R.F[1];
-const okC = T.carbs  >=R.C[0] && T.carbs  <=R.C[1];
-const okK = T.kcal   >=R.K[0] && T.kcal   <=R.K[1];
-
-const quests = document.getElementById("quests");
-quests.append(
-  makeTask("たんぱく質 50–120g を目指す", okP, `現在 ${Math.round(T.protein)} g`),
-  makeTask("脂質 40–70g に収める",         okF, `現在 ${Math.round(T.fat)} g`),
-  makeTask("炭水化物 180–300g をキープ",   okC, `現在 ${Math.round(T.carbs)} g`),
-  makeTask("総カロリー 目標±10％以内",     okK, `現在 ${Math.round(T.kcal)} kcal`)
-);
-
-const events = document.getElementById("events");
-// イベント例（自由に差し替え可）
-const uniqueNames = new Set();
-for (const m of meals.filter(x=> (x.date||"").slice(0,10)===todayKey)){
-  (m.ingredients||[]).forEach(i => uniqueNames.add(i.name));
+// ===== 初期化 =====
+function init(){
+  updateGauge();
+  updateQuests();
+  initHeroMotion();
 }
-events.append(
-  makeTask("新食材に挑戦（未登録の食材を1つ）", uniqueNames.size>=1),
-  makeTask("野菜を5品追加してみよう",         uniqueNames.size>=5),
-  makeTask("タンパク質200g以上の食材を食べる", T.protein>=100), // 例
-  makeTask("夜21時以降は間食なしで過ごす",     false)          // 記録からの厳密判定は未実装
-);
-
-// ------------- しゃべる内容（簡単リアクション） -------------
-const bubble = document.getElementById("heroBubble");
-const msgs = [
-  "今日のPFC、いいリズム！",
-  "水分補給も忘れずにね💧",
-  "野菜は色とりどりがコツ🥦",
-  "たんぱく質は毎食ちょっとずつ🐔"
-];
-if (okP && okF && okC) bubble.textContent = "理想のバランス！レベル上がりそう🔥";
-else if (T.count===0)  bubble.textContent = "まずは写真を1枚アップだよ📷";
-else                   bubble.textContent = msgs[Math.floor(Math.random()*msgs.length)];
+document.addEventListener('DOMContentLoaded', init);
