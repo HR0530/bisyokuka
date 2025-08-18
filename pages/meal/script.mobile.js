@@ -222,13 +222,18 @@ els.addMealBtn.addEventListener("click", async () => {
   els.addMealBtn.textContent = "解析中…";
   els.helperText.textContent = "AIが食材内訳と栄養素を推定しています…";
 
+  let photoDataURL = null;
   try {
+    // 先に写真を DataURL 化（API がコケても記録は残す）
+    photoDataURL = await fileToDataURL(originalFile);
+
+    // API 解析
     const resized = await downscaleForApi(originalFile, 1280);
     const raw = await analyzeByAI(resized);
     const norm = normalizeNutrition(raw);
     els.helperText.textContent = raw?.note ? String(raw.note) : "";
 
-    const photoDataURL = await fileToDataURL(originalFile);
+    // 正常保存
     const now = new Date();
     const item = {
       id: "m_" + now.getTime(),
@@ -240,10 +245,41 @@ els.addMealBtn.addEventListener("click", async () => {
       ingredients: norm.ingredients,
       totals: norm.totals
     };
-
     const items = loadMeals();
     items.push(item);
     saveMeals(items);
+
+  } catch (e) {
+    console.warn("AI解析失敗", e);
+    // フォールバック保存（写真・コメントだけでも残す）
+    els.helperText.textContent = "解析に失敗しました（ネットワーク/URL/CORSの可能性）。写真は記録しました。";
+
+    const now = new Date();
+    const item = {
+      id: "m_" + now.getTime(),
+      date: now.toISOString(),
+      photo: photoDataURL,                 // ← ここがあるから“記録できない”を回避できる
+      food: "不明",
+      stars: Math.max(1, Math.min(5, parseInt(els.starsInput.value || "3", 10))),
+      comment: els.commentInput.value.trim(),
+      ingredients: [],
+      totals: { protein:0, fat:0, carbs:0, kcal:0 }
+    };
+    const items = loadMeals();
+    items.push(item);
+    saveMeals(items);
+  } finally {
+    // 入力欄リセット & 再描画
+    els.addMealBtn.disabled = false;
+    els.addMealBtn.textContent = defaultText;
+    els.commentInput.value = "";
+    els.starsInput.value = "4";
+    els.photoPreview.innerHTML = "";
+    originalFile = null;
+    render();
+  }
+});
+
 
     // リセット
     els.commentInput.value = "";
