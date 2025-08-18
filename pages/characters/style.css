@@ -6,144 +6,124 @@
   --frame-w: 32px;
   --frame-h: 32px;
 
-  /* キャラ表示倍率（大きければ上げる / 小さければ下げる）*/
-  --hero-scale: 2.8; /* 2.6〜3.2 で好み調整 */
+  /* ==== コンパクト化の主役 ==== */
+  --hero-scale: 1.85;           /* さらに小さくしたい時は 1.6〜1.75 */
+  --hero-stage-h: 260px;        /* キャラの“舞台”の高さ */
+  --hero-card-min-h: 320px;     /* 左カードの最小高さ */
+  --right-rows-h: 66px;         /* 右リスト1行の高さ（4行固定） */
 }
 
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
   margin:0; background:var(--bg); color:var(--ink);
-  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 }
 
 /* ヘッダー */
 .topbar{
   display:flex; align-items:center; justify-content:space-between;
-  padding:12px 16px; gap:10px; background:#0b1220; border-bottom:1px solid var(--line);
+  padding:10px 14px; gap:10px; background:#0b1220; border-bottom:1px solid var(--line);
 }
 .topbar h1{margin:0; font-size:18px}
 
 /* 共通ボタン */
-.btn{
-  appearance:none; border:none; cursor:pointer;
-  font-weight:700; border-radius:12px; padding:8px 14px; text-decoration:none;
-  display:inline-flex; align-items:center; gap:6px; color:#0b0b0b;
-}
-.btn.ghost{ background:var(--brand); color:#031422; }
-.btn.accent{ background:var(--accent); color:#111; }
+.btn{appearance:none;border:none;cursor:pointer;font-weight:700;border-radius:12px;padding:8px 12px;display:inline-flex;align-items:center;gap:6px}
+.btn.ghost{ background:var(--brand); color:#031422 }
+.btn.accent{ background:var(--accent); color:#111 }
 
-/* ===== ゲージ（横長・細め） ===== */
+/* ==== ゲージ ==== */
 .gauge-card{
-  margin:14px auto 10px;
-  width:min(1300px, 96%);                 /* すこしワイドに */
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:16px 18px;                      /* 余白↓ */
+  margin:12px auto 10px;
+  width:min(1240px,96%);
+  background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px;
 }
-.gauge-title{font-weight:800; margin-bottom:8px}
-.gauge-rail{
-  background:#0b1220; border:1px solid var(--line);
-  height:16px;                            /* 細長いバー */
-  border-radius:999px; overflow:hidden
-}
-.gauge-bar{height:100%; width:0; background:linear-gradient(90deg, #4ade80, #22c55e)}
-.gauge-hint{margin-top:8px; color:var(--muted); font-size:12px}
+.gauge-title{font-weight:800;margin-bottom:6px}
+.gauge-rail{background:#0b1220;border:1px solid var(--line);height:14px;border-radius:999px;overflow:hidden}
+.gauge-bar{height:100%;width:0;background:linear-gradient(90deg,#4ade80,#22c55e)}
+.gauge-hint{margin-top:6px;color:var(--muted);font-size:12px}
 
-/* ===== 2カラム：左(3) : 右(2) ===== */
+/* ==== 2カラム（右を広めに） ==== */
 .two-col{
-  width:min(1200px, 96%); margin:0 auto 20px;
-  display:grid; grid-template-columns: 3fr 2fr; /* 見本比率 */
-  gap:20px;
+  width:min(1200px,96%); margin:0 auto 18px;
+  display:grid; grid-template-columns: 1.2fr 1.8fr;  /* 右を広めに */
+  gap:16px;
 }
-@media (max-width: 980px){
-  .two-col{ grid-template-columns: 1fr; }
-}
+@media (max-width: 980px){ .two-col{ grid-template-columns:1fr } }
 
-/* ===== 左：キャラ枠 ===== */
+/* ==== 左：キャラ枠（コンパクト） ==== */
 .hero-col{
-  background:var(--card); border:1px solid var(--line);
-  border-radius:16px; padding:18px; position:relative;
-  min-height: 520px;                      /* 余白・縦ゆったり */
+  background:var(--card); border:1px solid var(--line); border-radius:16px; padding:12px;
+  position:relative; min-height: var(--hero-card-min-h);
 }
 .bubble{
-  position:absolute; left:24px; top:20px;
+  position:absolute; left:16px; top:12px;
   background:#0b1220; border:1px solid var(--line); color:#e5e7eb;
-  padding:8px 12px; border-radius:12px; font-size:13px;
-  box-shadow:0 10px 30px rgba(0,0,0,.35);
+  padding:6px 10px; border-radius:10px; font-size:12px;
+  box-shadow:0 10px 24px rgba(0,0,0,.32);
 }
+
+/* 舞台自体を小型化＋余白最適化 */
 .hero-stage{
-  height: 430px;                          /* 舞台を広く */
+  height: var(--hero-stage-h);
   display:flex; align-items:center; justify-content:center;
-  margin-top: 28px; position:relative; overflow:hidden; border-radius:16px;
-  background: radial-gradient(1200px 220px at 50% 110%, rgba(0,0,0,.28), transparent 60%);
+  margin-top: 28px; position:relative; overflow:hidden; border-radius:14px;
+  background: radial-gradient(900px 160px at 50% 110%, rgba(0,0,0,.26), transparent 60%);
 }
 .shadow{
-  position:absolute; bottom:26px; left:50%; transform:translateX(-50%);
-  width: 44%; height:18px; background: radial-gradient(closest-side, rgba(0,0,0,.45), transparent 70%);
-  filter: blur(2px); opacity:.75; border-radius:50%;
+  position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
+  width: 40%; height:14px; background: radial-gradient(closest-side, rgba(0,0,0,.45), transparent 70%);
+  filter: blur(2px); opacity:.7; border-radius:50%;
 }
 
 /* スプライト（3×4） */
 .hero{
-  width: var(--frame-w);
-  height: var(--frame-h);
+  width: var(--frame-w); height: var(--frame-h);
   image-rendering: pixelated;
   transform: scale(var(--hero-scale));
   transform-origin: center bottom;
   background-repeat:no-repeat;
-  background-size: calc(var(--frame-w) * 3) calc(var(--frame-h) * 4);
-  background-position: 0 calc(var(--frame-h) * 0); /* 初期：正面列（JSで切替） */
-  animation: walk 0.6s steps(3) infinite;
+  background-size: calc(var(--frame-w)*3) calc(var(--frame-h)*4);
+  background-position: 0 calc(var(--frame-h)*0); /* JSで列切替（正面が基本） */
+  animation: walk .6s steps(3) infinite;
 }
 @keyframes walk{
-  0%   { background-position-x: 0; }
-  100% { background-position-x: calc(var(--frame-w) * -3); }
+  0%{background-position-x:0}
+  100%{background-position-x:calc(var(--frame-w)*-3)}
 }
 
-/* ===== 右：クエスト / イベント ===== */
-.quest-col{
-  display:grid; grid-template-rows: 1fr 1fr;  /* 上下同じ高さ */
-  gap:18px;
-}
+/* ==== 右：クエスト/イベント（4行固定・中だけスクロール） ==== */
+.quest-col{ display:grid; grid-template-rows: 1fr 1fr; gap:16px; }
 .panel{
-  background:var(--card); border:1px solid var(--line);
-  border-radius:16px; padding:14px;
-  display:flex; flex-direction:column;
-  min-height: 340px;                        /* 背を確保 */
+  background:var(--card); border:1px solid var(--line); border-radius:16px; padding:12px;
+  display:flex; flex-direction:column; min-height: 300px;
 }
 .panel h2{
-  margin:0 0 8px; font-size:16px;
-  position:sticky; top:0; z-index:1;       /* タイトル固定 */
-  background:var(--card); padding-bottom:8px;
+  margin:0 0 8px; font-size:15px; position:sticky; top:0; z-index:1; background:var(--card);
 }
 
-/* 中身だけスクロール、常に4行見せる */
+/* 行の高さを少し絞って4行を無理なく */
 .task-list{
-  list-style:none; margin:0; padding:0;
-  display:grid; gap:12px;
-  grid-auto-rows: 72px;                     /* 1行の高さ */
-  max-height: calc(72px * 4);               /* 4行固定 */
-  overflow:auto; padding-right:4px;
+  list-style:none; margin:0; padding:0 2px 0 0; display:grid; gap:10px;
+  grid-auto-rows: var(--right-rows-h);
+  max-height: calc(var(--right-rows-h) * 4);
+  overflow:auto;
 }
-
-/* 行 */
 .task{
-  display:grid; grid-template-columns: 1fr auto;
-  align-items:center; gap:12px;
-  background:#0b1220; border:1px solid var(--line);
-  border-radius:12px; padding:12px 14px;
+  display:grid; grid-template-columns: 1fr auto; align-items:center; gap:10px;
+  background:#0b1220; border:1px solid var(--line); border-radius:12px; padding:10px 12px;
 }
-.task-title{ margin:0; font-size:14px }
+.task-title{ margin:0; font-size:13.5px; line-height:1.2 }
 .task .meta{ color:var(--muted); font-size:12px }
 
-/* ボタン（青=確認 / 緑=達成） */
+/* 小さめボタンでも押しやすい幅に */
 .task .action{
-  border:none; border-radius:12px; font-weight:800;
-  padding:10px 14px; cursor:pointer; min-width:104px;
-  color:#0b0b0b; background:#ffd166;
+  border:none; border-radius:12px; font-weight:800; padding:8px 12px; min-width:96px; cursor:pointer;
+  color:#031422; background:#3bb2ff;
 }
-.task .action.view{ background:#3bb2ff; color:#03223a; } /* 確認する */
-.task.done .action{ background:var(--ok); color:#06260f; } /* 達成！ */
-.task.done    { outline:2px dashed rgba(34,197,94,.25) }
+.task.done .action{ background:var(--ok); color:#06260f }
+.task.done{ outline:2px dashed rgba(34,197,94,.28) }
+
+/* 各タスクのミニ進捗（任意表示） */
+.mini-rail{height:6px;background:#0a1422;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.mini-bar{height:100%;width:0;background:linear-gradient(90deg,#60a5fa,#34d399)}
