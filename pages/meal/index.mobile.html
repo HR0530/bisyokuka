@@ -2,83 +2,91 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
   <title>美食家さん 食事記録（モバイル）</title>
-  <link rel="stylesheet" href="style.css" />
+
+  <!-- フォント & CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="meal-app-container mobile">
     <h1>🍽️ 食事記録</h1>
 
     <div class="meal-upload-area">
-      <!-- カメラで撮る -->
+      <!-- カメラで撮る（iOS/Android） -->
       <label class="file-label full">
-        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;">
+        <input
+          type="file"
+          id="cameraInput"
+          accept="image/*,.heic,.HEIC"
+          capture="environment"
+          style="display:none;"
+        />
         <span class="file-btn large">📷 カメラで撮る</span>
       </label>
 
       <!-- ライブラリから選ぶ -->
       <label class="file-label full">
-        <input type="file" id="libraryInput" accept="image/*" multiple style="display:none;">
+        <input
+          type="file"
+          id="libraryInput"
+          accept="image/*,.heic,.HEIC"
+          style="display:none;"
+        />
         <span class="file-btn outline large">🖼 ライブラリから選ぶ</span>
       </label>
 
+      <!-- プレビュー -->
       <div id="photoPreview" class="photo-preview"></div>
 
+      <!-- 評価 & コメント -->
       <div class="controls-row">
-        <input type="number" id="starsInput" min="1" max="5" value="4" title="星評価" inputmode="numeric">
-        <input type="text" id="commentInput" maxlength="32" placeholder="コメント(任意)">
+        <input
+          type="number"
+          id="starsInput"
+          min="1"
+          max="5"
+          value="4"
+          title="星評価"
+          inputmode="numeric"
+        />
+        <input
+          type="text"
+          id="commentInput"
+          maxlength="32"
+          placeholder="コメント(任意)"
+        />
       </div>
 
+      <!-- 操作ボタン -->
       <button id="addMealBtn" class="primary large">記録する</button>
       <button id="resetBtn" class="danger subtle">全てリセット</button>
 
+      <!-- ヘルパーテキスト（API状態など） -->
       <div id="helperText" class="hint"></div>
     </div>
 
+    <!-- 日付ごとの一覧 -->
     <div id="mealsByDay"></div>
 
+    <!-- 戻る -->
     <div class="back-button">
       <a href="../../index.html">← ホームへ戻る</a>
     </div>
   </div>
 
-  <!-- iPhoneのHEIC/HEIF → JPEG 変換 -->
+  <!-- HEIC/HEIF → JPEG 変換（iPhone対応） -->
   <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
+
+  <!-- モバイル用スクリプト（API_URL を最新 ngrok に！） -->
   <script src="script.mobile.js"></script>
-</body>
-</html>
-
-    <!-- 日付ごとの一覧 -->
-    <main id="mealsByDay" class="days"></main>
-
-    <!-- 編集モーダル（テキスト編集式）-->
-    <div id="modalOverlay" class="modal" hidden>
-      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="editTitle">
-        <header class="sheet-head">
-          <h2 id="editTitle">記録の編集</h2>
-          <button id="closeModal" class="icon-btn" aria-label="閉じる">✕</button>
-        </header>
-        <img id="modalPhoto" class="sheet-photo" alt="料理写真のプレビュー">
-        <div class="sheet-body">
-          <label>料理名<input id="modalFoodInput" type="text" placeholder="料理名" /></label>
-          <label>評価<input id="modalStarsInput" type="number" min="1" max="5" inputmode="numeric" /></label>
-          <label>コメント<input id="modalCommentInput" type="text" maxlength="32" placeholder="コメント (任意)" /></label>
-          <p class="hint">※ 料理名を編集しても栄養は自動再計算されません。</p>
-        </div>
-        <footer class="sheet-foot">
-          <button id="saveModalBtn" class="primary">保存</button>
-        </footer>
-      </div>
-    </div>
-  </div>
-
-  <script src="script.mobile.js"></script>
-
-  <!-- HEIC/HEIF → JPEG 変換ライブラリ（約30KB） -->
-<script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
-
 </body>
 </html>
