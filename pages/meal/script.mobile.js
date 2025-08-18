@@ -1,5 +1,5 @@
 // ===== モバイル版 script（API先を更新！）=====
-const API_URL = "https://<今のngrok>.ngrok-free.app/api/calc-calorie"; // ←差し替え必須
+const API_URL = "https://cbb0b1273bbb.ngrok-free.app/api/calc-calorie";
 
 // ---- DOM ----
 const els = {
