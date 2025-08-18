@@ -1,4 +1,4 @@
-// ===== データ読み込み：mealの保存形式 =====
+// ---- meal 読み ----
 function loadMeals(){
   try { return JSON.parse(localStorage.getItem("bisyokuka_meals_v2") || "[]"); }
   catch { return []; }
@@ -17,9 +17,8 @@ function sumToday(){
   }, {kcal:0,p:0,f:0,c:0});
 }
 
-// ===== ゲージ（P/F/C 目標にどれだけ近いか）=====
+// ---- ゲージ ----
 const target = { kcal: 1800, p: 100, f: 60, c: 250 };
-function clamp01(x){ return Math.max(0, Math.min(1, x)); }
 function updateGauge(){
   const s = sumToday();
   const closenessP = 1 - Math.min(1, Math.abs(s.p - target.p) / target.p);
@@ -27,13 +26,11 @@ function updateGauge(){
   const closenessC = 1 - Math.min(1, Math.abs(s.c - target.c) / target.c);
   const pct = Math.round((closenessP + closenessF + closenessC)/3 * 100);
 
-  const bar = document.getElementById("gaugeBar");
-  const label = document.getElementById("gaugePct");
-  bar.style.width = `${pct}%`;
-  label.textContent = `${pct}%`;
+  document.getElementById("gaugeBar").style.width = `${pct}%`;
+  document.getElementById("gaugePct").textContent = `${pct}%`;
 }
 
-// ===== クエスト達成状態（達成なら緑＆無効化、未達成は青で分析へ）=====
+// ---- クエスト達成表示 ----
 function setDone(id, done){
   const li = document.getElementById(id);
   if (!li) return;
@@ -53,23 +50,16 @@ function updateQuests(){
   setDone('q3', s.c >= 180 && s.c <= 300);
   setDone('q4', Math.abs(s.kcal - 1800) <= 180);
 
-  // イベント側は例（必要があれば置き換え）
   setDone('e1', false);
   setDone('e2', s.p >= 80);
   setDone('e3', false);
   setDone('e4', false);
 }
 
-// ===== キャラ：正面→横向きへ時々切替（数秒間）=====
-function initHeroMotion(){
-  const stage = document.querySelector('.hero-stage');
-  const front = document.getElementById('heroFront');
-  const side  = document.getElementById('heroSide');
+// ---- キャラ切替（正面が基本・時々横向きで3.4秒歩く）----
+function initHero(){
+  const stage = document.getElementById('heroStage');
   const bubble= document.getElementById('bubbleText');
-
-  // 横向き画像が読み込めない場合は“横向き演出”をスキップ
-  let sideUsable = true;
-  side.addEventListener('error', ()=> sideUsable = false, {once:true});
 
   const lines = [
     "いい感じのペース！",
@@ -77,27 +67,21 @@ function initHeroMotion(){
     "バランスが大事だよ。",
     "今日の目標、いけそう！",
   ];
+  function speak(){ bubble.textContent = lines[Math.floor(Math.random()*lines.length)]; }
 
-  function randomSpeak(){
-    bubble.textContent = lines[Math.floor(Math.random()*lines.length)];
-  }
-
-  function goSideWalk(){
-    if (!sideUsable) return;                 // 横向き無しなら何もしない
+  function sideWalk(){
     stage.classList.add('hero-moving');
-    randomSpeak();
-    // 3〜4秒ほど横向きウォーク
+    speak();
     setTimeout(()=> stage.classList.remove('hero-moving'), 3400);
   }
 
-  // 最初は正面、9〜14秒ごとに横向きウォーク
-  setInterval(()=> goSideWalk(), 9000 + Math.random()*5000);
+  // 9〜14秒ごとに横向き演出
+  setInterval(()=> sideWalk(), 9000 + Math.random()*5000);
 }
 
-// ===== 初期化 =====
-function init(){
+// ---- init ----
+document.addEventListener('DOMContentLoaded', ()=>{
   updateGauge();
   updateQuests();
-  initHeroMotion();
-}
-document.addEventListener('DOMContentLoaded', init);
+  initHero();
+});
