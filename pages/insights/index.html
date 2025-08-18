@@ -19,6 +19,8 @@
         <span class="spacer"></span>
         <button id="expandAll" class="ghost small">すべて展開</button>
         <button id="collapseAll" class="ghost small">すべて畳む</button>
+        <!-- 追加：詳細なグラフ -->
+        <button id="openCharts" class="ghost small" style="margin-left:8px;">詳細なグラフ</button>
       </nav>
     </header>
 
@@ -39,5 +41,12 @@
   </div>
 
   <script src="script.js"></script>
+  <script>
+    // 「詳細なグラフ」ボタンで charts.html へ遷移
+    document.getElementById('openCharts')?.addEventListener('click', () => {
+      // 同じフォルダに charts.html を置く想定（/pages/insights/charts.html）
+      location.href = 'charts.html';
+    });
+  </script>
 </body>
 </html>
