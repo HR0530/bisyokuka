@@ -3,79 +3,51 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>美食家さん – キャラ育成</title>
+  <title>キャラ育成 | 美食家さん</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="wrap">
-    <header class="topbar">
-      <a class="btn ghost" href="../../index.html">← ホーム</a>
-      <h1>🎮 キャラ育成</h1>
-      <a class="btn" href="dex/index.html">📚 図鑑</a>
-    </header>
+  <header class="topbar">
+    <a class="btn ghost" href="../../index.html">← ホーム</a>
+    <h1>🎮 キャラ育成</h1>
+    <a class="btn accent" href="./dex/index.html">📚 図鑑</a>
+  </header>
 
-    <!-- ゲージ（全幅） -->
-    <section class="gauge-card">
-      <div class="gauge-head">
-        <div class="title">きょうの育成ゲージ</div>
-        <div id="gaugePct" class="pct">0%</div>
+  <!-- 育成ゲージ -->
+  <section class="gauge-card">
+    <div class="gauge-title">きょうの育成ゲージ <span id="gaugePct">0%</span></div>
+    <div class="gauge-rail"><div id="gaugeBar" class="gauge-bar"></div></div>
+    <div id="gaugeHint" class="gauge-hint">まずは1食記録してみよう！</div>
+  </section>
+
+  <main class="two-col">
+    <!-- 左：キャラ -->
+    <section class="hero-col">
+      <div class="bubble" id="heroBubble">今日のPFCバランス、いい感じ？</div>
+
+      <div class="hero-stage">
+        <!-- スプライト本体（CSSスプライトアニメ） -->
+        <div id="hero" class="hero"
+             data-sprite="project-root/男_スーツ1.png"
+             aria-label="キャラクター">
+        </div>
+        <div class="shadow"></div>
       </div>
-      <div class="gauge-rail"><div id="gaugeBar" class="gauge-bar"></div></div>
-      <div id="gaugeNote" class="note">食事を記録すると育成が進みます</div>
     </section>
 
-    <!-- 左：キャラ / 右：クエスト＋イベント -->
-    <section class="main-grid">
-      <!-- 左：キャラ -->
-      <div class="stage card">
-        <canvas id="charCanvas" width="288" height="288"></canvas>
-        <div id="speech" class="speech">こんにちは！</div>
+    <!-- 右：クエスト/イベント（4列=4行表示） -->
+    <section class="quest-col">
+      <div class="panel">
+        <h2>⏳ クエスト</h2>
+        <ul id="quests" class="task-list"></ul>
       </div>
 
-      <!-- 右：クエスト＆イベント（各4行） -->
-      <div class="tasks card">
-        <h2>🧭 クエスト</h2>
-        <div class="list">
-          <div class="item">
-            <div class="name">たんぱく質 50–120g を目指す</div>
-            <a class="btn tiny" href="../insights/index.html">チェック</a>
-          </div>
-          <div class="item">
-            <div class="name">脂質 40–70g に収める</div>
-            <a class="btn tiny" href="../insights/index.html">チェック</a>
-          </div>
-          <div class="item">
-            <div class="name">炭水化物 180–300g をキープ</div>
-            <a class="btn tiny" href="../insights/index.html">チェック</a>
-          </div>
-          <div class="item">
-            <div class="name">総カロリーを目標±10%に</div>
-            <a class="btn tiny" href="../insights/index.html">チェック</a>
-          </div>
-        </div>
-
+      <div class="panel">
         <h2>🎉 イベント</h2>
-        <div class="list">
-          <div class="item">
-            <div class="name">新食材に挑戦（未登録の食材を1つ）</div>
-            <a class="btn tiny" href="../insights/index.html">チェック</a>
-          </div>
-          <div class="item">
-            <div class="name">野菜をもう1品追加してみよう</div>
-            <a class="btn tiny" href="../insights/index.html">チェック</a>
-          </div>
-          <div class="item">
-            <div class="name">水分 1.5L 以上を目指す</div>
-            <a class="btn tiny" href="../insights/index.html">チェック</a>
-          </div>
-          <div class="item">
-            <div class="name">低脂質・高たんぱくメニューの日</div>
-            <a class="btn tiny" href="../insights/index.html">チェック</a>
-          </div>
-        </div>
+        <ul id="events" class="task-list"></ul>
       </div>
     </section>
-  </div>
+  </main>
 
   <script src="script.js"></script>
 </body>
