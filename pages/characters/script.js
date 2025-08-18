@@ -1,227 +1,196 @@
-// ===== 設定 =====
-const STORAGE_MEALS = "bisyokuka_meals_v2";
-const STORAGE_DEX   = "dex_state"; // { unlocked: {id:true,...}, xp: number, level: number }
-const XP_MAX_BASE   = 100;
+// ===== キャラ定義（project-root に置いたスプライトを列挙）=====
+// 追加したい時はこの配列に push（最大32体）だけでOK
+const CHARACTERS = [
+  { id:"m_suit1",  name:"スーツ男子A",  sprite:"project-root/男_スーツ1.png",  unlockKey:"u00" },
+  { id:"f_suit1",  name:"スーツ女子A",  sprite:"project-root/女_スーツ1.png",  unlockKey:"u01" },
+  { id:"f_suit2",  name:"スーツ女子B",  sprite:"project-root/女_スーツ2.png",  unlockKey:"u02" },
+  { id:"f_lab",    name:"研究員",        sprite:"project-root/女_スーツ白衣.png", unlockKey:"u03" },
+  { id:"f_std1",   name:"学生A",         sprite:"project-root/女_学生1.png",     unlockKey:"u04" },
+  { id:"f_std2",   name:"学生B",         sprite:"project-root/女_学生2.png",     unlockKey:"u05" },
+  { id:"f_std3",   name:"学生C",         sprite:"project-root/女_学生3.png",     unlockKey:"u06" },
+  { id:"f_horror", name:"ミステリアス",  sprite:"project-root/女_学生ホラー.png", unlockKey:"u07" },
+  { id:"f_swim1",  name:"スイマーA",     sprite:"project-root/女_水着1.png",     unlockKey:"u08" },
+  { id:"f_swim2",  name:"スイマーB",     sprite:"project-root/女_水着2.png",     unlockKey:"u09" },
+  { id:"f_swim3",  name:"スイマーC",     sprite:"project-root/女_水着3.png",     unlockKey:"u10" },
+];
 
-// ===== ユーティリティ =====
-const fmt = n => new Intl.NumberFormat("ja-JP",{maximumFractionDigits:0}).format(n);
-const todayKey = () => new Date().toISOString().slice(0,10);
-const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
-
-function loadMeals(){ try{ return JSON.parse(localStorage.getItem(STORAGE_MEALS)||"[]"); }catch{ return []; } }
-function saveDex(state){ localStorage.setItem(STORAGE_DEX, JSON.stringify(state)); }
-function loadDex(){
-  try{
-    const d = JSON.parse(localStorage.getItem(STORAGE_DEX)||"{}");
-    return { unlocked: d.unlocked||{0:true}, xp: d.xp||0, level: d.level||1 };
-  }catch{
-    return { unlocked:{0:true}, xp:0, level:1 };
-  }
-}
-
-// ===== 今日の栄養合計 =====
-function sumToday(){
-  const meals = loadMeals().filter(m => (m.date||"").startsWith(todayKey()));
-  return meals.reduce((a,m)=>({
-    kcal:  a.kcal  + (Number(m.totals?.kcal)||0),
-    p:     a.p     + (Number(m.totals?.protein)||0),
-    f:     a.f     + (Number(m.totals?.fat)||0),
-    c:     a.c     + (Number(m.totals?.carbs)||0),
-    count: a.count + 1
-  }), {kcal:0,p:0,f:0,c:0,count:0});
-}
-
-// ===== 成長（バランス判定→EXP） =====
-// 目安: P:体重×1.0~1.5, F:20~70g, C:150~300g くらいをざっくり最適域に
-function computeDailyXP(sum){
-  if(sum.count===0) return {xp:0, comment:"まずは1食記録してみよう！"};
-  let xp = 10; // 記録ボーナス
-  let tips = [];
-  // バランス評価（かなりざっくり）
-  if(sum.p >= 50 && sum.p <= 120){ xp += 20; } else tips.push("たんぱく質を50–120gに");
-  if(sum.f >= 20 && sum.f <= 70){  xp += 20; } else tips.push("脂質を20–70gに");
-  if(sum.c >= 150 && sum.c <= 300){xp += 20; } else tips.push("炭水化物を150–300gに");
-
-  // カロリー超過/不足ペナルティ軽く
-  if(sum.kcal >= 1400 && sum.kcal <= 2600){ xp += 15; } else tips.push("総カロリーを1400–2600kcalに");
-
-  // 3食以上でボーナス
-  if(sum.count >= 3) xp += 15;
-
-  const comment = tips.length ? `今日は${tips[0]}近づけると育成が進むよ！` : "バランス良いね、その調子！";
-  return { xp: clamp(xp, 0, 90), comment };
-}
-
-// ===== レベル・称号 =====
-function xpMaxFor(level){ return XP_MAX_BASE + (level-1)*20; }
-function titleFor(level){
-  if(level>=20) return "伝説の美食家";
-  if(level>=15) return "究極の食通";
-  if(level>=10) return "一流フーディー";
-  if(level>=6)  return "健やかグルメ";
-  if(level>=3)  return "期待の新人";
-  return "見習いフーディー";
-}
-
-// ===== UI参照 =====
-const els = {
-  xpFill: document.getElementById("xpFill"),
-  xpNow:  document.getElementById("xpNow"),
-  xpMax:  document.getElementById("xpMax"),
-  level:  document.getElementById("levelNum"),
-  title:  document.getElementById("titleText"),
-  speech: document.getElementById("speech"),
-  sprite: document.getElementById("sprite"),
-  quests: document.getElementById("quests"),
-  challenges: document.getElementById("challenges"),
-  refreshQuests: document.getElementById("refreshQuests"),
+// ===== 進捗の保存 =====
+const LS = {
+  UNLOCKS: "bisyokuka_unlocks_v1",     // {u00:true, ...}
+  ACTIVE:  "bisyokuka_active_char_v1", // "m_suit1"
 };
+const getUnlocks = () => JSON.parse(localStorage.getItem(LS.UNLOCKS) || "{}");
+const setUnlock = (key, v=true) => localStorage.setItem(LS.UNLOCKS, JSON.stringify({ ...getUnlocks(), [key]:v }));
+const getActiveId = () => localStorage.getItem(LS.ACTIVE) || CHARACTERS[0].id;
+const setActiveId = (id) => localStorage.setItem(LS.ACTIVE, id);
 
-// ===== スプライトアニメ（3コマ×4方向） =====
-const FRAME_W = 32, FRAME_H = 32;
-let frame=0, dir=0; // 0:下,1:左,2:右,3:上
-function updateSpriteBackground(){
-  // スプライト原寸は 96x128（3×4）。表示はCSSで2倍に拡大。
-  const x = -FRAME_W * frame;
-  const y = -FRAME_H * dir;
-  els.sprite.style.backgroundPosition = `${x}px ${y}px`;
+// ===== meal から当日の栄養を集計（ゲージ＆クエスト計算に使用）=====
+function sumToday(){
+  const items = JSON.parse(localStorage.getItem("bisyokuka_meals_v2") || "[]");
+  const today = new Date().toISOString().slice(0,10);
+  const sums = { kcal:0, p:0, f:0, c:0 };
+  for(const m of items){
+    if ((m.date||"").slice(0,10) !== today) continue;
+    sums.kcal += Number(m.totals?.kcal||0);
+    sums.p    += Number(m.totals?.protein||0);
+    sums.f    += Number(m.totals?.fat||0);
+    sums.c    += Number(m.totals?.carbs||0);
+  }
+  return sums;
 }
-function loop(){
-  frame = (frame+1)%3;
-  updateSpriteBackground();
-  requestAnimationFrame(()=> setTimeout(loop, 220));
-}
-updateSpriteBackground();
-loop();
+const calorieGoal = Number(localStorage.getItem("calorieGoal")||1580);
 
-// 方向切替（セリフのたびにちょっと向きを変える）
-function nudgeDir(){ dir = (dir+1)%4; updateSpriteBackground(); }
+// ===== UI要素 =====
+const spriteEl = document.getElementById("sprite");
+const bubbleEl = document.getElementById("bubble");
+const charListEl = document.getElementById("charList");
+const barBalanceEl = document.getElementById("barBalance");
+const barCalEl = document.getElementById("barCal");
+const titleBadgeEl = document.getElementById("titleBadge");
 
-// ===== クエスト生成（今日の合計ベース） =====
-function buildQuests(sum){
-  const qs = [];
-  qs.push({
-    text:`たんぱく質を 70g 以上にする（現在 ${fmt(sum.p)}g）`,
-    done: sum.p >= 70
-  });
-  qs.push({
-    text:`脂質を 70g 未満にする（現在 ${fmt(sum.f)}g）`,
-    done: sum.f < 70
-  });
-  qs.push({
-    text:`炭水化物を 180g 以上にする（現在 ${fmt(sum.c)}g）`,
-    done: sum.c >= 180
-  });
-  qs.push({
-    text:`3食以上 記録する（現在 ${sum.count} 食）`,
-    done: sum.count >= 3
-  });
-  return qs;
+// セリフ
+const LINES = [
+  "今日もバランスよく食べよう！",
+  "たんぱく質、足りてる？",
+  "水分補給を忘れずに。",
+  "ゆっくり味わうと満足度UP！",
+  "野菜はカラフルにね。"
+];
+
+// ===== キャラ描画 =====
+function updateSprite(){
+  const id = getActiveId();
+  const ch = CHARACTERS.find(c => c.id===id) || CHARACTERS[0];
+  spriteEl.style.backgroundImage = `url("${ch.sprite}")`;
+  spriteEl.style.backgroundSize  = `288px 512px`; // 96*3 x 128*4（縦方向はそのまま）
+  // デフォルトは前向き（最下段）にしておく
+  spriteEl.style.backgroundPositionY = `-${128*3}px`;
 }
-function renderQuests(qs){
-  els.quests.innerHTML = "";
-  for(const q of qs){
-    const li = document.createElement("li");
-    li.className = "quest-item";
-    li.innerHTML = `
-      <span>${q.text}</span>
-      <span class="badge ${q.done?'ok':'warn'}">${q.done?'達成':'未達'}</span>
+function sayRandom(){
+  bubbleEl.textContent = LINES[Math.floor(Math.random()*LINES.length)];
+}
+
+// ===== 左：キャラ一覧 =====
+function renderCharList(){
+  const unlocks = getUnlocks();
+  const active = getActiveId();
+  charListEl.innerHTML = "";
+  CHARACTERS.forEach(ch => {
+    const div = document.createElement("div");
+    const locked = !unlocks[ch.unlockKey];
+    div.className = "char-item" + (locked ? " locked" : "") + (active===ch.id ? " current" : "");
+    div.innerHTML = `
+      <img src="${ch.sprite}" alt="${ch.name}">
+      <div class="name">${ch.name}</div>
+      <div class="tag">${locked ? "未解放" : "解放済"}</div>
     `;
-    els.quests.appendChild(li);
-  }
+    if (!locked){
+      div.addEventListener("click", ()=>{ setActiveId(ch.id); updateSprite(); renderCharList(); });
+    }
+    charListEl.appendChild(div);
+  });
 }
 
-// ===== チャレンジ（実績） =====
-function buildChallenges(){
-  const meals = loadMeals();
-  const days = new Set(meals.map(m => (m.date||"").slice(0,10)));
-  const kinds = new Set(meals.map(m => m.food||""));
+// ===== 右：クエスト/チャレンジ =====
+function pct(v, max){ return Math.max(0, Math.min(100, Math.round((v/max)*100))); }
 
-  return [
-    { text:`通算 10 食 記録`, done: meals.length>=10 },
-    { text:`通算 30 食 記録`, done: meals.length>=30 },
-    { text:`ユニーク料理 10 種`, done: kinds.size>=10 },
-    { text:`7 日連続 記録`,     done: consecutiveDays(meals)>=7 },
+function computeQuests(){
+  const t = sumToday();
+  // PFCバランス指数（ざっくり）：P=25%, F=25%, C=50% を理想
+  const totalG = t.p + t.f + t.c || 1;
+  const pR = t.p/totalG, fR = t.f/totalG, cR = t.c/totalG;
+  const score = Math.round(100 - (Math.abs(pR-0.25)+Math.abs(fR-0.25)+Math.abs(cR-0.50))*100);
+  return {
+    t,
+    balanceScore: Math.max(0, score),
+    calPct: pct(t.kcal, calorieGoal||1600)
+  };
+}
+
+function renderQuests(){
+  const qRoot = document.getElementById("questList");
+  const dRoot = document.getElementById("dailyList");
+  qRoot.innerHTML = dRoot.innerHTML = "";
+
+  const {t, balanceScore, calPct} = computeQuests();
+
+  // クエスト（固定3つ）
+  const quests = [
+    { title:"バランス達人", desc:"P:25% / F:25% / C:50% を目指そう", value:balanceScore, unit:"%", goal:100 },
+    { title:"カロリー調整", desc:`目標 ${calorieGoal}kcal に近づけよう`, value:calPct, unit:"%", goal:100 },
+    { title:"たんぱく質チャージ", desc:"今日のP 80g 以上", value:pct(t.p, 80), unit:"%", goal:100 },
   ];
-}
-function consecutiveDays(meals){
-  const set = new Set(meals.map(m => (m.date||"").slice(0,10)));
-  let streak=0;
-  let d = new Date();
-  while(set.has(d.toISOString().slice(0,10))){
-    streak++; d.setDate(d.getDate()-1);
-  }
-  return streak;
-}
-function renderChallenges(cs){
-  els.challenges.innerHTML = "";
-  for(const c of cs){
-    const li = document.createElement("li");
-    li.className = "challenge-item";
-    li.innerHTML = `
-      <span>${c.text}</span>
-      <span class="badge ${c.done?'ok':'warn'}">${c.done?'達成':'未達'}</span>
-    `;
-    els.challenges.appendChild(li);
-  }
+  quests.forEach(q => qRoot.appendChild(makeCard(q)));
+
+  // デイリー（チップ表示）
+  const daily = [
+    { title:"野菜を摂ろう", desc:"炭水化物 200g 以下", value:pct(Math.max(0,200 - t.c),200), unit:"%", goal:100 },
+    { title:"脂質を控えめに", desc:"脂質 60g 以下", value:pct(Math.max(0,60 - t.f),60), unit:"%", goal:100 },
+  ];
+  daily.forEach(q => dRoot.appendChild(makeCard(q)));
 }
 
-// ===== 図鑑連動（解放） =====
-function maybeUnlockByProgress(state){
-  const meals = loadMeals();
-  const kinds = new Set(meals.map(m => m.food||""));
-  // 例: ユニーク料理 5/10/20/30 で 4,8,16,24 番を解放
-  const unlocks = [
-    { need:5,  id:4 },
-    { need:10, id:8 },
-    { need:20, id:16 },
-    { need:30, id:24 },
-  ];
-  for(const u of unlocks){
-    if(kinds.size>=u.need) state.unlocked[u.id]=true;
-  }
-  saveDex(state);
+function makeCard(q){
+  const wrap = document.createElement("div");
+  wrap.className = "card";
+  wrap.innerHTML = `
+    <div class="top">
+      <div class="title">${q.title}</div>
+      <div class="small">${q.desc}</div>
+    </div>
+    <div class="rail"><div class="fill" style="width:${Math.min(100,q.value)}%"></div></div>
+    <div class="small">進捗: ${Math.min(100,q.value)}${q.unit}</div>
+  `;
+  return wrap;
 }
+
+// ===== 称号・ゲージ =====
+function updateHUD(){
+  const {t, balanceScore, calPct} = computeQuests();
+
+  // ゲージ
+  barBalanceEl.style.width = `${balanceScore}%`;
+  barCalEl.style.width = `${Math.min(100, calPct)}%`;
+  barCalEl.classList.toggle("ok", t.kcal <= calorieGoal*1.05);
+
+  // 称号（ざっくり）
+  let title = "見習いフーディー";
+  if (balanceScore>=70 && t.kcal>0) title = "バランサー";
+  if (balanceScore>=85 && t.kcal>0) title = "栄養賢者";
+  if (balanceScore>=95 && t.kcal>0) title = "究極の美食家";
+  titleBadgeEl.textContent = title;
+
+  // 解放ロジック例：P80g達成で1体解放、バランス90で更に1体…（自由に増やせる）
+  const unlocks = getUnlocks();
+  if (t.p >= 80) setUnlock("u01", true);
+  if (balanceScore >= 90) setUnlock("u02", true);
+  if (t.kcal >= calorieGoal*0.9 && t.kcal <= calorieGoal*1.1) setUnlock("u03", true);
+  renderCharList();
+}
+
+// ===== イベント =====
+document.getElementById("talkBtn").addEventListener("click", sayRandom);
+document.getElementById("prevBtn").addEventListener("click", ()=> {
+  const idx = CHARACTERS.findIndex(c=>c.id===getActiveId());
+  const prev = (idx-1+CHARACTERS.length)%CHARACTERS.length;
+  setActiveId(CHARACTERS[prev].id); updateSprite(); renderCharList();
+});
+document.getElementById("nextBtn").addEventListener("click", ()=> {
+  const idx = CHARACTERS.findIndex(c=>c.id===getActiveId());
+  const next = (idx+1)%CHARACTERS.length;
+  setActiveId(CHARACTERS[next].id); updateSprite(); renderCharList();
+});
 
 // ===== 初期化 =====
-function init(){
-  const state = loadDex();
-  const sum = sumToday();
-  const {xp, comment} = computeDailyXP(sum);
+(function init(){
+  // 初期1体は解放しておく
+  const un = getUnlocks();
+  if (!un.u00){ setUnlock("u00", true); }
+  renderCharList();
+  updateSprite();
+  updateHUD();
+  sayRandom();
 
-  // XP反映（1日1回の概念は簡易化：ページロード時に仮加算）
-  state.xp += xp;
-  while(state.xp >= xpMaxFor(state.level)){
-    state.xp -= xpMaxFor(state.level);
-    state.level++;
-  }
-  saveDex(state);
-  maybeUnlockByProgress(state);
-
-  // ゲージ/称号
-  const max = xpMaxFor(state.level);
-  document.getElementById("xpMax").textContent = max;
-  document.getElementById("xpNow").textContent = state.xp;
-  document.getElementById("levelNum").textContent = state.level;
-  document.getElementById("titleText").textContent = titleFor(state.level);
-  const pct = Math.round(state.xp / max * 100);
-  document.getElementById("xpFill").style.width = `${pct}%`;
-
-  // セリフ
-  els.speech.textContent = comment;
-  nudgeDir();
-
-  // クエスト/チャレンジ
-  renderQuests(buildQuests(sum));
-  renderChallenges(buildChallenges());
-
-  // 更新ボタン
-  els.refreshQuests.addEventListener("click", ()=>{
-    const s = sumToday();
-    renderQuests(buildQuests(s));
-    els.speech.textContent = computeDailyXP(s).comment;
-    nudgeDir();
-  });
-}
-
-init();
+  // 10秒ごとにHUD更新（mealの追加に追随）
+  setInterval(updateHUD, 10000);
+})();
