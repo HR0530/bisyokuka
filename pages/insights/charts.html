@@ -140,17 +140,24 @@
     }
 
     // 共通オプション（小さめレジェンド・文字色）
-    const commonOpts = {
-      maintainAspectRatio: false,   // .chart-wrap の高さを優先
-      plugins:{
-        legend:{ position:'bottom', labels:{ color:'#e5e7eb', boxWidth:14, boxHeight:14, font:{ size:11 } } },
-        tooltip:{ bodyColor:'#111', titleColor:'#111' }
-      },
-      scales:{
-        x:{ ticks:{ color:'#e5e7eb', font:{ size:11 } }, grid:{ color:'rgba(255,255,255,.06)' } },
-        y:{ ticks:{ color:'#e5e7eb', font:{ size:11 } }, grid:{ color:'rgba(255,255,255,.06)' } }
-      }
-    };
+// 共通オプション（小さめレジェンド・文字色）
+const commonOpts = {
+  maintainAspectRatio: false,   // .chart-wrap の高さを優先
+  plugins:{
+    legend:{ position:'bottom', labels:{ color:'#e5e7eb', boxWidth:14, boxHeight:14, font:{ size:11 } } },
+    tooltip:{ 
+      backgroundColor: 'rgba(255,255,255,0.9)',
+      titleColor: '#111827',
+      bodyColor: '#111827',
+      borderColor: '#e5e7eb',
+      borderWidth: 1
+    }
+  },
+  scales:{
+    x:{ ticks:{ color:'#e5e7eb', font:{ size:11 } }, grid:{ color:'rgba(255,255,255,.06)' } },
+    y:{ ticks:{ color:'#e5e7eb', font:{ size:11 } }, grid:{ color:'rgba(255,255,255,.06)' } }
+  }
+};
 
     // ====== 今日（円＋棒）======
     function drawToday(){
