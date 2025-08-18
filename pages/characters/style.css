@@ -2,9 +2,16 @@
   --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --muted:#94a3b8;
   --line:#1f2937; --accent:#ff9800; --brand:#0ea5e9; --ok:#22c55e;
 
-  /* 全体バランス（スクロール無しで収める前提） */
-  --hero-stage-h: 200px;   /* キャラ舞台の高さ */
-  --hero-scale: 0.9;       /* キャラ画像の拡大率（必要に応じて 0.8〜1.1 程度で調整） */
+  /* スプライト（3×4）の1コマサイズ */
+  --frame-w: 32px;
+  --frame-h: 32px;
+  /* どの行を“正面/横”に使うか（シートによって異なる場合はここだけ変えればOK） */
+  --front-row: 0;   /* 0=1行目, 1=2行目... */
+  --side-row:  2;   /* 右向き行のインデックス */
+
+  /* 全体レイアウト（スクロール無し） */
+  --hero-stage-h: 200px;
+  --hero-scale: 2.8;   /* キャラの見た目サイズ（必要に応じて 2.4〜3.2 で微調整） */
 }
 
 *{box-sizing:border-box}
@@ -25,7 +32,7 @@ body{
 .topbar h1{margin:0; font-size:18px; line-height:1}
 .actions{display:flex; gap:8px}
 
-/* 共通ボタン */
+/* ボタン */
 .btn{
   appearance:none; border:none; cursor:pointer;
   font-weight:700; border-radius:12px; padding:9px 13px; text-decoration:none;
@@ -46,7 +53,7 @@ body{
 .gauge-bar{height:100%; width:0; background:linear-gradient(90deg,#4ade80,#22c55e)}
 .gauge-hint{margin-top:6px; color:var(--muted); font-size:12px}
 
-/* 2カラム（残り領域をすべて消費） */
+/* 2カラム（残り領域を全て使う） */
 .two-col{
   width:min(1200px, 96%); margin:0 auto 12px;
   display:grid; grid-template-columns: 1fr 1fr; gap:14px;
@@ -76,23 +83,49 @@ body{
   flex:0 0 auto;
 }
 
-/* キャラ画像2枚を重ねて切り替え（正面/横） */
-.hero-img{
-  position:absolute; bottom:24px; left:50%; transform: translateX(-50%) scale(var(--hero-scale));
+/* ===== スプライト（正面/横）の実体。1コマだけ表示 ===== */
+.hero-sprite{
+  position:absolute; bottom:24px; left:50%;
+  width: var(--frame-w); height: var(--frame-h);
+  transform: translateX(-50%) scale(var(--hero-scale));
   transform-origin: center bottom;
-  width: 180px; height:auto; /* 基準サイズ：ここを下げるとより小さくなる */
-  image-rendering: auto;
-  transition: opacity .25s ease, transform .25s ease;
+  image-rendering: pixelated;
+  background-image: url("project-root/男_スーツ1.png");
+  background-repeat: no-repeat;
+  background-size: calc(var(--frame-w) * 3) calc(var(--frame-h) * 4);
+  /* 立ちポーズ：中央コマ(1)を見せる */
+  --col: 1; /* 0/1/2 */
+  --row: 0; /* 上から0,1,2,3 */
+  background-position: calc(var(--frame-w) * var(--col) * -1)
+                       calc(var(--frame-h) * var(--row) * -1);
+  /* 歩きアニメは基本停止。横向き表示中のみ走らせる */
+  animation: walk .6s steps(3) infinite;
+  animation-play-state: paused;
 }
-.hero-img.side{ opacity:0; pointer-events:none }
-.hero-moving .hero-img.side{ opacity:1 }   /* 横向き表示中 */
-.hero-moving .hero-img.front{ opacity:0 }
+.hero-sprite.front{ --row: var(--front-row); } /* 正面行 */
+.hero-sprite.side { --row: var(--side-row);  opacity:0; pointer-events:none; }
 
 .shadow{
   position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
   width:42%; height:12px;
   background: radial-gradient(closest-side, rgba(0,0,0,.42), transparent 70%);
   filter: blur(2px); opacity:.7; border-radius:50%;
+}
+
+/* 横向き中：frontを隠し、sideを表示+歩く */
+.hero-moving .hero-sprite.front{ opacity:0 }
+.hero-moving .hero-sprite.side{
+  opacity:1; animation-play-state: running;
+}
+
+/* 横向きの左右ゆらぎ（少し歩く感） */
+@keyframes walkSide {
+  0%   { transform: translate(-50%, 0) scale(var(--hero-scale)); }
+  50%  { transform: translate(calc(-50% + 36px), 0) scale(var(--hero-scale)); }
+  100% { transform: translate(-50%, 0) scale(var(--hero-scale)); }
+}
+.hero-moving .hero-sprite.side{
+  animation: walk .6s steps(3) infinite, walkSide 3.4s ease-in-out forwards;
 }
 
 /* 右：クエスト/イベント（4行固定・スクロール無し） */
@@ -108,10 +141,10 @@ body{
 .task-list{
   list-style:none; margin:0; padding:0;
   display:grid; gap:8px;
-  grid-template-rows: repeat(4, 1fr); /* ← 4行きっちり */
+  grid-template-rows: repeat(4, 1fr);
   height:100%;
 }
-.task-list > li:nth-child(n+5){ display:none } /* 5行目以降は非表示 */
+.task-list > li:nth-child(n+5){ display:none }
 
 .task{
   display:grid; grid-template-columns: 1fr auto; align-items:center;
@@ -126,25 +159,21 @@ body{
   border:none; border-radius:12px; font-weight:800;
   padding:10px 14px; cursor:pointer; min-width:104px;
   text-decoration:none; display:inline-flex; justify-content:center; align-items:center;
-  background:#3bb2ff; color:#03223a;  /* デフォルト青 */
+  background:#3bb2ff; color:#03223a;
 }
 .task.done .action{
-  background:var(--ok); color:#06260f; pointer-events:none; /* 達成時は無効化 */
+  background:var(--ok); color:#06260f; pointer-events:none;
 }
 .task.done{ outline:2px dashed rgba(34,197,94,.25) }
 
-/* 凡例 */
+/* 小凡例 */
 .mini-legend{ margin-top:10px; color:var(--muted); font-size:12px }
 .mini-legend .dot{ display:inline-block; width:10px; height:10px; border-radius:50%; margin:0 6px 0 2px; vertical-align:middle }
 .mini-legend .blue{ background:#3bb2ff }
 .mini-legend .green{ background:#22c55e }
 
-/* 横向き“歩き”アニメ（左右にゆっくり） */
-@keyframes walkSide {
-  0%   { transform: translate(-50%, 0) scale(var(--hero-scale)); }
-  50%  { transform: translate(calc(-50% + 40px), 0) scale(var(--hero-scale)); }
-  100% { transform: translate(-50%, 0) scale(var(--hero-scale)); }
-}
-.hero-moving .hero-img.side{
-  animation: walkSide 3.4s ease-in-out forwards;
+/* 横3コマの歩きアニメ（列を送る） */
+@keyframes walk{
+  0%   { background-position-x: 0; }
+  100% { background-position-x: calc(var(--frame-w) * -3); }
 }
