@@ -158,6 +158,40 @@
       document.getElementById('metaC').textContent = sums.c;
       document.getElementById('metaK').textContent = sums.kcal;
     }catch(e){}
+// ===== 達成判定 → 右ボタンを「達成！」（緑）に =====
+function setDone(selector, done) {
+  const li = document.querySelector(selector);
+  if (!li) return;
+  if (done) {
+    li.classList.add('done');
+    const btn = li.querySelector('.action');
+    if (btn) btn.textContent = '達成！';
+  } else {
+    li.classList.remove('done');
+    const btn = li.querySelector('.action');
+    if (btn) btn.textContent = '確認する';
+  }
+}
+
+// 目安（必要に応じて共通設定へ寄せてOK）
+const target = { kcal: 1800, p: 80, f: 60, c: 240 };
+
+// すでに sums を計算済みとして（前回のコード）:
+setDone('.panel:nth-of-type(1) .task:nth-child(1)',
+  sums.p >= 50 && sums.p <= 120);
+setDone('.panel:nth-of-type(1) .task:nth-child(2)',
+  sums.f >= 40 && sums.f <= 70);
+setDone('.panel:nth-of-type(1) .task:nth-child(3)',
+  sums.c >= 180 && sums.c <= 300);
+setDone('.panel:nth-of-type(1) .task:nth-child(4)',
+  Math.abs(sums.kcal - target.kcal) <= target.kcal * 0.10);
+
+// 例：イベント側は簡易ダミー（必要なら実データに合わせて）
+setDone('.panel:nth-of-type(2) .task:nth-child(1)', false);
+setDone('.panel:nth-of-type(2) .task:nth-child(2)', false);
+setDone('.panel:nth-of-type(2) .task:nth-child(3)', false);
+setDone('.panel:nth-of-type(2) .task:nth-child(4)', false);
+
   </script>
 </body>
 </html>
