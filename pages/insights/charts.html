@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>美食家さん - 詳細なグラフ</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#111827; --card:#1f2937; --ink:#e5e7eb; --line:#374151;
+      --accent:#ff9800; --muted:#9ca3af;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial}
+    a{color:#ffbb54;text-decoration:none}
+    .container{width:92%;max-width:960px;margin:16px auto 32px}
+    header{display:flex;align-items:center;gap:10px;justify-content:space-between}
+    h1{margin:0}
+    .btn{background:var(--accent);color:#111;padding:8px 12px;border:none;border-radius:10px;font-weight:700;cursor:pointer}
+    .ghost{background:#0ea5e9;color:#031422}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    .panel{margin-top:14px;display:grid;gap:10px}
+    details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+    summary{cursor:pointer;font-weight:700}
+    .card{background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:12px}
+    .card h3{margin:0 0 8px}
+    .muted{color:var(--muted);font-size:12px;margin-top:6px}
+    .backline{margin-top:14px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📈 詳細なグラフ</h1>
+      <div class="controls">
+        <button id="expandAll" class="btn ghost">すべて展開</button>
+        <button id="collapseAll" class="btn ghost">すべて畳む</button>
+        <a href="index.html" class="btn">← 分析に戻る</a>
+      </div>
+    </header>
+
+    <div class="panel" id="chartsPanel">
+      <details open>
+        <summary>本日の栄養バランス（円グラフ：たんぱく質 / 脂質 / 炭水化物）</summary>
+        <div class="card">
+          <h3>今日のP/F/C</h3>
+          <canvas id="chartTodayPFC" height="220"></canvas>
+          <div class="muted">今日の食事から算出した比率です。</div>
+        </div>
+      </details>
+
+      <details open>
+        <summary>直近7日の推移（棒グラフ）</summary>
+        <div class="card">
+          <h3>総カロリー（kcal）</h3>
+          <canvas id="chartKcal7" height="220"></canvas>
+        </div>
+        <div class="card">
+          <h3>P/F/C（スタック）</h3>
+          <canvas id="chartPFC7" height="220"></canvas>
+        </div>
+      </details>
+    </div>
+
+    <div class="backline">
+      <a href="../../index.html">← ホームへ戻る</a>
+    </div>
+  </div>
+
+  <script>
+    // ====== データ読み込み（mealの保存形式）======
+    const meals = JSON.parse(localStorage.getItem("bisyokuka_meals_v2") || "[]");
+
+    function groupByDate(meals){
+      const g = {};
+      for(const m of meals){
+        const d = (m.date || "").slice(0,10);
+        if(!d) continue;
+        if(!g[d]) g[d] = { kcal:0, protein:0, fat:0, carbs:0 };
+        g[d].kcal   += Number(m.totals?.kcal   || 0);
+        g[d].protein+= Number(m.totals?.protein|| 0);
+        g[d].fat    += Number(m.totals?.fat    || 0);
+        g[d].carbs  += Number(m.totals?.carbs  || 0);
+      }
+      return g;
+    }
+    const grouped = groupByDate(meals);
+
+    function lastNDatesAsc(n){
+      const res = [];
+      const today = new Date();
+      for(let i=n-1;i>=0;i--){
+        const d = new Date(today); d.setDate(today.getDate()-i);
+        res.push(d.toISOString().slice(0,10));
+      }
+      return res; // 古い→新しい
+    }
+
+    // ====== 円グラフ（今日）======
+    function drawTodayPFC(){
+      const todayKey = new Date().toISOString().slice(0,10);
+      const t = grouped[todayKey] || {kcal:0,protein:0,fat:0,carbs:0};
+      const ctx = document.getElementById("chartTodayPFC").getContext("2d");
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['たんぱく質','脂質','炭水化物'],
+          datasets: [{
+            data: [t.protein, t.fat, t.carbs],
+            backgroundColor: ['#34d399','#fbbf24','#60a5fa']
+          }]
+        },
+        options: {
+          plugins:{
+            legend:{ position:'bottom', labels:{ color:'#e5e7eb' } },
+            tooltip:{ callbacks:{
+              label:(c)=>{
+                const v = Number(c.raw)||0;
+                const total = (t.protein+t.fat+t.carbs)||1;
+                const pct = (v/total*100).toFixed(1);
+                return `${c.label}: ${v} g (${pct}%)`;
+              }
+            }}
+          }
+        }
+      });
+    }
+
+    // ====== 直近7日の棒グラフ ======
+    function draw7days(){
+      const d7 = lastNDatesAsc(7);
+      const kcal7 = d7.map(d => grouped[d]?.kcal || 0);
+      const p7    = d7.map(d => grouped[d]?.protein || 0);
+      const f7    = d7.map(d => grouped[d]?.fat || 0);
+      const c7    = d7.map(d => grouped[d]?.carbs || 0);
+
+      // 総カロリー
+      const ctx2 = document.getElementById("chartKcal7").getContext("2d");
+      new Chart(ctx2, {
+        type:'bar',
+        data:{
+          labels:d7,
+          datasets:[{ label:'カロリー(kcal)', data:kcal7, backgroundColor:'#0ea5e9' }]
+        },
+        options:{
+          scales:{
+            x:{ ticks:{ color:'#e5e7eb' }, grid:{ color:'rgba(255,255,255,.06)' } },
+            y:{ ticks:{ color:'#e5e7eb' }, grid:{ color:'rgba(255,255,255,.06)' } }
+          },
+          plugins:{ legend:{ labels:{ color:'#e5e7eb' } } }
+        }
+      });
+
+      // P/F/C スタック
+      const ctx3 = document.getElementById("chartPFC7").getContext("2d");
+      new Chart(ctx3, {
+        type:'bar',
+        data:{
+          labels:d7,
+          datasets:[
+            { label:'たんぱく質(g)', data:p7, backgroundColor:'#34d399' },
+            { label:'脂質(g)',       data:f7, backgroundColor:'#fbbf24' },
+            { label:'炭水化物(g)',   data:c7, backgroundColor:'#60a5fa' },
+          ]
+        },
+        options:{
+          scales:{
+            x:{ stacked:true, ticks:{ color:'#e5e7eb' }, grid:{ color:'rgba(255,255,255,.06)' } },
+            y:{ stacked:true, ticks:{ color:'#e5e7eb' }, grid:{ color:'rgba(255,255,255,.06)' } },
+          },
+          plugins:{ legend:{ labels:{ color:'#e5e7eb' } } }
+        }
+      });
+    }
+
+    // ====== すべて展開/畳む ======
+    const expandAllBtn = document.getElementById('expandAll');
+    const collapseAllBtn = document.getElementById('collapseAll');
+    const detailsEls = () => Array.from(document.querySelectorAll('#chartsPanel details'));
+    expandAllBtn.addEventListener('click', () => detailsEls().forEach(d => d.open = true));
+    collapseAllBtn.addEventListener('click', () => detailsEls().forEach(d => d.open = false));
+
+    // 初期描画
+    drawTodayPFC();
+    draw7days();
+  </script>
+</body>
+</html>
