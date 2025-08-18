@@ -2,60 +2,64 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>美食家さん 分析</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>栄養インサイト</title>
+  <link rel="stylesheet" href="insights.css" />
 </head>
 <body>
-  <div class="nutri-container">
-    <header class="page-head">
-      <h1>📈 分析（栄養・カロリー）</h1>
-      <div class="head-actions">
-        <button id="expandAllBtn" class="ghost small">すべて展開</button>
-        <button id="collapseAllBtn" class="ghost small">すべて畳む</button>
-      </div>
-    </header>
+  <h1>🍽 栄養インサイト</h1>
+  <p>食事の栄養情報を確認できます。項目をクリックして開閉してください。</p>
 
-    <!-- 概要カード -->
-    <section class="summary-grid">
-      <div class="summary-card">
-        <div class="label">今日の合計</div>
-        <div class="value"><span id="todayKcal">0</span> kcal</div>
-        <div class="subs">
-          <span>たんぱく質 <span id="todayP">0</span> g</span>
-          <span>脂質 <span id="todayF">0</span> g</span>
-          <span>炭水化物 <span id="todayC">0</span> g</span>
-        </div>
+  <div class="accordion">
+    <div class="accordion-item">
+      <button class="accordion-header">カロリー</button>
+      <div class="accordion-content">
+        <table>
+          <thead>
+            <tr><th>日付</th><th>合計カロリー</th></tr>
+          </thead>
+          <tbody id="calorieTable"></tbody>
+        </table>
       </div>
-      <div class="summary-card">
-        <div class="label">今週の合計</div>
-        <div class="value"><span id="weekKcal">0</span> kcal</div>
-        <div class="subs">
-          <span>たんぱく質 <span id="weekP">0</span> g</span>
-          <span>脂質 <span id="weekF">0</span> g</span>
-          <span>炭水化物 <span id="weekC">0</span> g</span>
-        </div>
-      </div>
-      <div class="summary-card">
-        <div class="label">今月の合計</div>
-        <div class="value"><span id="monthKcal">0</span> kcal</div>
-        <div class="subs">
-          <span>たんぱく質 <span id="monthP">0</span> g</span>
-          <span>脂質 <span id="monthF">0</span> g</span>
-          <span>炭水化物 <span id="monthC">0</span> g</span>
-        </div>
-      </div>
-    </section>
+    </div>
 
-    <!-- 日別の詳細（折り畳み） -->
-    <div id="daysWrap" class="days-wrap"></div>
+    <div class="accordion-item">
+      <button class="accordion-header">たんぱく質</button>
+      <div class="accordion-content">
+        <table>
+          <thead>
+            <tr><th>日付</th><th>たんぱく質 (g)</th></tr>
+          </thead>
+          <tbody id="proteinTable"></tbody>
+        </table>
+      </div>
+    </div>
 
-    <div class="back" style="text-align:center; margin-top: 2rem;">
-      <a href="../../index.html" style="text-decoration:none; color:#ffbb54;">← トップに戻る</a>
+    <div class="accordion-item">
+      <button class="accordion-header">脂質</button>
+      <div class="accordion-content">
+        <table>
+          <thead>
+            <tr><th>日付</th><th>脂質 (g)</th></tr>
+          </thead>
+          <tbody id="fatTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="accordion-item">
+      <button class="accordion-header">炭水化物</button>
+      <div class="accordion-content">
+        <table>
+          <thead>
+            <tr><th>日付</th><th>炭水化物 (g)</th></tr>
+          </thead>
+          <tbody id="carbTable"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script src="insights.js"></script>
 </body>
 </html>
