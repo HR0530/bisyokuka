@@ -2,24 +2,29 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>図鑑</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>図鑑 | 美食家さん</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{ --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --line:#1f2937; --muted:#9ca3af; }
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Poppins,Arial}
-  .wrap{max-width:1100px;margin:0 auto;padding:16px}
-  h1{margin:0 0 12px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Poppins,system-ui,Segoe UI,Roboto,Arial}
+  .wrap{max-width:1100px;margin:0 auto;padding:14px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .btn{background:#1f2937;border:1px solid var(--line);color:#e5e7eb;padding:8px 12px;border-radius:10px;text-decoration:none;font-weight:700}
+  .title{font-size:20px;font-weight:800}
+
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
   .cell{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;position:relative}
   .thumb{
     width:96px;height:128px;margin:4px auto 8px;image-rendering:pixelated;
-    background-repeat:no-repeat;background-size:300% 400%; /* 3x4 */
-    background-position: 50% 66.666%; /* 正面(ROW_FRONT=2), 中央(COL_CENTER=1) */
+    background-repeat:no-repeat;background-size:300% 400%;
+    background-position:50% 66.666%; /* 正面(行2) 中央(列1) */
   }
-  .name{font-size:13px;text-align:center;color:#e5e7eb}
+  .name{font-size:13px;text-align:center}
   .locked::after{
     content:"LOCKED"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    color:#fff; font-weight:800; letter-spacing:.5px;
+    color:#fff; font-weight:800; letter-spacing:.4px;
     background:linear-gradient(0deg, rgba(0,0,0,.55), rgba(0,0,0,.35));
     border-radius:12px;
   }
@@ -27,12 +32,18 @@
 </head>
 <body>
   <div class="wrap">
-    <h1>📚 図鑑</h1>
+    <div class="topbar">
+      <div class="title">📚 図鑑</div>
+      <div>
+        <a class="btn" href="index.html">🧑‍🍳 育成へ</a>
+        <a class="btn" href="../../index.html">🏠 ホーム</a>
+      </div>
+    </div>
+
     <div id="dex" class="grid"></div>
   </div>
 
 <script>
-  // 32キャラ分の例（画像は必要な分だけ用意できればOK）
   const BASE = "project-root/";
   const characters = [
     { id:1,  name:"キャラ#1",  src:"男_スーツ1.png", unlocked:true },
@@ -46,7 +57,7 @@
     { id:9,  name:"キャラ#9",  src:"女_水着1.png" },
     { id:10, name:"キャラ#10", src:"女_水着2.png" },
     { id:11, name:"キャラ#11", src:"女_水着3.png" },
-    // ... 32体まで増やしてOK
+    // …必要分 32体まで
   ];
 
   const dex = document.getElementById('dex');
