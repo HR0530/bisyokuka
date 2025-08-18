@@ -1,5 +1,5 @@
 // ===== モバイル版 script（API先を更新！）=====
-const API_URL = "https://cbb0b1273bbb.ngrok-free.app/api/calc-calorie";
+const API_URL = "https://cbb0b1273bbb.ngrok-free.app/api/calc-calorie"; // ←今のURLに
 
 // ---- DOM ----
 const els = {
@@ -258,7 +258,7 @@ els.addMealBtn.addEventListener("click", async () => {
     const item = {
       id: "m_" + now.getTime(),
       date: now.toISOString(),
-      photo: photoDataURL,                 // ← ここがあるから“記録できない”を回避できる
+      photo: photoDataURL,
       food: "不明",
       stars: Math.max(1, Math.min(5, parseInt(els.starsInput.value || "3", 10))),
       comment: els.commentInput.value.trim(),
@@ -277,23 +277,6 @@ els.addMealBtn.addEventListener("click", async () => {
     els.photoPreview.innerHTML = "";
     originalFile = null;
     render();
-  }
-});
-
-
-    // リセット
-    els.commentInput.value = "";
-    els.starsInput.value = "4";
-    els.photoPreview.innerHTML = "";
-    originalFile = null;
-
-    render();
-  } catch (e) {
-    console.warn("AI解析失敗", e);
-    els.helperText.textContent = "解析に失敗しました: " + (e?.message || "ネットワーク/サーバ停止の可能性");
-  } finally {
-    els.addMealBtn.disabled = false;
-    els.addMealBtn.textContent = defaultText;
   }
 });
 
