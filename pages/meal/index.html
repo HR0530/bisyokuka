@@ -7,6 +7,24 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
+
+  <script>
+  // 1度だけ判定してモバイルへ
+  (function () {
+    // 既にモバイルにいたら何もしない
+    if (location.pathname.endsWith('index.mobile.html')) return;
+
+    // ユーザーが手動で戻したいケースもあるので、明示オプトアウト対応
+    if (localStorage.getItem('meal_forceDesktop') === '1') return;
+
+    // 画面幅で判定（UAは誤検知があるため避ける）
+    var w = Math.min(window.screen.width, window.innerWidth || 9999);
+    if (w <= 812) { // 目安：タブレット未満をモバイル扱い
+      location.replace('index.mobile.html');
+    }
+  })();
+</script>
+
 <body>
   <div class="meal-app-container">
     <h1>🍽️ 美食家さん 食事記録</h1>
