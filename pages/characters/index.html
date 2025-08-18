@@ -1,62 +1,145 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>美食家さん - キャラ育成</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>キャラ育成</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    :root{
+      --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --line:#1f2937;
+      --accent:#f59e0b; --brand:#0ea5e9; --muted:#9ca3af;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Poppins,Arial}
+    .wrap{max-width:960px;margin:0 auto;padding:16px}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+    .title{font-weight:800}
+    .row{display:grid;grid-template-columns: 180px 1fr 220px; gap:12px}
+    @media (max-width:860px){ .row{grid-template-columns: 1fr} }
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+    .gauge{height:10px;background:#0b1220;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+    .bar{height:100%;background:linear-gradient(90deg,#34d399,#0ea5e9)}
+    .badge{display:inline-block;background:#1f2937;border:1px solid var(--line);padding:4px 8px;border-radius:999px;font-size:12px;color:#cbd5e1}
+
+    /* ===== Sprite（1コマ切り出し & アニメ） ===== */
+    .stage{display:flex;align-items:center;justify-content:center;min-height:240px}
+    .sprite{
+      width:96px; height:128px;   /* シート全体サイズ（3×4） */
+      image-rendering: pixelated;
+      background-repeat:no-repeat;
+      /* 3列×4行のシートを百分率で扱う（背景全体を 300%×400% にすると1タイル=幅の1/3, 高さの1/4） */
+      background-size: 300% 400%;
+      /* 背景位置はJSで row/col に応じて変更 */
+    }
+
+    .say{margin-top:8px;font-size:14px;color:#e5e7eb;background:#0b1220;border:1px solid var(--line);padding:8px 10px;border-radius:10px}
+
+    .quests{display:grid;grid-template-columns: 1fr 1fr;gap:8px}
+    @media (max-width:860px){ .quests{grid-template-columns: 1fr} }
+    .q{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .q .text{font-size:14px}
+    .q .btn{background:var(--brand);color:#031422;border:none;border-radius:10px;padding:6px 10px;font-weight:700;cursor:pointer}
+  </style>
 </head>
 <body>
-  <div class="page">
-    <header class="header">
-      <h1>🧑‍🍳 キャラ育成</h1>
-      <nav class="nav">
-        <a class="btn ghost" href="dex/index.html">📔 図鑑</a>
-        <a class="btn" href="../../index.html">← ホーム</a>
-      </nav>
+  <div class="wrap">
+    <header>
+      <h1 class="title">🧑‍🍳 キャラ育成</h1>
+      <span class="badge" id="titleBadge">称号：ビギナー</span>
     </header>
 
-    <!-- 成長ゲージ（当日のバランスで増減） -->
-    <section class="panel">
-      <div class="rank-row">
-        <div class="title">
-          <div class="rank">称号: <span id="titleText">見習いフーディー</span></div>
-          <div class="lvl">Lv <span id="levelNum">1</span></div>
+    <div class="row">
+      <!-- 左：ゲージ -->
+      <section class="card">
+        <div style="font-weight:700;margin-bottom:6px">成長ゲージ</div>
+        <div class="gauge"><div id="growBar" class="bar" style="width:20%"></div></div>
+        <div style="font-size:12px;color:#9ca3af;margin-top:6px">今日の栄養バランスで育成が進みます</div>
+      </section>
+
+      <!-- 中央：キャラ -->
+      <section class="card">
+        <div class="stage">
+          <div id="sprite" class="sprite"></div>
         </div>
-        <div class="gauge">
-          <div id="xpFill" class="fill" style="width:0%"></div>
+        <div id="speech" class="say">今日は「たんぱく質 50–120g」に近づけると育成が進むよ！</div>
+      </section>
+
+      <!-- 右：クエスト/チャレンジ（スクロールなしで見切る） -->
+      <section class="card">
+        <div style="font-weight:700;margin-bottom:6px">クエスト / チャレンジ</div>
+        <div class="quests">
+          <div class="q card">
+            <div class="text">P合計 80g 以上</div>
+            <button class="btn" data-quest="p80">挑戦</button>
+          </div>
+          <div class="q card">
+            <div class="text">野菜 2品 以上</div>
+            <button class="btn" data-quest="veg2">挑戦</button>
+          </div>
         </div>
-        <div class="xp-text"><span id="xpNow">0</span>/<span id="xpMax">100</span> EXP</div>
-      </div>
-    </section>
-
-    <!-- キャラ＆セリフ（スプライトアニメ） -->
-    <section class="panel hero">
-      <div class="bubble" id="speech">今日のごはん、何食べた？バランス見て育ててね！</div>
-      <div id="sprite" class="sprite facing-down" aria-label="メインキャラ"></div>
-      <div class="hint">※ 歩行アニメ：3フレーム×4方向スプライト想定（96×128px）</div>
-    </section>
-
-    <!-- クエスト（今日の食事から出題） -->
-    <section class="panel">
-      <h2>🎯 今日のクエスト</h2>
-      <ul id="quests" class="quests"></ul>
-      <button id="refreshQuests" class="btn ghost">クエスト更新</button>
-    </section>
-
-    <!-- チャレンジ（実績/解放の足がかり） -->
-    <section class="panel">
-      <h2>🏆 チャレンジ</h2>
-      <ul id="challenges" class="challenges"></ul>
-    </section>
-
-    <footer class="footer">
-      <small class="muted">保存データ：localStorage「bisyokuka_meals_v2」「dex_state」</small>
-    </footer>
+      </section>
+    </div>
   </div>
 
-  <script src="data/characters.js"></script>
-  <script src="script.js"></script>
+  <script>
+    // ==== スプライト設定（3列×4行 / 1タイル=32×32px, シート=96×128px） ====
+    const SHEET = "project-root/男_スーツ1.png";  // 好きなキャラに差し替え
+    const COLS = 3, ROWS = 4;
+    // 行の意味（シートにより違う場合は調整してOK）
+    const ROW_RIGHT = 0, ROW_LEFT = 1, ROW_FRONT = 2, ROW_BACK = 3;
+    const COL_CENTER = 1, COL_LEFT = 0, COL_RIGHT = 2;
+
+    const sprite = document.getElementById("sprite");
+    sprite.style.backgroundImage = `url('${SHEET}')`;
+
+    // 1コマの背景位置（百分率）を計算
+    function setFrame(el, row, col){
+      // 背景サイズを 300%×400% にしているので、各コマの左上は 0%, 50% などの割合になる
+      const x = (col / (COLS - 1)) * 100;     // 0, 50, 100
+      const y = (row / (ROWS - 1)) * 100;     // 0, 33.3, 66.6, 100
+      el.style.backgroundPosition = `${x}% ${y}%`;
+    }
+
+    // 初期は正面・中央コマ（アイドル）
+    setFrame(sprite, ROW_FRONT, COL_CENTER);
+
+    // たまに “横にチョイ歩き” アニメ（左右1往復）
+    function sideShuffle(){
+      // 左か右をランダム
+      const toLeft = Math.random() < 0.5;
+      const row = toLeft ? ROW_LEFT : ROW_RIGHT;
+      const seq = [COL_CENTER, toLeft ? COL_LEFT : COL_RIGHT, COL_CENTER]; // ﾄﾝｯ → 戻る
+      let i = 0;
+      const tick = setInterval(()=>{
+        setFrame(sprite, row, seq[i]);
+        i++;
+        if(i >= seq.length){
+          clearInterval(tick);
+          // 正面に戻す
+          setFrame(sprite, ROW_FRONT, COL_CENTER);
+        }
+      }, 120);
+    }
+
+    // 6〜12秒に一回だけ発火
+    function scheduleShuffle(){
+      const ms = 6000 + Math.random()*6000;
+      setTimeout(()=>{
+        sideShuffle();
+        scheduleShuffle();
+      }, ms);
+    }
+    scheduleShuffle();
+
+    // ====== 成長ゲージ & 称号（ダミー例） ======
+    const meals = JSON.parse(localStorage.getItem("bisyokuka_meals_v2")||"[]");
+    const todayKey = new Date().toISOString().slice(0,10);
+    const today = meals.filter(m=>m.date?.slice(0,10)===todayKey);
+    const sumP = today.reduce((a,b)=>a + Number(b.totals?.protein||0), 0);
+    const pRate = Math.max(0, Math.min(1, sumP / 120)); // 120gで100%
+    document.getElementById("growBar").style.width = (pRate*100).toFixed(0) + "%";
+    if(sumP >= 80) document.getElementById("titleBadge").textContent = "称号：たんぱくマスター";
+  </script>
 </body>
 </html>
