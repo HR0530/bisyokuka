@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- ヘッダー -->
   <header class="topbar">
     <h1>🧑‍🍳 キャラ育成</h1>
     <nav class="actions">
@@ -16,22 +15,20 @@
     </nav>
   </header>
 
-  <!-- ゲージ -->
   <section class="gauge-card">
     <div class="gauge-title">本日の栄養バランス達成率： <span id="gaugePct">0%</span></div>
     <div class="gauge-rail"><div id="gaugeBar" class="gauge-bar"></div></div>
     <div class="gauge-hint">※P/F/C の目標にどれだけ近いかの平均で算出しています。</div>
   </section>
 
-  <!-- 2カラム：左=キャラ / 右=クエスト＆イベント（各4行固定） -->
   <main class="two-col">
     <!-- 左：キャラ -->
     <section class="hero-col">
       <p class="bubble" id="bubbleText">今日もバランス良く食べよう！</p>
-      <div class="hero-stage">
-        <!-- 正面 & 横向き（横向き画像が無い場合は同じ画像でもOK） -->
-        <img id="heroFront" class="hero-img front" src="project-root/男_スーツ1.png" alt="キャラ(正面)">
-        <img id="heroSide"  class="hero-img side"  src="project-root/男_スーツ1.png" alt="キャラ(横向き)">
+      <div class="hero-stage" id="heroStage">
+        <!-- スプライト（1コマ表示）: 正面と横向きを重ねる -->
+        <div id="heroFront" class="hero-sprite front"></div>
+        <div id="heroSide"  class="hero-sprite side"></div>
         <div class="shadow"></div>
       </div>
       <div class="mini-legend">
@@ -39,9 +36,8 @@
       </div>
     </section>
 
-    <!-- 右：クエスト / イベント -->
+    <!-- 右：クエスト / イベント（各4行固定） -->
     <section class="quest-col">
-      <!-- クエスト -->
       <div class="panel">
         <h2>🎯 クエスト（今日）</h2>
         <ul class="task-list" id="questList">
@@ -76,7 +72,6 @@
         </ul>
       </div>
 
-      <!-- イベント（例：自由に差し替え可） -->
       <div class="panel">
         <h2>🎉 イベント</h2>
         <ul class="task-list" id="eventList">
