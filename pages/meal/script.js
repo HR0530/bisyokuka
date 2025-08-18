@@ -1,6 +1,6 @@
 // ===== pages/meal/script.js（完成版） =====
 // ★必ず “今の ngrok URL” に置き換える
-const API_URL = " https://cb55562dc471.ngrok-free.app";
+const API_URL = "https://cb55562dc471.ngrok-free.app";
 
 // ---- DOM ----
 const els = {
