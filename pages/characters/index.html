@@ -10,12 +10,10 @@
   <header class="app-header">
     <h1>🍽️ 美食家さん｜キャラ育成</h1>
 
-    <!-- ▼ ナビボタン -->
     <nav class="nav-buttons">
       <button class="ghost-btn" id="btnHome">🏠 ホーム</button>
       <button class="ghost-btn" id="btnDex">📚 図鑑</button>
     </nav>
-    <!-- ▲ -->
 
     <div class="user-summary">
       <div class="title-badge" id="titleBadge">見習いフーディー</div>
@@ -30,7 +28,6 @@
   </header>
 
   <main class="layout">
-    <!-- 左：ステージ -->
     <section class="stage-card">
       <div class="stage-toolbar">
         <div class="stat"><strong>体力</strong> <span id="hpText">100</span></div>
@@ -40,10 +37,9 @@
 
       <div class="stage">
         <div class="grid-bg" aria-hidden="true"></div>
-        <!-- 中央キャラ（1体） -->
+        <!-- キャラ本体（画像は JS で差し替え） -->
         <div id="character" class="char dir-front" title="主人公"></div>
 
-        <!-- 右下クイックナビ -->
         <div class="stage-fab">
           <button class="fab" id="fabDex" title="図鑑へ">📚</button>
           <button class="fab" id="fabHome" title="ホームへ">🏠</button>
@@ -55,15 +51,12 @@
         <ul>
           <li>📷 <strong>食事記録を投稿</strong>：+20 XP（写真つきなら +30）</li>
           <li>🎯 <strong>カロリー目標を達成</strong>：+40 XP（連続達成で +10 ずつボーナス）</li>
-          <li>🧪 <strong>研究クエスト</strong>（下の一覧）：クエスト毎の XP を付与</li>
+          <li>🧪 <strong>研究クエスト</strong>：クエスト毎に XP を付与</li>
           <li>🔥 <strong>連続ログイン</strong>：日数 × 5 XP（最大 +25）</li>
         </ul>
-        <p>XP が一定値に達すると <strong>レベル</strong> が上がり、所持称号も自動で更新されます。<br>
-          称号例：見習い → 研究家 → 美食家 → 食の達人 → グランド・グルメ</p>
       </details>
     </section>
 
-    <!-- 右：クエスト/ログ -->
     <aside class="side-card">
       <h2>クエスト</h2>
       <div class="quest-list" id="questList"></div>
@@ -76,7 +69,6 @@
   <footer class="app-footer">
     © Bishokuka-san
     <div class="footer-actions">
-      <!-- 分析へ（確認する） -->
       <button class="blue" id="goInsights">確認する</button>
       <button class="green" id="quickClear">達成！ログをクリア</button>
     </div>
