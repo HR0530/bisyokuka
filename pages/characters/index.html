@@ -3,111 +3,78 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>美食家さん – キャラ育成</title>
+  <title>美食家さん｜キャラ育成</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="topbar">
-    <h1>🧑‍🍳 キャラ育成</h1>
-    <nav class="actions">
-      <a class="btn ghost" href="dex/index.html">📚 図鑑</a>
-      <a class="btn accent" href="../../index.html">🏠 ホーム</a>
+  <header class="app-header">
+    <h1>🍽️ 美食家さん｜キャラ育成</h1>
+
+    <!-- ▼ 追加：ナビボタン -->
+    <nav class="nav-buttons">
+      <button class="ghost-btn" id="btnHome">🏠 ホーム</button>
+      <button class="ghost-btn" id="btnDex">📚 図鑑</button>
     </nav>
+    <!-- ▲ 追加 -->
+
+    <div class="user-summary">
+      <div class="title-badge" id="titleBadge">見習いフーディー</div>
+      <div class="xp-wrap">
+        <div class="xp-label"><span id="levelText">Lv.1</span> <span id="xpText">0 / 100 XP</span></div>
+        <div class="xp-bar"><div id="xpFill"></div></div>
+      </div>
+    </div>
   </header>
 
-  <section class="gauge-card">
-    <div class="gauge-title">本日の栄養バランス達成率： <span id="gaugePct">0%</span></div>
-    <div class="gauge-rail"><div id="gaugeBar" class="gauge-bar"></div></div>
-    <div class="gauge-hint">※P/F/C の目標にどれだけ近いかの平均で算出しています。</div>
-  </section>
+  <main class="layout">
+    <section class="stage-card">
+      <div class="stage-toolbar">
+        <div class="stat"><strong>体力</strong> <span id="hpText">100</span></div>
+        <div class="stat"><strong>満足度</strong> <span id="satisfactionText">50</span></div>
+        <button class="ghost-btn" id="toggleRun">一時停止</button>
+      </div>
 
-  <main class="two-col">
-    <!-- 左：キャラ -->
-    <section class="hero-col">
-      <p class="bubble" id="bubbleText">今日もバランス良く食べよう！</p>
-      <div class="hero-stage" id="heroStage">
-        <!-- スプライト（1コマ表示）: 正面と横向きを重ねる -->
-        <div id="heroFront" class="hero-sprite front"></div>
-        <div id="heroSide"  class="hero-sprite side"></div>
-        <div class="shadow"></div>
+      <div class="stage">
+        <div class="grid-bg" aria-hidden="true"></div>
+        <div id="character" class="char dir-front" title="主人公"></div>
+
+        <!-- ▼ 追加：ステージ右下のクイックナビ（任意・使わなければ削除可） -->
+        <div class="stage-fab">
+          <button class="fab" id="fabDex" title="図鑑へ">📚</button>
+          <button class="fab" id="fabHome" title="ホームへ">🏠</button>
+        </div>
+        <!-- ▲ 追加 -->
       </div>
-      <div class="mini-legend">
-        <span class="dot blue"></span>確認する（分析へ） / <span class="dot green"></span>達成！
-      </div>
+
+      <details class="howto" open>
+        <summary>称号・経験値はこう上がる（原理）</summary>
+        <ul>
+          <li>📷 <strong>食事記録を投稿</strong>：+20 XP（写真つきなら +30）</li>
+          <li>🎯 <strong>カロリー目標を達成</strong>：+40 XP（連続達成で +10 ずつボーナス）</li>
+          <li>🧪 <strong>研究クエスト</strong>（下の一覧）：クエスト毎の XP を付与</li>
+          <li>🔥 <strong>連続ログイン</strong>：日数 × 5 XP（最大 +25）</li>
+        </ul>
+        <p>XP が一定値に達すると <strong>レベル</strong> が上がり、所持称号も自動で更新されます。<br>
+        称号例：見習い → 研究家 → 美食家 → 食の達人 → グランド・グルメ</p>
+      </details>
     </section>
 
-    <!-- 右：クエスト / イベント（各4行固定） -->
-    <section class="quest-col">
-      <div class="panel">
-        <h2>🎯 クエスト（今日）</h2>
-        <ul class="task-list" id="questList">
-          <li class="task" id="q1">
-            <div>
-              <p class="task-title">たんぱく質を 50–120g の範囲に</p>
-              <div class="meta">Pの目安を満たそう</div>
-            </div>
-            <a class="action view" href="../insights/index.html">確認する</a>
-          </li>
-          <li class="task" id="q2">
-            <div>
-              <p class="task-title">脂質を 40–70g の範囲に</p>
-              <div class="meta">Fの目安を満たそう</div>
-            </div>
-            <a class="action view" href="../insights/index.html">確認する</a>
-          </li>
-          <li class="task" id="q3">
-            <div>
-              <p class="task-title">炭水化物を 180–300g の範囲に</p>
-              <div class="meta">Cの目安を満たそう</div>
-            </div>
-            <a class="action view" href="../insights/index.html">確認する</a>
-          </li>
-          <li class="task" id="q4">
-            <div>
-              <p class="task-title">カロリーを 1800±10% に</p>
-              <div class="meta">総カロリーのバランス調整</div>
-            </div>
-            <a class="action view" href="../insights/index.html">確認する</a>
-          </li>
-        </ul>
-      </div>
-
-      <div class="panel">
-        <h2>🎉 イベント</h2>
-        <ul class="task-list" id="eventList">
-          <li class="task" id="e1">
-            <div>
-              <p class="task-title">新しい料理の写真を撮る</p>
-              <div class="meta">未登録ジャンルに挑戦</div>
-            </div>
-            <a class="action view" href="../insights/index.html">確認する</a>
-          </li>
-          <li class="task" id="e2">
-            <div>
-              <p class="task-title">今日の合計 P を 80g 以上</p>
-              <div class="meta">高たんぱくデー</div>
-            </div>
-            <a class="action view" href="../insights/index.html">確認する</a>
-          </li>
-          <li class="task" id="e3">
-            <div>
-              <p class="task-title">野菜料理を 2 回以上記録</p>
-              <div class="meta">彩り豊かな食卓</div>
-            </div>
-            <a class="action view" href="../insights/index.html">確認する</a>
-          </li>
-          <li class="task" id="e4">
-            <div>
-              <p class="task-title">夜 21:00 までに夕食を終える</p>
-              <div class="meta">生活リズムチャレンジ</div>
-            </div>
-            <a class="action view" href="../insights/index.html">確認する</a>
-          </li>
-        </ul>
-      </div>
-    </section>
+    <aside class="side-card">
+      <h2>クエスト</h2>
+      <div class="quest-list" id="questList"></div>
+      <h3 class="mt">今日の活動ログ</h3>
+      <ul class="log" id="activityLog"></ul>
+    </aside>
   </main>
 
-  <script src="script.js"></script>
+  <footer class="app-footer">
+    © Bishokuka-san
+    <div class="footer-actions">
+      <button class="blue" onclick="window.location.href='../index_pc.html'">確認する</button>
+      <button class="green" id="quickClear">達成！ログをクリア</button>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
 </body>
 </html>
