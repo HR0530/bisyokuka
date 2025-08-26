@@ -6,10 +6,8 @@
 /* reset-ish */
 *{box-sizing:border-box}
 html,body{height:100%}
-body{
-  margin:0; font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: var(--bg); color: var(--ink);
-}
+body{ margin:0; font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg); color: var(--ink); }
 
 /* ---------- Header ---------- */
 .app-header{
@@ -17,15 +15,12 @@ body{
   display:grid; grid-template-columns: 1fr auto auto; gap:12px; align-items:center;
 }
 .app-header h1{margin:0; font-size:20px; letter-spacing:0.02em}
-
 .nav-buttons{display:flex; gap:8px; justify-self:center}
 .nav-buttons .ghost-btn{min-width:110px}
-
 .user-summary{justify-self:end; display:flex; align-items:center; gap:16px}
 .title-badge{
-  background:linear-gradient(135deg,#2dd4bf,#60a5fa);
-  color:#0b1320; font-weight:700; padding:6px 10px; border-radius:999px;
-  box-shadow:0 2px 12px rgba(0,0,0,.3);
+  background:linear-gradient(135deg,#2dd4bf,#60a5fa); color:#0b1320; font-weight:700;
+  padding:6px 10px; border-radius:999px; box-shadow:0 2px 12px rgba(0,0,0,.3);
 }
 .xp-wrap{min-width:360px}
 .xp-label{display:flex; justify-content:space-between; font-size:12px; color:var(--muted)}
@@ -45,10 +40,8 @@ body{
 /* ---------- Stage ---------- */
 .stage-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px}
 .stat{font-size:13px; color:var(--muted)}
-.ghost-btn{
-  background:transparent; color:var(--ink); border:1px solid #263144; padding:6px 10px;
-  border-radius:10px; cursor:pointer
-}
+.ghost-btn{ background:transparent; color:var(--ink); border:1px solid #263144;
+  padding:6px 10px; border-radius:10px; cursor:pointer }
 .ghost-btn:hover{background:#0e1625}
 
 .stage{
@@ -68,25 +61,19 @@ body{
 
 /* キャラ（32x32 3列 x 4行）を2倍描画 */
 .char{
-  position:absolute; width:64px; height:64px;
-  left:40px; top:40px;
-  image-rendering: pixelated;
-  background-image: url("img/char.png");
-  background-repeat:no-repeat;
+  position:absolute; width:64px; height:64px; left:40px; top:40px;
+  image-rendering: pixelated; background-image: url("img/char.png"); background-repeat:no-repeat;
   transform: translateZ(0);
 }
 
 /* 歩行フレーム（3コマ） */
-@keyframes walk-frames {
-  from { background-position-x: 0px; }
-  to   { background-position-x: -96px; } /* 32px × 3コマ */
-}
+@keyframes walk-frames { from { background-position-x: 0px; } to { background-position-x: -96px; } }
 
 /* 向き（行オフセット） */
-.dir-front{ background-position-y:   0px;  }
-.dir-left { background-position-y: -32px;  }
-.dir-right{ background-position-y: -64px;  }
-.dir-back { background-position-y: -96px;  }
+.dir-front{ background-position-y:   0px; }
+.dir-left { background-position-y: -32px; }
+.dir-right{ background-position-y: -64px; }
+.dir-back { background-position-y: -96px; }
 
 /* アニメ再生 */
 .char.walking{ animation: walk-frames .6s steps(3) infinite; }
@@ -97,8 +84,7 @@ body{
 }
 .fab{
   width:40px; height:40px; border-radius:12px; border:1px solid #203049;
-  background:#0e1726; color:#e5e7eb; font-size:18px; cursor:pointer;
-  box-shadow:0 4px 14px rgba(0,0,0,.35);
+  background:#0e1726; color:#e5e7eb; font-size:18px; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.35);
 }
 .fab:hover{background:#12233a}
 
@@ -106,7 +92,7 @@ body{
 .side-card h2{margin:4px 0 10px}
 .quest-list{display:flex; flex-direction:column; gap:10px}
 .quest{
-  border:1px solid #203049; background:#0e1726; border-radius:12px; padding:10px 12px;
+  border:1px solid #203049; background:#0e1726; border-radius:12px; padding:10px 12px; transition:opacity .2s;
 }
 .quest .top{display:flex; justify-content:space-between; align-items:center; gap:8px}
 .quest .name{font-weight:600}
@@ -114,34 +100,26 @@ body{
 .quest .desc{margin:6px 0 10px; color:#b6c2d1; font-size:13px}
 .quest .actions{display:flex; gap:8px}
 button{cursor:pointer}
-button.blue{
-  background:var(--blue); color:white; border:none; padding:8px 10px; border-radius:10px; font-weight:600;
-}
-button.green{
-  background:var(--green); color:#06200f; border:none; padding:8px 10px; border-radius:10px; font-weight:700;
-}
+button.blue{ background:var(--blue); color:white; border:none; padding:8px 10px; border-radius:10px; font-weight:600; }
+button.green{ background:var(--green); color:#06200f; border:none; padding:8px 10px; border-radius:10px; font-weight:700; }
 button:disabled{opacity:.6; cursor:not-allowed}
 
-/* ---------- How-to ---------- */
-.howto{
-  margin-top:12px; background:#0c1422; border:1px solid #1a2740; border-radius:12px; padding:10px 12px;
-  color:#c8d3e1
-}
-.howto summary{cursor:pointer; color:#a3d9ff; font-weight:700}
+/* 完了デザイン */
+.quest.done{ opacity:.6; }
+.quest.done .name{ text-decoration:line-through; }
+.quest .state{ font-size:12px; color:#a5f3fc; margin-left:6px; }
 
-/* ---------- Log ---------- */
+/* ---------- How-to / Log / Footer ---------- */
+.howto{ margin-top:12px; background:#0c1422; border:1px solid #1a2740; border-radius:12px; padding:10px 12px; color:#c8d3e1 }
+.howto summary{cursor:pointer; color:#a3d9ff; font-weight:700}
 .mt{margin-top:14px}
 .log{margin:8px 0 0; padding-left:18px; max-height:160px; overflow:auto}
 .log li{margin:4px 0; color:#c7d2fe; font-size:13px}
-
-/* ---------- Footer ---------- */
-.app-footer{
-  max-width:1200px; margin:0 auto 24px; padding:12px 20px;
-  display:flex; justify-content:space-between; align-items:center; color:var(--muted)
-}
+.app-footer{ max-width:1200px; margin:0 auto 24px; padding:12px 20px;
+  display:flex; justify-content:space-between; align-items:center; color:var(--muted)}
 .footer-actions{display:flex; gap:10px}
 
-/* ---------- Responsive (ノートPC以下) ---------- */
+/* ---------- Responsive ---------- */
 @media (max-width:1024px){
   .layout{grid-template-columns:1fr; gap:12px}
   .xp-wrap{min-width:260px}
