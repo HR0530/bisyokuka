@@ -38,37 +38,43 @@ body{margin:0; font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif
 .grid-bg{position:absolute; inset:0; background-image:linear-gradient(#14314d 1px,transparent 1px),linear-gradient(90deg,#14314d 1px,transparent 1px); background-size:40px 40px; opacity:.35}
 
 /* --- キャラ（3×4 スプライト）--- */
+/* 1人だけ・大きく見せる：要素サイズは1コマ分(32x32)にし、拡大は transform で */
+:root{
+  --hero-scale: 3.6;        /* ←ここで大きさを調整（例: 3.0〜4.5） */
+}
+
+/* 背景グリッドや他のCSSはそのままでOK */
+
 .char{
   position:absolute;
-  width:96px;   /* 32px * 3 */
-  height:96px;  /* 表示は 3 倍相当（見やすさ用）。縦は行切替で使うので 96 */
+  width:32px;               /* ← ここが重要：32px(1コマ) */
+  height:32px;              /* ← ここが重要：32px(1コマ) */
   left:50%; top:55%;
-  transform:translate(-50%,-50%);
+  transform: translate(-50%,-50%) scale(var(--hero-scale));
+  transform-origin: center bottom;
   image-rendering: pixelated;
 
-  /* ここが一番大事：スプライト画像の場所 */
-  background-image: url("project-root/char1.png"); /* ← 画像をここに置く */
+  background-image:url("project-root/char1.png");  /* 画像パスはそのまま */
   background-repeat:no-repeat;
 
-  /* スプライト全体(3×4)をちょうど収める */
+  /* スプライト全体サイズ（横3×縦4） */
   background-size: 96px 128px; /* 32*3, 32*4 */
+
   z-index:1;
 }
 
-/* 横3コマの歩行：左→中→右 → 繰り返し */
-@keyframes walk3 {
-  from { background-position-x: 0; }
-  to   { background-position-x: -96px; } /* 32px を3コマ分左に送る */
-}
-.char.walking{ animation: walk3 0.6s steps(3) infinite; }
+/* 横3コマの歩行 */
+@keyframes walk3 { from{ background-position-x:0 } to{ background-position-x:-96px } }
+.char.walking{ animation: walk3 .6s steps(3) infinite; }
 
-/* 行オフセット：1行=32px */
-.dir-front { background-position-y:   0px; }  /* 正面 */
-.dir-left  { background-position-y: -32px; }  /* 左向き */
-.dir-right { background-position-y: -64px; }  /* 右向き */
-.dir-back  { background-position-y: -96px; }  /* 後ろ */
+/* 行オフセット（1行=32px） */
+.dir-front { background-position-y:   0px; }
+.dir-left  { background-position-y: -32px; }
+.dir-right { background-position-y: -64px; }
+.dir-back  { background-position-y: -96px; }
 
-/* 吹き出しなどはそのままでOK（既存のCSSを使って大丈夫）*/
+/* 念のため、複数いたら1体以外は表示させない */
+.stage .char:not(:first-of-type){ display:none !important; }
 
 
 
