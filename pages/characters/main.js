@@ -1,11 +1,6 @@
-/* =======================================================
-   美食家さん｜キャラ育成  完成版 main.js
-   - 状態は localStorage に保存
-   - クエストは meal データから自動判定
-   - キャラは中央で前向き歩行、時々横向き
-   ======================================================= */
+/* ================== キャラ育成 main.js（修正版） ================== */
 
-/* -------- DOM -------- */
+/* DOM */
 const xpFill = document.getElementById("xpFill");
 const xpText = document.getElementById("xpText");
 const levelText = document.getElementById("levelText");
@@ -13,19 +8,17 @@ const titleBadge = document.getElementById("titleBadge");
 const logEl = document.getElementById("activityLog");
 const hpText = document.getElementById("hpText");
 const satiText = document.getElementById("satisfactionText");
-
 const character = document.getElementById("character");
 const toggleBtn = document.getElementById("toggleRun");
-const quickClear = document.getElementById("quickClear");
 
-/* -------- ナビ（ホーム/図鑑/分析） -------- */
-function resolveHomePath(){
-  // /pages/characters/index.html → ../../index_pc.html
-  if (location.pathname.includes('/pages/')) return '../index_pc.html';
+/* ---------- ルーティング（ホーム/図鑑/分析） ---------- */
+// GitHub Pages: /bisyokuka/pages/characters/index.html からの相対をきちんと解決
+function resolveHomePath(){                         // ★fix ホームに戻れない問題
+  if (location.pathname.includes('/pages/characters/')) return '../../index_pc.html';
+  if (location.pathname.includes('/pages/'))           return '../index_pc.html';
   return 'index_pc.html';
 }
 function resolveDexPath(){
-  // /pages/characters/ からは dex/index.html、それ以外なら絶対相対で
   if (location.pathname.includes('/pages/characters/')) return 'dex/index.html';
   return 'pages/characters/dex/index.html';
 }
@@ -34,38 +27,36 @@ function resolveInsightsPath(){
   if (location.pathname.includes('/pages/'))           return 'insights/index.html';
   return 'pages/insights/index.html';
 }
-
 document.getElementById("btnHome")?.addEventListener("click", ()=> location.href = resolveHomePath());
 document.getElementById("btnDex") ?.addEventListener("click", ()=> location.href = resolveDexPath());
 document.getElementById("fabHome")?.addEventListener("click", ()=> location.href = resolveHomePath());
 document.getElementById("fabDex") ?.addEventListener("click", ()=> location.href = resolveDexPath());
 document.getElementById("goInsights")?.addEventListener("click", ()=> location.href = resolveInsightsPath());
 
-// ショートカット
-window.addEventListener("keydown",(e)=>{
-  const k = e.key.toLowerCase();
-  if (k === "h") location.href = resolveHomePath();
-  if (k === "d") location.href = resolveDexPath();
-  if (k === "i") location.href = resolveInsightsPath();
-});
+/* ---------- キャラスキン（画像の場所を JS で確実に反映） ---------- */
+// 画像は /pages/characters/project-root/*.png に配置
+const SKIN_DIR = 'project-root/';                   // ★fix 反映されない問題を JS でも強制
+const DEFAULT_SKIN = localStorage.getItem('bs_char_skin') || '男_スーツ1.png';
+function applySkin(filename){
+  // 日本語ファイル名もそのまま使える（GitHub Pages 対応）
+  character.style.backgroundImage = `url("${SKIN_DIR}${filename}")`;
+}
+applySkin(DEFAULT_SKIN);
 
-/* -------- ユーティリティ -------- */
+/* ---------- 状態 & 表示 ---------- */
 const STORAGE_VERSION = "v1";
-const CHAR_STATE_KEY  = `bs_char_state_${STORAGE_VERSION}`;
-const STREAK_KEY      = `bs_target_streak_${STORAGE_VERSION}`;
-const QUEST_AWARD_D_PREFIX = `bs_quest_awards_${STORAGE_VERSION}_`;
-const QUEST_STATE_D_PREFIX = `bs_quest_state_${STORAGE_VERSION}_`;
+const CHAR_KEY  = `bs_char_state_${STORAGE_VERSION}`;
+const STREAK_KEY = `bs_target_streak_${STORAGE_VERSION}`;
+const AWARD_D_PREFIX = `bs_quest_awards_${STORAGE_VERSION}_`;
+const QSTATE_D_PREFIX = `bs_quest_state_${STORAGE_VERSION}_`;
 
 const todayStr = () => {
   const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 };
-const todayKey = () => todayStr().replaceAll("-","");
+const todayKey = () => todayStr().replaceAll('-','');
 
-/* -------- キャラ状態 -------- */
 const titles = [
   { minLv: 1, name: "見習いフーディー" },
   { minLv: 3, name: "美食研究家" },
@@ -74,44 +65,45 @@ const titles = [
   { minLv:10, name: "グランド・グルメ" },
 ];
 
-let state = loadCharState() || { level:1, xp:0, hp:100, satisfaction:50 };
-function saveCharState(){ localStorage.setItem(CHAR_STATE_KEY, JSON.stringify(state)); }
-function loadCharState(){
-  try{ return JSON.parse(localStorage.getItem(CHAR_STATE_KEY) || "null"); }
-  catch{ return null; }
+let state = load(CHAR_KEY) || { level:1, xp:0, hp:100, satisfaction:50 };
+function load(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch{ return null; } }
+function save(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+function xpNeeded(lv){ return 100 + (lv-1)*50; }
+
+function addLog(t){
+  if(!logEl) return;
+  const li = document.createElement('li');
+  li.textContent = `${new Date().toLocaleTimeString()}  ${t}`;
+  logEl.prepend(li);
 }
-function xpNeeded(lv){ return 100 + (lv - 1) * 50; }
 
-function setXP(diff, reason=""){
-  state.xp = Math.max(0, (state.xp ?? 0) + diff);
+function setXP(diff, reason=''){
+  state.xp = Math.max(0, (state.xp||0) + diff);
   if (reason) addLog(`+${diff} XP：${reason}`);
-
-  while (state.xp >= xpNeeded(state.level)) {
+  while(state.xp >= xpNeeded(state.level)){
     state.xp -= xpNeeded(state.level);
     state.level++;
     addLog(`🎉 レベルアップ！ → Lv.${state.level}`);
-    state.hp = Math.min(200, (state.hp ?? 100) + 5);
-    state.satisfaction = Math.min(100, (state.satisfaction ?? 50) + 3);
+    state.hp = Math.min(200, (state.hp||100)+5);
+    state.satisfaction = Math.min(100, (state.satisfaction||50)+3);
   }
-  saveCharState();
+  save(CHAR_KEY, state);
   refreshHeader();
 }
 
 function refreshHeader(){
   const need = xpNeeded(state.level);
-  const pct = Math.min(100, Math.round((state.xp / need) * 100));
+  const pct = Math.min(100, Math.round((state.xp/need)*100));
   xpFill.style.width = `${pct}%`;
   xpText.textContent = `${state.xp} / ${need} XP`;
   levelText.textContent = `Lv.${state.level}`;
   hpText.textContent = state.hp;
   satiText.textContent = state.satisfaction;
-
-  let current = titles[0].name;
-  for(const t of titles){ if(state.level >= t.minLv) current = t.name; }
-  titleBadge.textContent = current;
+  const t = titles.reduce((acc,cur)=> state.level>=cur.minLv ? cur.name : acc, titles[0].name);
+  titleBadge.textContent = t;
 }
 
-/* -------- クエスト定義 -------- */
+/* ---------- クエスト ---------- */
 const QUESTS = [
   { id:"protein", name:"たんぱく質 50–120g を目指す", xp:30, desc:"Pの目標レンジに入れる" },
   { id:"fat",     name:"脂質 40–70g に収める",         xp:30, desc:"Fの目標レンジに入れる" },
@@ -119,123 +111,81 @@ const QUESTS = [
   { id:"total",   name:"総カロリー ±10% に収める",     xp:40, desc:"目標カロリーを達成", streak:true },
 ];
 
-const questState = loadQuestStateForToday();
-function saveQuestStateForToday(){
-  localStorage.setItem(QUEST_STATE_D_PREFIX + todayKey(), JSON.stringify(questState));
-}
-function loadQuestStateForToday(){
-  try{
-    const raw = localStorage.getItem(QUEST_STATE_D_PREFIX + todayKey());
-    if (raw) return JSON.parse(raw);
-  }catch{}
-  const obj = {}; QUESTS.forEach(q => obj[q.id] = "check"); // 既定
-  return obj;
-}
-
-function getAwardsToday(){
-  try{ return JSON.parse(localStorage.getItem(QUEST_AWARD_D_PREFIX + todayKey()) || "{}"); }
-  catch{ return {}; }
-}
-function setAwardsToday(map){
-  localStorage.setItem(QUEST_AWARD_D_PREFIX + todayKey(), JSON.stringify(map));
-}
+const qState = load(QSTATE_D_PREFIX + todayKey()) || Object.fromEntries(QUESTS.map(q=>[q.id,'check']));
+function saveQState(){ save(QSTATE_D_PREFIX + todayKey(), qState); }
 
 function renderQuests(){
-  const wrap = document.getElementById("questList");
-  if (!wrap) return;
-  wrap.innerHTML = "";
+  const wrap = document.getElementById('questList');
+  wrap.innerHTML = '';
   QUESTS.forEach(q=>{
-    const el = document.createElement("div");
-    el.className = "quest"; el.id = `q-${q.id}`;
+    const el = document.createElement('div');
+    el.className = 'quest'; el.id = `q-${q.id}`;
     el.innerHTML = `
       <div class="top">
         <div class="name">${q.name}<span class="state" id="state-${q.id}"></span></div>
         <div class="xp">+${q.xp} XP${q.streak?' ・<span title="連続達成で +10/日（最大+30）">🛈</span>':''}</div>
       </div>
-      <div class="desc">${q.desc || ""}</div>
-      <div class="actions">
-        <button class="blue" id="btn-${q.id}">確認する</button>
-      </div>
+      <div class="desc">${q.desc||''}</div>
+      <div class="actions"><button class="blue" id="btn-${q.id}">確認する</button></div>
     `;
     wrap.appendChild(el);
-    // 「確認する」は分析へ
-    el.querySelector(`#btn-${q.id}`).addEventListener("click", ()=>{
-      location.href = resolveInsightsPath();
-    });
+    el.querySelector(`#btn-${q.id}`).addEventListener('click', ()=> location.href = resolveInsightsPath());
   });
 }
-
-function updateQuestUI(id, status){ // "check" | "ready" | "done"
+function setQuestUI(id,status){
   const btn = document.getElementById(`btn-${id}`);
   const badge = document.getElementById(`state-${id}`);
   const card = document.getElementById(`q-${id}`);
-  questState[id] = status;
-
-  if(status === "check"){
-    if(btn){ btn.textContent = "確認する"; btn.className = "blue"; btn.disabled = false; }
-    if(badge) badge.textContent = "（未達成）";
-    card?.classList.remove("done");
-  }else if(status === "ready"){
-    if(btn){ btn.textContent = "達成！"; btn.className = "green"; btn.disabled = true; }
-    if(badge) badge.textContent = "（達成）";
-    card?.classList.remove("done");
+  qState[id] = status;
+  if(status==='check'){
+    btn.textContent='確認する'; btn.className='blue'; btn.disabled=false;
+    badge.textContent='（未達成）'; card.classList.remove('done');
+  }else if(status==='ready'){
+    btn.textContent='達成！'; btn.className='green'; btn.disabled=true;
+    badge.textContent='（達成）'; card.classList.remove('done');
   }else{
-    if(btn){ btn.textContent = "完了"; btn.className = "green"; btn.disabled = true; }
-    if(badge) badge.textContent = "（完了）";
-    card?.classList.add("done");
+    btn.textContent='完了'; btn.className='green'; btn.disabled=true;
+    badge.textContent='（完了）'; card.classList.add('done');
   }
-  saveQuestStateForToday();
+  saveQState();
 }
 
-/* -------- meal 集計 -------- */
+/* ---------- meal 集計（v2の totals 対応） ---------- */
 const MEAL_KEYS = [
-  "bisyokuka_meals_v2",                // ← 追加
+  "bisyokuka_meals_v2",               // ★fix 追加
   "mealEntries","meals","mealRecords","bisyokuka_meals",
   "mealList","mealData","meals_today","bs_meals","mealHistory"
 ];
 
 function getCalorieGoal(){
-  const candidates = [
-    "calorieGoal","calorieTarget","bisyokuka_calorie_goal",
-    "goalCalories","dailyCalorieGoal"
-  ];
-  for(const k of candidates){
-    const v = localStorage.getItem(k);
-    if(v && !isNaN(Number(v))) return Number(v);
-  }
-  const settingsKeys = ["settings","userSettings","bs_settings"];
-  for(const sk of settingsKeys){
+  const ks = ["calorieGoal","calorieTarget","bisyokuka_calorie_goal","goalCalories","dailyCalorieGoal"];
+  for(const k of ks){ const v = localStorage.getItem(k); if(v && !isNaN(+v)) return +v; }
+  for(const sk of ["settings","userSettings","bs_settings"]){
     try{
-      const o = JSON.parse(localStorage.getItem(sk) || "null");
-      if(o){
-        const cand = o.calorieGoal ?? o.calorie_target ?? o.calorieTarget;
-        if(cand && !isNaN(Number(cand))) return Number(cand);
-      }
+      const o = JSON.parse(localStorage.getItem(sk)||'null');
+      const cand = o?.calorieGoal ?? o?.calorie_target ?? o?.calorieTarget;
+      if(cand && !isNaN(+cand)) return +cand;
     }catch{}
   }
-  return 1580; // 既定
+  return 1580;
 }
-function toDateStrLocal(any){
-  if(any == null) return todayStr();
-  if(typeof any === "number") return toDateStrLocal(new Date(any));
-  if(typeof any === "string"){
-    const d = new Date(any);
-    if(!isNaN(d)) return toDateStrLocal(d);
+function dateStr(any){
+  if(!any) return todayStr();
+  if(typeof any==='string'){
     if(/^\d{4}-\d{2}-\d{2}$/.test(any)) return any;
+    const d = new Date(any); if(!isNaN(d)) return dateStr(d);
   }
   if(any instanceof Date){
-    const y = any.getFullYear();
-    const m = String(any.getMonth()+1).padStart(2,"0");
-    const d = String(any.getDate()).padStart(2,"0");
+    const y = any.getFullYear(), m = String(any.getMonth()+1).padStart(2,'0'), d = String(any.getDate()).padStart(2,'0');
     return `${y}-${m}-${d}`;
   }
   return todayStr();
 }
-function firstNumber(obj, keys){
+function num(obj, keys){
   for(const k of keys){
     const v = obj?.[k];
-    if(typeof v === "number" && !isNaN(v)) return v;
-    if(typeof v === "string" && v.trim() !== "" && !isNaN(Number(v))) return Number(v);
+    if(typeof v==='number' && !isNaN(v)) return v;
+    if(typeof v==='string' && v.trim()!=='' && !isNaN(+v)) return +v;
   }
   return 0;
 }
@@ -254,148 +204,118 @@ function collectMealsToday(){
     }catch{}
   }
   const today = todayStr();
-  items = items.filter(it=>{
-    const ds = toDateStrLocal(it?.date ?? it?.day ?? it?.createdAt ?? it?.timestamp);
-    return ds === today;
-  });
-  let P=0,F=0,C=0, K=0;
+  items = items.filter(it => dateStr(it?.date ?? it?.day ?? it?.createdAt ?? it?.timestamp) === today);
+
+  // ★fix v2 形式: totals.{protein,fat,carbs,kcal} を読む
+  let P=0,F=0,C=0,K=0;
   for(const it of items){
-    P += firstNumber(it, ["protein","prot","P","p"]);
-    F += firstNumber(it, ["fat","lipid","F","f"]);
-    C += firstNumber(it, ["carbs","carb","C","c","carbohydrate"]);
-    K += firstNumber(it, ["calories","kcal","cal","energy"]);
+    if(it?.totals){
+      P += +it.totals.protein || 0;
+      F += +it.totals.fat     || 0;
+      C += +it.totals.carbs   || 0;
+      K += (+it.totals.kcal)  || 0;
+    }else{
+      P += num(it,["protein","prot","P","p"]);
+      F += num(it,["fat","lipid","F","f"]);
+      C += num(it,["carbs","carb","C","c","carbohydrate"]);
+      K += num(it,["calories","kcal","cal","energy"]);
+    }
   }
-  return {P, F, C, K, count: items.length};
+  return {P,F,C,K,count:items.length};
 }
 
-/* -------- 自動判定＆XP付与 -------- */
-function evaluateAndAward(){
+/* ---------- 判定 & XP 付与 ---------- */
+function loadStreak(){ return load(STREAK_KEY) || {}; }
+function saveStreak(v){ save(STREAK_KEY, v||{}); }
+function evaluate(){
   const {P,F,C,K,count} = collectMealsToday();
   const goal = getCalorieGoal();
-  const awards = getAwardsToday();
+  const awards = load(AWARD_D_PREFIX + todayKey()) || {};
 
-  const okProtein = (P >= 50 && P <= 120);
-  const okFat     = (F >= 40 && F <= 70);
-  const okCarb    = (C >= 180 && C <= 300);
-  const okTotal   = (goal>0) ? Math.abs(K - goal) <= goal*0.10 : false;
+  const okP = (P>=50 && P<=120);
+  const okF = (F>=40 && F<=70);
+  const okC = (C>=180 && C<=300);
+  const okT = goal>0 ? Math.abs(K-goal) <= goal*0.10 : false;
 
-  updateQuestUI("protein", okProtein ? "ready" : "check");
-  updateQuestUI("fat",     okFat     ? "ready" : "check");
-  updateQuestUI("carb",    okCarb    ? "ready" : "check");
-  updateQuestUI("total",   okTotal   ? "ready" : "check");
+  setQuestUI("protein", okP?'ready':'check');
+  setQuestUI("fat",     okF?'ready':'check');
+  setQuestUI("carb",    okC?'ready':'check');
+  setQuestUI("total",   okT?'ready':'check');
 
-  QUESTS.forEach(q=>{
-    const achieved = (q.id==="protein" && okProtein)
-                  || (q.id==="fat"     && okFat)
-                  || (q.id==="carb"    && okCarb)
-                  || (q.id==="total"   && okTotal);
-    if(achieved){
-      if(!awards[q.id]){
-        let gained = q.xp;
-        if(q.streak){
-          const st = loadStreak();
-          const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
-          const yStr = toDateStrLocal(yesterday);
-          if(st.last === yStr) st.count = Math.min(999, (st.count||0) + 1);
-          else st.count = 1;
-          st.last = todayStr();
-          saveStreak(st);
-          gained += Math.min(3, st.count) * 10;
-          addLog(`🎯 目標達成ストリーク：${st.count}日`);
-        }
-        setXP(gained, `クエスト「${q.name}」`);
-        awards[q.id] = true;
-        setAwardsToday(awards);
+  for(const q of QUESTS){
+    const hit = (q.id==="protein"&&okP)||(q.id==="fat"&&okF)||(q.id==="carb"&&okC)||(q.id==="total"&&okT);
+    if(hit && !awards[q.id]){
+      let gain = q.xp;
+      if(q.streak){
+        const st = loadStreak();
+        const y = new Date(); y.setDate(y.getDate()-1);
+        const yStr = dateStr(y);
+        st.count = (st.last===yStr) ? (st.count||0)+1 : 1;
+        st.last = todayStr(); saveStreak(st);
+        gain += Math.min(3, st.count)*10;
+        addLog(`🎯 目標達成ストリーク：${st.count}日`);
       }
-      updateQuestUI(q.id, "done");
+      setXP(gain, `クエスト「${q.name}」`);
+      awards[q.id] = true;
+      save(AWARD_D_PREFIX + todayKey(), awards);
+      setQuestUI(q.id,'done');
     }
-  });
-
-  addOrUpdateNutritionBadge(P,F,C,K,goal,count);
-}
-function loadStreak(){ try{ return JSON.parse(localStorage.getItem(STREAK_KEY) || "{}"); }catch{ return {}; } }
-function saveStreak(obj){ localStorage.setItem(STREAK_KEY, JSON.stringify(obj||{})); }
-
-function addOrUpdateNutritionBadge(P,F,C,K,goal,count){
-  let el = document.getElementById("nutritionBadge");
-  if(!el){
-    el = document.createElement("div");
-    el.id = "nutritionBadge";
-    el.style.cssText = "margin-top:8px;color:#94a3b8;font-size:12px";
-    document.querySelector(".howto")?.appendChild(el);
   }
-  el.textContent = `今日の集計: P ${Math.round(P)}g / F ${Math.round(F)}g / C ${Math.round(C)}g / ${Math.round(K)}kcal（目標 ${goal}kcal）・記録 ${count}件`;
+
+  // 画面下の今日サマリー（簡易）
+  let badge = document.getElementById('nutritionBadge');
+  if(!badge){
+    badge = document.createElement('div');
+    badge.id='nutritionBadge';
+    badge.style.cssText='margin-top:8px;color:#94a3b8;font-size:12px';
+    document.querySelector('.howto')?.appendChild(badge);
+  }
+  badge.textContent = `今日の集計: P ${Math.round(P)}g / F ${Math.round(F)}g / C ${Math.round(C)}g / ${Math.round(K)}kcal（目標 ${goal}kcal）・記録 ${count}件`;
 }
 
-/* -------- 活動ログ -------- */
-function addLog(text){
-  if(!logEl) return;
-  const li = document.createElement("li");
-  li.textContent = `${new Date().toLocaleTimeString()}  ${text}`;
-  logEl.prepend(li);
-}
-quickClear?.addEventListener("click", ()=>{ if(logEl) logEl.innerHTML = ""; });
-
-/* -------- キャラ挙動 -------- */
-function ensureSingleChar(){
-  const nodes = document.querySelectorAll(".char");
-  nodes.forEach((n,i)=>{ if(i>0) n.remove(); });
-}
+/* ---------- キャラ挙動 ---------- */
 function setRow(dir){
-  character.classList.remove("dir-front","dir-left","dir-right","dir-back");
+  character.classList.remove('dir-front','dir-left','dir-right','dir-back');
   character.classList.add(`dir-${dir}`);
 }
-const wait = ms => new Promise(r=>setTimeout(r,ms));
-
 let running = true;
-toggleBtn?.addEventListener("click", ()=>{
+toggleBtn?.addEventListener('click', ()=>{
   running = !running;
-  toggleBtn.textContent = running ? "一時停止" : "再開";
-  character.classList.toggle("walking", running);
+  toggleBtn.textContent = running ? '一時停止' : '再開';
+  character.classList.toggle('walking', running);
 });
-
+const wait = ms => new Promise(r=>setTimeout(r,ms));
 async function loopWalk(){
-  character.classList.add("walking");
+  character.classList.add('walking');
   let side = true;
-  while(true){
-    // 一時停止中は待機
+  for(;;){
     while(!running) await wait(150);
-
-    setRow("front");
-    for(let t=0; t<25; t++){ if(!running) break; await wait(200); } // ~5秒
-
+    setRow('front'); for(let i=0;i<25;i++){ if(!running) break; await wait(200); } // 約5秒
     while(!running) await wait(150);
-    setRow(side ? "left" : "right");
-    side = !side;
-    for(let t=0; t<10; t++){ if(!running) break; await wait(200); } // ~2秒
+    setRow(side?'left':'right'); side=!side; for(let i=0;i<10;i++){ if(!running) break; await wait(200); } // 約2秒
   }
 }
 
-function addSpeech(){
-  const stage = document.querySelector(".stage");
-  const b = document.createElement("div");
-  b.className = "speech";
-  b.textContent = "今日のPFCバランス、いい感じ？";
-  stage.appendChild(b);
-}
-
-/* -------- 初期化 -------- */
+/* ---------- 初期化 ---------- */
 function init(){
-  ensureSingleChar();
-  setRow("front");
-  addSpeech();
   renderQuests();
   refreshHeader();
+  evaluate();
 
-  evaluateAndAward();
-  window.addEventListener("focus", evaluateAndAward);
-  window.addEventListener("storage", (e)=>{
+  window.addEventListener('focus', evaluate);
+  window.addEventListener('storage', (e)=>{
     if(!e.key) return;
-    if (MEAL_KEYS.includes(e.key) || ["calorieGoal","calorieTarget","bisyokuka_calorie_goal","settings","userSettings","bs_settings"].includes(e.key)){
-      evaluateAndAward();
+    if (["bisyokuka_meals_v2","mealEntries","meals","mealRecords","bisyokuka_meals","mealList","mealData","meals_today","bs_meals","mealHistory",
+         "calorieGoal","calorieTarget","bisyokuka_calorie_goal","settings","userSettings","bs_settings"].includes(e.key)){
+      evaluate();
     }
   });
-  setInterval(evaluateAndAward, 10000);
+  setInterval(evaluate, 10000);
+
+  // 吹き出し
+  const b = document.createElement('div');
+  b.className='speech'; b.textContent='今日のPFCバランス、いい感じ？';
+  document.querySelector('.stage')?.appendChild(b);
 
   loopWalk();
 }
