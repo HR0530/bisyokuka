@@ -37,23 +37,40 @@ body{margin:0; font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif
 .stage{position:relative; height:520px; border-radius:16px; overflow:hidden; background:radial-gradient(ellipse at 30% 30%, #0f2438, #0c1827 60%); outline:1px solid #0c2238}
 .grid-bg{position:absolute; inset:0; background-image:linear-gradient(#14314d 1px,transparent 1px),linear-gradient(90deg,#14314d 1px,transparent 1px); background-size:40px 40px; opacity:.35}
 
-/* Character（画像は JS で適用するのでここでは指定しない） */
+/* --- キャラ（3×4 スプライト）--- */
 .char{
-  position:absolute; left:50%; top:55%; transform:translate(-50%,-50%) scale(var(--scale));
-  transform-origin:center bottom; width:var(--frame); height:var(--frame);
-  image-rendering:pixelated; background-repeat:no-repeat;
-  background-size: calc(var(--frame) * 3) calc(var(--frame) * 4);
+  position:absolute;
+  width:96px;   /* 32px * 3 */
+  height:96px;  /* 表示は 3 倍相当（見やすさ用）。縦は行切替で使うので 96 */
+  left:50%; top:55%;
+  transform:translate(-50%,-50%);
+  image-rendering: pixelated;
+
+  /* ここが一番大事：スプライト画像の場所 */
+  background-image: url("project-root/char1.png"); /* ← 画像をここに置く */
+  background-repeat:no-repeat;
+
+  /* スプライト全体(3×4)をちょうど収める */
+  background-size: 96px 128px; /* 32*3, 32*4 */
   z-index:1;
 }
-.stage .char:not(:first-of-type){display:none!important}
-@keyframes walk-frames{from{background-position-x:0} to{background-position-x:calc(var(--frame) * -3)}}
-.char.walking{animation:walk-frames .6s steps(3) infinite}
 
-/* スプライトの行（上から Front/Left/Right/Back の順で合わせた） */
-.dir-front{background-position-y: calc(var(--frame) * 0 * -1)}
-.dir-left {background-position-y: calc(var(--frame) * 1 * -1)}
-.dir-right{background-position-y: calc(var(--frame) * 2 * -1)}
-.dir-back {background-position-y: calc(var(--frame) * 3 * -1)}
+/* 横3コマの歩行：左→中→右 → 繰り返し */
+@keyframes walk3 {
+  from { background-position-x: 0; }
+  to   { background-position-x: -96px; } /* 32px を3コマ分左に送る */
+}
+.char.walking{ animation: walk3 0.6s steps(3) infinite; }
+
+/* 行オフセット：1行=32px */
+.dir-front { background-position-y:   0px; }  /* 正面 */
+.dir-left  { background-position-y: -32px; }  /* 左向き */
+.dir-right { background-position-y: -64px; }  /* 右向き */
+.dir-back  { background-position-y: -96px; }  /* 後ろ */
+
+/* 吹き出しなどはそのままでOK（既存のCSSを使って大丈夫）*/
+
+
 
 .speech{position:absolute; left:50%; top:22%; transform:translateX(-50%); background:#0f172a; color:#e5e7eb; border:1px solid #203049; border-radius:14px; padding:8px 12px; font-size:14px}
 .speech::after{content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%); border:8px solid transparent; border-top-color:#203049}
