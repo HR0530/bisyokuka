@@ -14,38 +14,30 @@ const toggleBtn = document.getElementById("toggleRun");
 const quickClear = document.getElementById("quickClear");
 
 /* =========================
-   パス自動補正（ホーム/図鑑）
-   - pages/characters/ 配下でも root でも動く
+   ナビ（ホーム/図鑑）：どの階層でも動く相対パス
 ========================= */
 function resolvePath(fromRoot){
-  // 例: /repo/pages/characters/index.html → 深さで ../ を作る
-  const depth = location.pathname.replace(/\/+$/,'').split('/').filter(Boolean).length;
-  // 「プロジェクトのルート深さ」をざっくり推定（/repo/ を想定して +1）
-  // characters 下なら 2 つ上、そうでなければ 1 つ上を優先
   if (location.pathname.includes('/pages/characters/')) return `../../${fromRoot}`;
   if (location.pathname.includes('/pages/'))           return `../${fromRoot}`;
-  return fromRoot; // すでにルート想定
+  return fromRoot;
 }
+const HOME_PATH = resolvePath('index_pc.html');
+const DEX_PATH  = resolvePath('pages/dex/index.html');
 
-const HOME_PATH = resolvePath('index_pc.html');            // 例: ../../index_pc.html
-const DEX_PATH  = resolvePath('pages/dex/index.html');     // 例: ../dex/index.html
+const btnHome = document.getElementById("btnHome");
+const btnDex  = document.getElementById("btnDex");
+if (btnHome) btnHome.onclick = ()=> location.href = HOME_PATH;
+if (btnDex)  btnDex.onclick  = ()=> location.href = DEX_PATH;
 
-["btnHome","fabHome"].forEach(id=>{
-  const el = document.getElementById(id);
-  if(el) el.onclick = ()=> window.location.href = HOME_PATH;
-});
-["btnDex","fabDex"].forEach(id=>{
-  const el = document.getElementById(id);
-  if(el) el.onclick = ()=> window.location.href = DEX_PATH;
-});
-window.addEventListener("keydown", (e)=>{
+/* キーボードショートカット：H=ホーム / D=図鑑 */
+window.addEventListener("keydown",(e)=>{
   const k = e.key.toLowerCase();
-  if (k === "h") window.location.href = HOME_PATH;
-  if (k === "d") window.location.href = DEX_PATH;
+  if (k==="h") location.href = HOME_PATH;
+  if (k==="d") location.href = DEX_PATH;
 });
 
 /* =========================
-   XP / レベル / 称号（従来仕様を踏襲）
+   XP / レベル / 称号（従来ロジック）
 ========================= */
 const titles = [
   { minLv: 1, name: "見習いフーディー" },
@@ -88,39 +80,43 @@ function refreshHeader(){
   hpText.textContent = state.hp;
   satiText.textContent = state.satisfaction;
 
-  // 称号更新
   let current = titles[0].name;
   for(const t of titles){ if(state.level >= t.minLv) current = t.name; }
   titleBadge.textContent = current;
 }
 
 /* =========================
-   クエスト：確認 → 達成！ → 完了（UI更新）
+   クエスト：確認 → 達成！ → 完了
 ========================= */
 const QUESTS = [
-  { id:"log-photo",  name:"食事を写真つきで記録する", desc:"本日中に1件投稿（料理全体が見える写真）", xp:30 },
-  { id:"hit-target", name:"カロリー目標を達成",       desc:"今日の摂取カロリーを±5%以内に収める", xp:40, bonus:"連続達成で +10/日（最大+30）"},
-  { id:"try-new",    name:"未知の食材を試す",         desc:"普段使わない食材で簡単レシピを作る", xp:25 },
-  { id:"research",   name:"食の小ネタを1つ投稿",       desc:"発酵の仕組み、オレイン酸の効果など", xp:20 },
+  { id:"protein",   name:"たんぱく質 50–120g を目指す", xp:30, desc:"Pの目標レンジに入れる" },
+  { id:"fat",       name:"脂質 40–70g に収める",        xp:30, desc:"Fの目標レンジに入れる" },
+  { id:"carb",      name:"炭水化物 180–300g をキープ",  xp:30, desc:"Cの目標レンジに入れる" },
+  { id:"total",     name:"総カロリー ±10% に収める",    xp:40, desc:"目標カロリーを達成", streak:true },
+  { id:"newfood",   name:"新食材に挑戦（未登録）",       xp:25, desc:"未登録の食材を1つ追加" },
+  { id:"addveg",    name:"野菜をもう1品追加",            xp:20, desc:"副菜を増やす" },
 ];
+
 const questState = {}; // id: "check" | "ready" | "done"
 
 function renderQuests(){
   const wrap = document.getElementById("questList");
+  if(!wrap) return;
   wrap.innerHTML = "";
+
   QUESTS.forEach(q=>{
-    questState[q.id] = questState[q.id] || "check"; // 初期は「確認する」
+    questState[q.id] = questState[q.id] || "check";
     const el = document.createElement("div");
     el.className = "quest";
     el.id = `q-${q.id}`;
     el.innerHTML = `
       <div class="top">
         <div class="name">${q.name}<span class="state" id="state-${q.id}"></span></div>
-        <div class="xp">+${q.xp} XP ${q.bonus?`・<span title="${q.bonus}">🛈</span>`:""}</div>
+        <div class="xp">+${q.xp} XP${q.streak?' ・<span title="連続達成で+10/日（最大+30）">🛈</span>':''}</div>
       </div>
-      <div class="desc">${q.desc}</div>
+      <div class="desc">${q.desc || ""}</div>
       <div class="actions">
-        <button class="blue"  id="btn-${q.id}"></button>
+        <button class="blue" id="btn-${q.id}"></button>
       </div>
     `;
     wrap.appendChild(el);
@@ -128,16 +124,14 @@ function renderQuests(){
   });
 
   wrap.addEventListener("click",(e)=>{
-    const btn = e.target.closest("button[id^='btn-']");
-    if(!btn) return;
-    const id = btn.id.replace('btn-','');
+    const btn = e.target.closest("button[id^='btn-']"); if(!btn) return;
+    const id = btn.id.replace("btn-","");
     const st = questState[id];
-
-    if(st==="check"){ // 確認 → 達成に切り替え
+    if(st==="check"){
       confirmQuest(id);
       questState[id] = "ready";
       updateQuestButton(id);
-    }else if(st==="ready"){ // 達成！
+    }else if(st==="ready"){
       completeQuest(id);
       questState[id] = "done";
       updateQuestButton(id);
@@ -152,27 +146,27 @@ function updateQuestButton(id){
   const st = questState[id];
 
   if(st==="check"){
-    btn.textContent = "確認する"; btn.className = "blue"; btn.disabled = false;
+    btn.textContent = "チェック"; btn.className = "blue"; btn.disabled = false;
     badge.textContent = "（未着手）"; card.classList.remove("done");
   }else if(st==="ready"){
     btn.textContent = "達成！"; btn.className = "green"; btn.disabled = false;
     badge.textContent = "（確認済）"; card.classList.remove("done");
-  }else{ // done
+  }else{
     btn.textContent = "完了"; btn.className = "green"; btn.disabled = true;
     badge.textContent = "（完了）"; card.classList.add("done");
   }
 }
 
 function confirmQuest(id){
-  const q = QUESTS.find(x=>x.id===id); if(!q) return;
-  addLog(`チェック：${q.name} —— ${q.desc}`);
+  const q = QUESTS.find(x=>x.id===id);
+  if(q) addLog(`チェック：${q.name}`);
 }
 
 function completeQuest(id){
   const q = QUESTS.find(x=>x.id===id); if(!q) return;
-
   let gained = q.xp;
-  if(id==="hit-target"){
+
+  if(q.streak){
     state.streak = Math.min(3, state.streak + 1);
     gained += state.streak * 10;
     addLog(`🎯 目標達成ストリーク：${state.streak}日`);
@@ -186,85 +180,51 @@ function completeQuest(id){
 function addLog(text){
   const li = document.createElement("li");
   li.textContent = `${new Date().toLocaleTimeString()}  ${text}`;
-  logEl.prepend(li);
+  logEl?.prepend(li);
 }
-if(quickClear){ quickClear.addEventListener("click", ()=>{ logEl.innerHTML = ""; }); }
+quickClear?.addEventListener("click", ()=>{ if(logEl) logEl.innerHTML = ""; });
 
 /* =========================
-   キャラ：1人だけを常に表示し、前多め→横
+   キャラ：1体だけ・中央で前多め→時々横
 ========================= */
-/* 画像は横3×縦4（各32px）。行：front(0), left(1), right(2), back(3) */
+function ensureSingleChar(){
+  const nodes = document.querySelectorAll(".char");
+  nodes.forEach((n,i)=>{ if(i>0) n.remove(); }); // 2体目以降を除去
+}
 function setRow(dir){
   character.classList.remove("dir-front","dir-left","dir-right","dir-back");
   character.classList.add(`dir-${dir}`);
   character.classList.add("walking");
 }
-
-// 保険：もし複数 .char がDOMにあれば 1人に揃える
-(function ensureSingleChar(){
-  const nodes = document.querySelectorAll(".char");
-  nodes.forEach((n,i)=>{ if(i>0) n.remove(); });
-})();
-
-let running = true;
-let alternateSide = true;
-
-function moveTo(x, y, durationMs){
-  return new Promise(resolve=>{
-    character.style.transition = `transform ${durationMs}ms linear`;
-    character.style.transform  = `translate(${x}px, ${y}px)`;
-    setTimeout(resolve, durationMs);
-  });
-}
-function getPos(){
-  const m = /translate\(([-\d.]+)px,\s*([-\d.]+)px\)/.exec(character.style.transform || "");
-  if(!m) return {x:0,y:0};
-  return {x:parseFloat(m[1]), y:parseFloat(m[2])};
-}
-function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
-function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
 async function loopWalk(){
-  const stage = document.querySelector(".stage");
-  const bounds = stage.getBoundingClientRect();
-  const maxX = bounds.width - 80;
-  const maxY = bounds.height - 80;
-
+  let side = true;
   while(true){
-    if(!running){ await wait(120); continue; }
-
-    // 前（下方向）5秒：メイン挙動
-    setRow("front");
-    let p = getPos();
-    let dy = 120 + Math.random()*80;
-    let newY = clamp(p.y + dy, 0, maxY);
-    await moveTo(p.x, newY, 5000);
-
-    // 横 2秒：左右交互
-    setRow(alternateSide ? "left" : "right");
-    alternateSide = !alternateSide;
-    p = getPos();
-    let dx = (Math.random()*160 + 80) * (Math.random()<0.5 ? -1 : 1);
-    let newX = clamp(p.x + dx, 0, maxX);
-    await moveTo(newX, p.y, 2000);
+    setRow("front"); await wait(5000);     // 正面：長め
+    setRow(side ? "left" : "right");       // 横：短め（交互）
+    side = !side;
+    await wait(2000);
   }
 }
 
-/* 再生/停止 */
-if(toggleBtn){
-  toggleBtn.addEventListener("click", ()=>{
-    running = !running;
-    toggleBtn.textContent = running ? "一時停止" : "再開する";
-    addLog(running ? "▶ キャラ再開" : "⏸ キャラ停止");
-  });
+/* 吹き出し */
+function addSpeech(){
+  const stage = document.querySelector(".stage");
+  const b = document.createElement("div");
+  b.className = "speech";
+  b.textContent = "今日のPFCバランス、いい感じ？";
+  stage.appendChild(b);
 }
 
 /* =========================
    初期化
 ========================= */
 function init(){
+  ensureSingleChar();
   character.style.backgroundPosition = `0px 0px`;
-  character.classList.add("walking");
+  setRow("front");
+  addSpeech();
   renderQuests();
   refreshHeader();
   loopWalk();
