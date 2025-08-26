@@ -1,6 +1,10 @@
 :root{
   --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --muted:#94a3b8;
   --accent:#22d3ee; --green:#22c55e; --blue:#3b82f6; --line:#1f2937; --orange:#f59e0b;
+
+  /* スプライト：1コマ32px、3×4の想定。表示サイズはscaleで拡大。*/
+  --frame: 32px;
+  --scale: 3;          /* ← 大きさはここで調整（2.4〜3.2 目安） */
 }
 
 /* reset-ish */
@@ -67,29 +71,34 @@ body{
   background-size: 40px 40px; opacity:.35;
 }
 
-/* キャラ：中央に1体だけ、3倍表示（32→96） */
+/* ---------- キャラ（1コマ=32px、拡大はscale） ---------- */
 .char{
-  position:absolute; width:96px; height:96px;
-  left:50%; top:55%; transform:translate(-50%,-50%);
+  position:absolute;
+  width:var(--frame);
+  height:var(--frame);
+  left:50%; top:55%; transform:translate(-50%,-50%) scale(var(--scale));
+  transform-origin:center bottom;
   image-rendering:pixelated;
-  background-image:url("img/char.png");
+  /* 画像は characters 配下の素材。必要に応じて差し替え可 */
+  background-image:url("project-root/男_スーツ1.png");
   background-repeat:no-repeat;
+  background-size: calc(var(--frame) * 3) calc(var(--frame) * 4); /* 3×4 シート */
   z-index:1;
 }
-/* もし複数あっても1体以外は非表示（保険） */
+/* 保険：複数あっても1体だけ */
 .stage .char:not(:first-of-type){ display:none !important; }
 
-/* 歩行アニメ（横3コマ） */
-@keyframes walk-frames { from{ background-position-x:0 } to{ background-position-x:-96px } }
+/* 歩行（横3コマ） */
+@keyframes walk-frames { from{ background-position-x:0 } to{ background-position-x:calc(var(--frame) * -3) } }
 .char.walking{ animation:walk-frames .6s steps(3) infinite; }
 
-/* 向き（行オフセット） */
-.dir-front{ background-position-y:   0px; }
-.dir-left { background-position-y: -32px; }
-.dir-right{ background-position-y: -64px; }
-.dir-back { background-position-y: -96px; }
+/* 向き（行オフセット）— スプライトの行に合わせて設定 */
+.dir-front{ background-position-y: calc(var(--frame) * 0 * -1); } /* 正面 */
+.dir-left { background-position-y: calc(var(--frame) * 1 * -1); } /* 左   */
+.dir-right{ background-position-y: calc(var(--frame) * 2 * -1); } /* 右   */
+.dir-back { background-position-y: calc(var(--frame) * 3 * -1); } /* 背面 */
 
-/* 吹き出し（2枚目の雰囲気） */
+/* 吹き出し */
 .speech{
   position:absolute; left:50%; top:22%; transform:translateX(-50%);
   background:#0f172a; color:#e5e7eb;
@@ -101,6 +110,16 @@ body{
   content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%);
   border:8px solid transparent; border-top-color:#203049;
 }
+
+/* 右下 FAB */
+.stage-fab{
+  position:absolute; right:10px; bottom:10px; display:flex; gap:8px; z-index:3;
+}
+.fab{
+  width:40px; height:40px; border-radius:10px; border:1px solid #21304a;
+  background:#0b1626; color:#e5e7eb; cursor:pointer; font-size:18px;
+}
+.fab:hover{ filter:brightness(1.1) }
 
 /* ---------- Quests ---------- */
 .side-card h2{margin:4px 0 10px}
