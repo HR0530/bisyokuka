@@ -1,13 +1,15 @@
 :root{
   --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --muted:#94a3b8;
-  --accent:#22d3ee; --green:#22c55e; --blue:#3b82f6; --line:#1f2937;
+  --accent:#22d3ee; --green:#22c55e; --blue:#3b82f6; --line:#1f2937; --orange:#f59e0b;
 }
 
 /* reset-ish */
 *{box-sizing:border-box}
 html,body{height:100%}
-body{ margin:0; font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: var(--bg); color: var(--ink); }
+body{
+  margin:0; font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:var(--bg); color:var(--ink);
+}
 
 /* ---------- Header ---------- */
 .app-header{
@@ -15,8 +17,14 @@ body{ margin:0; font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans
   display:grid; grid-template-columns: 1fr auto auto; gap:12px; align-items:center;
 }
 .app-header h1{margin:0; font-size:20px; letter-spacing:0.02em}
-.nav-buttons{display:flex; gap:8px; justify-self:center}
-.nav-buttons .ghost-btn{min-width:110px}
+
+.nav-buttons{display:flex; gap:10px; justify-self:center}
+.nav-buttons .ghost-btn{
+  border:none; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer;
+}
+#btnHome{ background:var(--blue); color:#fff; }
+#btnDex { background:var(--orange); color:#171717; }
+
 .user-summary{justify-self:end; display:flex; align-items:center; gap:16px}
 .title-badge{
   background:linear-gradient(135deg,#2dd4bf,#60a5fa); color:#0b1320; font-weight:700;
@@ -34,35 +42,46 @@ body{ margin:0; font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans
 }
 .stage-card, .side-card{
   background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px;
-  box-shadow: 0 6px 20px rgba(0,0,0,.25);
+  box-shadow:0 6px 20px rgba(0,0,0,.25);
 }
 
-/* ===== ここから追記/上書き ===== */
+/* ---------- Stage ---------- */
+.stage-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px}
+.stat{font-size:13px; color:var(--muted)}
+.ghost-btn{ background:transparent; color:var(--ink); border:1px solid #263144;
+  padding:6px 10px; border-radius:10px; cursor:pointer }
+.ghost-btn:hover{background:#0e1625}
 
-/* ステージを中央寄せ・余白拡大 */
 .stage{
-  position:relative; height:520px;  /* 少し高く */
-  border-radius:16px; overflow:hidden;
+  position:relative; height:520px; border-radius:16px; overflow:hidden;
   background: radial-gradient(ellipse at 30% 30%, #0f2438, #0c1827 60%);
   outline:1px solid #0c2238;
 }
 
-/* キャラ1体・中央・大きめ（32px → 96px相当） */
+/* 背景グリッド */
+.grid-bg{
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(#14314d 1px, transparent 1px),
+    linear-gradient(90deg, #14314d 1px, transparent 1px);
+  background-size: 40px 40px; opacity:.35;
+}
+
+/* キャラ：中央に1体だけ、3倍表示（32→96） */
 .char{
-  position:absolute;
-  width:96px; height:96px;            /* 3倍表示 */
-  left:50%; top:55%; transform:translate(-50%,-50%);  /* 中央固定 */
-  image-rendering: pixelated;
+  position:absolute; width:96px; height:96px;
+  left:50%; top:55%; transform:translate(-50%,-50%);
+  image-rendering:pixelated;
   background-image:url("img/char.png");
   background-repeat:no-repeat;
   z-index:1;
 }
-/* 複数あっても1体以外は非表示（保険） */
+/* もし複数あっても1体以外は非表示（保険） */
 .stage .char:not(:first-of-type){ display:none !important; }
 
-/* 歩行フレームはそのまま（コマ幅32px×3） */
-@keyframes walk-frames{ from{background-position-x:0} to{background-position-x:-96px} }
-.char.walking{ animation: walk-frames .6s steps(3) infinite; }
+/* 歩行アニメ（横3コマ） */
+@keyframes walk-frames { from{ background-position-x:0 } to{ background-position-x:-96px } }
+.char.walking{ animation:walk-frames .6s steps(3) infinite; }
 
 /* 向き（行オフセット） */
 .dir-front{ background-position-y:   0px; }
@@ -70,10 +89,9 @@ body{ margin:0; font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans
 .dir-right{ background-position-y: -64px; }
 .dir-back { background-position-y: -96px; }
 
-/* 吹き出し（2枚目の「今日のPFC〜」） */
+/* 吹き出し（2枚目の雰囲気） */
 .speech{
-  position:absolute; left:50%; top:22%;
-  transform:translateX(-50%);
+  position:absolute; left:50%; top:22%; transform:translateX(-50%);
   background:#0f172a; color:#e5e7eb;
   border:1px solid #203049; border-radius:14px;
   padding:8px 12px; font-size:14px; box-shadow:0 6px 20px rgba(0,0,0,.25);
@@ -83,22 +101,6 @@ body{ margin:0; font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans
   content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%);
   border:8px solid transparent; border-top-color:#203049;
 }
-
-/* クエスト完了時の見た目（淡色＋取り消し線） */
-.quest.done{ opacity:.6; }
-.quest.done .name{ text-decoration:line-through; }
-.quest .state{ font-size:12px; color:#a5f3fc; margin-left:6px; }
-
-/* ヘッダーボタンの配色（←ホーム：青 / 図鑑：オレンジ） */
-.nav-buttons .ghost-btn#btnHome{
-  background:#3b82f6; color:#fff; border:none; padding:10px 14px; border-radius:12px; font-weight:700;
-}
-.nav-buttons .ghost-btn#btnDex{
-  background:#f59e0b; color:#171717; border:none; padding:10px 14px; border-radius:12px; font-weight:700;
-}
-
-/* ===== ここまで追記/上書き ===== */
-
 
 /* ---------- Quests ---------- */
 .side-card h2{margin:4px 0 10px}
@@ -111,31 +113,40 @@ body{ margin:0; font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans
 .quest .xp{font-size:12px; color:var(--muted)}
 .quest .desc{margin:6px 0 10px; color:#b6c2d1; font-size:13px}
 .quest .actions{display:flex; gap:8px}
+
 button{cursor:pointer}
-button.blue{ background:var(--blue); color:white; border:none; padding:8px 10px; border-radius:10px; font-weight:600; }
-button.green{ background:var(--green); color:#06200f; border:none; padding:8px 10px; border-radius:10px; font-weight:700; }
+button.blue{
+  background:var(--blue); color:#fff; border:none; padding:8px 10px; border-radius:10px; font-weight:600;
+}
+button.green{
+  background:var(--green); color:#06200f; border:none; padding:8px 10px; border-radius:10px; font-weight:700;
+}
 button:disabled{opacity:.6; cursor:not-allowed}
 
 /* 完了デザイン */
-.quest.done{ opacity:.6; }
+.quest.done{ opacity:.55; }
 .quest.done .name{ text-decoration:line-through; }
 .quest .state{ font-size:12px; color:#a5f3fc; margin-left:6px; }
 
 /* ---------- How-to / Log / Footer ---------- */
 .howto{ margin-top:12px; background:#0c1422; border:1px solid #1a2740; border-radius:12px; padding:10px 12px; color:#c8d3e1 }
 .howto summary{cursor:pointer; color:#a3d9ff; font-weight:700}
+
 .mt{margin-top:14px}
 .log{margin:8px 0 0; padding-left:18px; max-height:160px; overflow:auto}
 .log li{margin:4px 0; color:#c7d2fe; font-size:13px}
-.app-footer{ max-width:1200px; margin:0 auto 24px; padding:12px 20px;
-  display:flex; justify-content:space-between; align-items:center; color:var(--muted)}
+
+.app-footer{
+  max-width:1200px; margin:0 auto 24px; padding:12px 20px;
+  display:flex; justify-content:space-between; align-items:center; color:var(--muted)
+}
 .footer-actions{display:flex; gap:10px}
 
 /* ---------- Responsive ---------- */
 @media (max-width:1024px){
   .layout{grid-template-columns:1fr; gap:12px}
   .xp-wrap{min-width:260px}
-  .stage{height:380px}
+  .stage{height:420px}
   .app-header{grid-template-columns: 1fr auto; grid-auto-rows:auto}
   .nav-buttons{justify-self:end}
 }
