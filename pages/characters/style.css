@@ -2,170 +2,91 @@
   --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --muted:#94a3b8;
   --accent:#22d3ee; --green:#22c55e; --blue:#3b82f6; --line:#1f2937; --orange:#f59e0b;
 
-  /* スプライト：1コマ32px、3×4の想定。表示サイズはscaleで拡大。*/
+  /* 1フレーム32px・3×4スプライト想定。見た目の大きさは scale を変える */
   --frame: 32px;
-  --scale: 3;          /* ← 大きさはここで調整（2.4〜3.2 目安） */
+  --scale: 3;
 }
 
-/* reset-ish */
 *{box-sizing:border-box}
 html,body{height:100%}
-body{
-  margin:0; font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
-  background:var(--bg); color:var(--ink);
-}
+body{margin:0; font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink)}
 
-/* ---------- Header ---------- */
-.app-header{
-  max-width:1200px; margin:16px auto 0; padding:16px 20px;
-  display:grid; grid-template-columns: 1fr auto auto; gap:12px; align-items:center;
-}
-.app-header h1{margin:0; font-size:20px; letter-spacing:0.02em}
-
+/* Header */
+.app-header{max-width:1200px; margin:16px auto 0; padding:16px 20px;
+  display:grid; grid-template-columns: 1fr auto auto; gap:12px; align-items:center;}
+.app-header h1{margin:0; font-size:20px}
 .nav-buttons{display:flex; gap:10px; justify-self:center}
-.nav-buttons .ghost-btn{
-  border:none; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer;
-}
-#btnHome{ background:var(--blue); color:#fff; }
-#btnDex { background:var(--orange); color:#171717; }
-
+.nav-buttons .ghost-btn{border:none; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer}
+#btnHome{background:var(--blue); color:#fff}
+#btnDex{background:var(--orange); color:#171717}
 .user-summary{justify-self:end; display:flex; align-items:center; gap:16px}
-.title-badge{
-  background:linear-gradient(135deg,#2dd4bf,#60a5fa); color:#0b1320; font-weight:700;
-  padding:6px 10px; border-radius:999px; box-shadow:0 2px 12px rgba(0,0,0,.3);
-}
+.title-badge{background:linear-gradient(135deg,#2dd4bf,#60a5fa); color:#0b1320; font-weight:700; padding:6px 10px; border-radius:999px}
 .xp-wrap{min-width:360px}
 .xp-label{display:flex; justify-content:space-between; font-size:12px; color:var(--muted)}
 .xp-bar{height:10px; background:#0b1220; border-radius:999px; overflow:hidden; border:1px solid #0a1020}
-.xp-bar #xpFill{height:100%; width:0%; background:linear-gradient(90deg,#22d3ee,#3b82f6); transition:width .4s ease}
+#xpFill{height:100%; width:0%; background:linear-gradient(90deg,#22d3ee,#3b82f6); transition:width .4s ease}
 
-/* ---------- Main Layout ---------- */
-.layout{
-  max-width:1200px; margin:0 auto; padding:12px 20px 24px;
-  display:grid; grid-template-columns: 7fr 5fr; gap:16px;
-}
-.stage-card, .side-card{
-  background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px;
-  box-shadow:0 6px 20px rgba(0,0,0,.25);
-}
+/* Layout */
+.layout{max-width:1200px; margin:0 auto; padding:12px 20px 24px; display:grid; grid-template-columns:7fr 5fr; gap:16px}
+.stage-card,.side-card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px; box-shadow:0 6px 20px rgba(0,0,0,.25)}
 
-/* ---------- Stage ---------- */
+/* Stage */
 .stage-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px}
 .stat{font-size:13px; color:var(--muted)}
-.ghost-btn{ background:transparent; color:var(--ink); border:1px solid #263144;
-  padding:6px 10px; border-radius:10px; cursor:pointer }
-.ghost-btn:hover{background:#0e1625}
+.ghost-btn{background:transparent; color:var(--ink); border:1px solid #263144; padding:6px 10px; border-radius:10px; cursor:pointer}
+.stage{position:relative; height:520px; border-radius:16px; overflow:hidden; background:radial-gradient(ellipse at 30% 30%, #0f2438, #0c1827 60%); outline:1px solid #0c2238}
+.grid-bg{position:absolute; inset:0; background-image:linear-gradient(#14314d 1px,transparent 1px),linear-gradient(90deg,#14314d 1px,transparent 1px); background-size:40px 40px; opacity:.35}
 
-.stage{
-  position:relative; height:520px; border-radius:16px; overflow:hidden;
-  background: radial-gradient(ellipse at 30% 30%, #0f2438, #0c1827 60%);
-  outline:1px solid #0c2238;
-}
-
-/* 背景グリッド */
-.grid-bg{
-  position:absolute; inset:0;
-  background-image:
-    linear-gradient(#14314d 1px, transparent 1px),
-    linear-gradient(90deg, #14314d 1px, transparent 1px);
-  background-size: 40px 40px; opacity:.35;
-}
-
-/* ---------- キャラ（1コマ=32px、拡大はscale） ---------- */
+/* Character（画像は JS で適用するのでここでは指定しない） */
 .char{
-  position:absolute;
-  width:var(--frame);
-  height:var(--frame);
-  left:50%; top:55%; transform:translate(-50%,-50%) scale(var(--scale));
-  transform-origin:center bottom;
-  image-rendering:pixelated;
-  /* 画像は characters 配下の素材。必要に応じて差し替え可 */
-  background-image:url("project-root/男_スーツ1.png");
-  background-repeat:no-repeat;
-  background-size: calc(var(--frame) * 3) calc(var(--frame) * 4); /* 3×4 シート */
+  position:absolute; left:50%; top:55%; transform:translate(-50%,-50%) scale(var(--scale));
+  transform-origin:center bottom; width:var(--frame); height:var(--frame);
+  image-rendering:pixelated; background-repeat:no-repeat;
+  background-size: calc(var(--frame) * 3) calc(var(--frame) * 4);
   z-index:1;
 }
-/* 保険：複数あっても1体だけ */
-.stage .char:not(:first-of-type){ display:none !important; }
+.stage .char:not(:first-of-type){display:none!important}
+@keyframes walk-frames{from{background-position-x:0} to{background-position-x:calc(var(--frame) * -3)}}
+.char.walking{animation:walk-frames .6s steps(3) infinite}
 
-/* 歩行（横3コマ） */
-@keyframes walk-frames { from{ background-position-x:0 } to{ background-position-x:calc(var(--frame) * -3) } }
-.char.walking{ animation:walk-frames .6s steps(3) infinite; }
+/* スプライトの行（上から Front/Left/Right/Back の順で合わせた） */
+.dir-front{background-position-y: calc(var(--frame) * 0 * -1)}
+.dir-left {background-position-y: calc(var(--frame) * 1 * -1)}
+.dir-right{background-position-y: calc(var(--frame) * 2 * -1)}
+.dir-back {background-position-y: calc(var(--frame) * 3 * -1)}
 
-/* 向き（行オフセット）— スプライトの行に合わせて設定 */
-.dir-front{ background-position-y: calc(var(--frame) * 0 * -1); } /* 正面 */
-.dir-left { background-position-y: calc(var(--frame) * 1 * -1); } /* 左   */
-.dir-right{ background-position-y: calc(var(--frame) * 2 * -1); } /* 右   */
-.dir-back { background-position-y: calc(var(--frame) * 3 * -1); } /* 背面 */
+.speech{position:absolute; left:50%; top:22%; transform:translateX(-50%); background:#0f172a; color:#e5e7eb; border:1px solid #203049; border-radius:14px; padding:8px 12px; font-size:14px}
+.speech::after{content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%); border:8px solid transparent; border-top-color:#203049}
 
-/* 吹き出し */
-.speech{
-  position:absolute; left:50%; top:22%; transform:translateX(-50%);
-  background:#0f172a; color:#e5e7eb;
-  border:1px solid #203049; border-radius:14px;
-  padding:8px 12px; font-size:14px; box-shadow:0 6px 20px rgba(0,0,0,.25);
-  z-index:2;
-}
-.speech::after{
-  content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%);
-  border:8px solid transparent; border-top-color:#203049;
-}
+.stage-fab{position:absolute; right:10px; bottom:10px; display:flex; gap:8px; z-index:3}
+.fab{width:40px; height:40px; border-radius:10px; border:1px solid #21304a; background:#0b1626; color:#e5e7eb; cursor:pointer; font-size:18px}
 
-/* 右下 FAB */
-.stage-fab{
-  position:absolute; right:10px; bottom:10px; display:flex; gap:8px; z-index:3;
-}
-.fab{
-  width:40px; height:40px; border-radius:10px; border:1px solid #21304a;
-  background:#0b1626; color:#e5e7eb; cursor:pointer; font-size:18px;
-}
-.fab:hover{ filter:brightness(1.1) }
-
-/* ---------- Quests ---------- */
+/* Quests */
 .side-card h2{margin:4px 0 10px}
 .quest-list{display:flex; flex-direction:column; gap:10px}
-.quest{
-  border:1px solid #203049; background:#0e1726; border-radius:12px; padding:10px 12px; transition:opacity .2s;
-}
+.quest{border:1px solid #203049; background:#0e1726; border-radius:12px; padding:10px 12px}
 .quest .top{display:flex; justify-content:space-between; align-items:center; gap:8px}
 .quest .name{font-weight:600}
 .quest .xp{font-size:12px; color:var(--muted)}
 .quest .desc{margin:6px 0 10px; color:#b6c2d1; font-size:13px}
 .quest .actions{display:flex; gap:8px}
-
-button{cursor:pointer}
-button.blue{
-  background:var(--blue); color:#fff; border:none; padding:8px 10px; border-radius:10px; font-weight:600;
-}
-button.green{
-  background:var(--green); color:#06200f; border:none; padding:8px 10px; border-radius:10px; font-weight:700;
-}
+button.blue{background:var(--blue); color:#fff; border:none; padding:8px 10px; border-radius:10px; font-weight:600}
+button.green{background:var(--green); color:#06200f; border:none; padding:8px 10px; border-radius:10px; font-weight:700}
 button:disabled{opacity:.6; cursor:not-allowed}
+.quest.done{opacity:.55}
+.quest.done .name{text-decoration:line-through}
+.quest .state{font-size:12px; color:#a5f3fc; margin-left:6px}
 
-/* 完了デザイン */
-.quest.done{ opacity:.55; }
-.quest.done .name{ text-decoration:line-through; }
-.quest .state{ font-size:12px; color:#a5f3fc; margin-left:6px; }
-
-/* ---------- How-to / Log / Footer ---------- */
-.howto{ margin-top:12px; background:#0c1422; border:1px solid #1a2740; border-radius:12px; padding:10px 12px; color:#c8d3e1 }
-.howto summary{cursor:pointer; color:#a3d9ff; font-weight:700}
-
+.howto{margin-top:12px; background:#0c1422; border:1px solid #1a2740; border-radius:12px; padding:10px 12px; color:#c8d3e1}
 .mt{margin-top:14px}
 .log{margin:8px 0 0; padding-left:18px; max-height:160px; overflow:auto}
-.log li{margin:4px 0; color:#c7d2fe; font-size:13px}
+.app-footer{max-width:1200px; margin:0 auto 24px; padding:12px 20px; display:flex; justify-content:space-between; align-items:center; color:#94a3b8}
 
-.app-footer{
-  max-width:1200px; margin:0 auto 24px; padding:12px 20px;
-  display:flex; justify-content:space-between; align-items:center; color:var(--muted)
-}
-.footer-actions{display:flex; gap:10px}
-
-/* ---------- Responsive ---------- */
+/* Responsive */
 @media (max-width:1024px){
   .layout{grid-template-columns:1fr; gap:12px}
   .xp-wrap{min-width:260px}
   .stage{height:420px}
-  .app-header{grid-template-columns: 1fr auto; grid-auto-rows:auto}
+  .app-header{grid-template-columns: 1fr auto}
   .nav-buttons{justify-self:end}
 }
