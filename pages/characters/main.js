@@ -1,5 +1,5 @@
 /* =========================
-   参照・定数
+   参照
 ========================= */
 const xpFill = document.getElementById("xpFill");
 const xpText = document.getElementById("xpText");
@@ -13,11 +13,23 @@ const character = document.getElementById("character");
 const toggleBtn = document.getElementById("toggleRun");
 const quickClear = document.getElementById("quickClear");
 
-/* ナビ先（必要に応じて修正） */
-const HOME_PATH = "../index_pc.html";
-const DEX_PATH  = "pages/dex/index.html";
+/* =========================
+   パス自動補正（ホーム/図鑑）
+   - pages/characters/ 配下でも root でも動く
+========================= */
+function resolvePath(fromRoot){
+  // 例: /repo/pages/characters/index.html → 深さで ../ を作る
+  const depth = location.pathname.replace(/\/+$/,'').split('/').filter(Boolean).length;
+  // 「プロジェクトのルート深さ」をざっくり推定（/repo/ を想定して +1）
+  // characters 下なら 2 つ上、そうでなければ 1 つ上を優先
+  if (location.pathname.includes('/pages/characters/')) return `../../${fromRoot}`;
+  if (location.pathname.includes('/pages/'))           return `../${fromRoot}`;
+  return fromRoot; // すでにルート想定
+}
 
-/* ヘッダー & FAB の遷移 */
+const HOME_PATH = resolvePath('index_pc.html');            // 例: ../../index_pc.html
+const DEX_PATH  = resolvePath('pages/dex/index.html');     // 例: ../dex/index.html
+
 ["btnHome","fabHome"].forEach(id=>{
   const el = document.getElementById(id);
   if(el) el.onclick = ()=> window.location.href = HOME_PATH;
@@ -33,7 +45,7 @@ window.addEventListener("keydown", (e)=>{
 });
 
 /* =========================
-   XP / レベル / 称号
+   XP / レベル / 称号（従来仕様を踏襲）
 ========================= */
 const titles = [
   { minLv: 1, name: "見習いフーディー" },
@@ -46,7 +58,7 @@ const titles = [
 let state = {
   level: 1,
   xp: 0,
-  streak: 0, // 目標達成の連続日数（簡易）
+  streak: 0, // 目標達成の連続日数
   hp: 100,
   satisfaction: 50,
 };
@@ -83,75 +95,81 @@ function refreshHeader(){
 }
 
 /* =========================
-   クエスト
+   クエスト：確認 → 達成！ → 完了（UI更新）
 ========================= */
 const QUESTS = [
-  {
-    id:"log-photo",
-    name:"食事を写真つきで記録する",
-    desc:"本日中に1件投稿（料理全体が見える写真）",
-    xp:30
-  },
-  {
-    id:"hit-target",
-    name:"カロリー目標を達成",
-    desc:"今日の摂取カロリーを±5%以内に収める",
-    xp:40,
-    bonus:"連続達成で +10/日（最大+30）"
-  },
-  {
-    id:"try-new",
-    name:"未知の食材を試す",
-    desc:"普段使わない食材で簡単レシピを作る",
-    xp:25
-  },
-  {
-    id:"research",
-    name:"食の小ネタを1つ調べて投稿",
-    desc:"例：発酵の仕組み、オレイン酸の効果など",
-    xp:20
-  },
+  { id:"log-photo",  name:"食事を写真つきで記録する", desc:"本日中に1件投稿（料理全体が見える写真）", xp:30 },
+  { id:"hit-target", name:"カロリー目標を達成",       desc:"今日の摂取カロリーを±5%以内に収める", xp:40, bonus:"連続達成で +10/日（最大+30）"},
+  { id:"try-new",    name:"未知の食材を試す",         desc:"普段使わない食材で簡単レシピを作る", xp:25 },
+  { id:"research",   name:"食の小ネタを1つ投稿",       desc:"発酵の仕組み、オレイン酸の効果など", xp:20 },
 ];
+const questState = {}; // id: "check" | "ready" | "done"
 
 function renderQuests(){
   const wrap = document.getElementById("questList");
   wrap.innerHTML = "";
   QUESTS.forEach(q=>{
+    questState[q.id] = questState[q.id] || "check"; // 初期は「確認する」
     const el = document.createElement("div");
     el.className = "quest";
+    el.id = `q-${q.id}`;
     el.innerHTML = `
       <div class="top">
-        <div class="name">${q.name}</div>
+        <div class="name">${q.name}<span class="state" id="state-${q.id}"></span></div>
         <div class="xp">+${q.xp} XP ${q.bonus?`・<span title="${q.bonus}">🛈</span>`:""}</div>
       </div>
       <div class="desc">${q.desc}</div>
       <div class="actions">
-        <button class="blue" data-q="${q.id}" data-act="check">確認する</button>
-        <button class="green" id="btn-${q.id}" data-q="${q.id}" data-act="done">達成！</button>
+        <button class="blue"  id="btn-${q.id}"></button>
       </div>
     `;
     wrap.appendChild(el);
+    updateQuestButton(q.id);
   });
 
   wrap.addEventListener("click",(e)=>{
-    const btn = e.target.closest("button"); if(!btn) return;
-    const id = btn.dataset.q, act = btn.dataset.act;
-    if(act==="check") confirmQuest(id);
-    if(act==="done")  completeQuest(id);
-  }, { once:true }); // 初期化時に1回リスナーを付与
+    const btn = e.target.closest("button[id^='btn-']");
+    if(!btn) return;
+    const id = btn.id.replace('btn-','');
+    const st = questState[id];
+
+    if(st==="check"){ // 確認 → 達成に切り替え
+      confirmQuest(id);
+      questState[id] = "ready";
+      updateQuestButton(id);
+    }else if(st==="ready"){ // 達成！
+      completeQuest(id);
+      questState[id] = "done";
+      updateQuestButton(id);
+    }
+  });
+}
+
+function updateQuestButton(id){
+  const btn = document.getElementById(`btn-${id}`);
+  const badge = document.getElementById(`state-${id}`);
+  const card = document.getElementById(`q-${id}`);
+  const st = questState[id];
+
+  if(st==="check"){
+    btn.textContent = "確認する"; btn.className = "blue"; btn.disabled = false;
+    badge.textContent = "（未着手）"; card.classList.remove("done");
+  }else if(st==="ready"){
+    btn.textContent = "達成！"; btn.className = "green"; btn.disabled = false;
+    badge.textContent = "（確認済）"; card.classList.remove("done");
+  }else{ // done
+    btn.textContent = "完了"; btn.className = "green"; btn.disabled = true;
+    badge.textContent = "（完了）"; card.classList.add("done");
+  }
 }
 
 function confirmQuest(id){
-  const q = QUESTS.find(x=>x.id===id);
-  if(!q) return;
+  const q = QUESTS.find(x=>x.id===id); if(!q) return;
   addLog(`チェック：${q.name} —— ${q.desc}`);
 }
 
 function completeQuest(id){
-  const q = QUESTS.find(x=>x.id===id);
-  if(!q) return;
-  const btn = document.getElementById(`btn-${id}`);
-  if(!btn || btn.disabled) return;
+  const q = QUESTS.find(x=>x.id===id); if(!q) return;
 
   let gained = q.xp;
   if(id==="hit-target"){
@@ -160,7 +178,6 @@ function completeQuest(id){
     addLog(`🎯 目標達成ストリーク：${state.streak}日`);
   }
   setXP(gained, `クエスト「${q.name}」`);
-  btn.disabled = true;
 }
 
 /* =========================
@@ -171,22 +188,23 @@ function addLog(text){
   li.textContent = `${new Date().toLocaleTimeString()}  ${text}`;
   logEl.prepend(li);
 }
-if(quickClear){
-  quickClear.addEventListener("click", ()=>{ logEl.innerHTML = ""; });
-}
+if(quickClear){ quickClear.addEventListener("click", ()=>{ logEl.innerHTML = ""; }); }
 
 /* =========================
-   キャラ挙動（前が多め→横を挟む）
+   キャラ：1人だけを常に表示し、前多め→横
 ========================= */
-/*
-  スプライト：横3×縦4（各32px）
-  行（Y）：front(0), left(1), right(2), back(3)
-*/
+/* 画像は横3×縦4（各32px）。行：front(0), left(1), right(2), back(3) */
 function setRow(dir){
   character.classList.remove("dir-front","dir-left","dir-right","dir-back");
   character.classList.add(`dir-${dir}`);
-  character.classList.add("walking"); // 常に歩行アニメ
+  character.classList.add("walking");
 }
+
+// 保険：もし複数 .char がDOMにあれば 1人に揃える
+(function ensureSingleChar(){
+  const nodes = document.querySelectorAll(".char");
+  nodes.forEach((n,i)=>{ if(i>0) n.remove(); });
+})();
 
 let running = true;
 let alternateSide = true;
@@ -209,13 +227,13 @@ function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
 async function loopWalk(){
   const stage = document.querySelector(".stage");
   const bounds = stage.getBoundingClientRect();
-  const maxX = bounds.width - 80; // 余白考慮
+  const maxX = bounds.width - 80;
   const maxY = bounds.height - 80;
 
   while(true){
     if(!running){ await wait(120); continue; }
 
-    // 前（下方向）5秒：メイン
+    // 前（下方向）5秒：メイン挙動
     setRow("front");
     let p = getPos();
     let dy = 120 + Math.random()*80;
@@ -249,6 +267,6 @@ function init(){
   character.classList.add("walking");
   renderQuests();
   refreshHeader();
-  loopWalk(); // 非同期ループ
+  loopWalk();
 }
 init();
