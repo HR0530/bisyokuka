@@ -1,4 +1,4 @@
-/* ================== キャラ育成 main.js（修正版） ================== */
+/* ================== キャラ育成 main.js（最終版） ================== */
 
 /* DOM */
 const xpFill = document.getElementById("xpFill");
@@ -12,8 +12,7 @@ const character = document.getElementById("character");
 const toggleBtn = document.getElementById("toggleRun");
 
 /* ---------- ルーティング（ホーム/図鑑/分析） ---------- */
-// GitHub Pages: /bisyokuka/pages/characters/index.html からの相対をきちんと解決
-function resolveHomePath(){                         // ★fix ホームに戻れない問題
+function resolveHomePath(){
   if (location.pathname.includes('/pages/characters/')) return '../../index_pc.html';
   if (location.pathname.includes('/pages/'))           return '../index_pc.html';
   return 'index_pc.html';
@@ -33,12 +32,11 @@ document.getElementById("fabHome")?.addEventListener("click", ()=> location.href
 document.getElementById("fabDex") ?.addEventListener("click", ()=> location.href = resolveDexPath());
 document.getElementById("goInsights")?.addEventListener("click", ()=> location.href = resolveInsightsPath());
 
-/* ---------- キャラスキン（画像の場所を JS で確実に反映） ---------- */
-// 画像は /pages/characters/project-root/*.png に配置
-const SKIN_DIR = 'project-root/';                   // ★fix 反映されない問題を JS でも強制
-const DEFAULT_SKIN = localStorage.getItem('bs_char_skin') || '男_スーツ1.png';
+/* ---------- キャラスキン（画像の場所を JS で反映） ---------- */
+/* 必ず /pages/characters/project-root/char.png を使う */
+const SKIN_DIR = 'project-root/';
+const DEFAULT_SKIN = 'char.png';
 function applySkin(filename){
-  // 日本語ファイル名もそのまま使える（GitHub Pages 対応）
   character.style.backgroundImage = `url("${SKIN_DIR}${filename}")`;
 }
 applySkin(DEFAULT_SKIN);
@@ -152,7 +150,7 @@ function setQuestUI(id,status){
 
 /* ---------- meal 集計（v2の totals 対応） ---------- */
 const MEAL_KEYS = [
-  "bisyokuka_meals_v2",               // ★fix 追加
+  "bisyokuka_meals_v2",
   "mealEntries","meals","mealRecords","bisyokuka_meals",
   "mealList","mealData","meals_today","bs_meals","mealHistory"
 ];
@@ -206,7 +204,6 @@ function collectMealsToday(){
   const today = todayStr();
   items = items.filter(it => dateStr(it?.date ?? it?.day ?? it?.createdAt ?? it?.timestamp) === today);
 
-  // ★fix v2 形式: totals.{protein,fat,carbs,kcal} を読む
   let P=0,F=0,C=0,K=0;
   for(const it of items){
     if(it?.totals){
@@ -262,7 +259,6 @@ function evaluate(){
     }
   }
 
-  // 画面下の今日サマリー（簡易）
   let badge = document.getElementById('nutritionBadge');
   if(!badge){
     badge = document.createElement('div');
@@ -273,7 +269,7 @@ function evaluate(){
   badge.textContent = `今日の集計: P ${Math.round(P)}g / F ${Math.round(F)}g / C ${Math.round(C)}g / ${Math.round(K)}kcal（目標 ${goal}kcal）・記録 ${count}件`;
 }
 
-/* ---------- キャラ挙動 ---------- */
+/* ---------- キャラ挙動（数秒ごとに向きを切替） ---------- */
 function setRow(dir){
   character.classList.remove('dir-front','dir-left','dir-right','dir-back');
   character.classList.add(`dir-${dir}`);
@@ -312,7 +308,6 @@ function init(){
   });
   setInterval(evaluate, 10000);
 
-  // 吹き出し
   const b = document.createElement('div');
   b.className='speech'; b.textContent='今日のPFCバランス、いい感じ？';
   document.querySelector('.stage')?.appendChild(b);
