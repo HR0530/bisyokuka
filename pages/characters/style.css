@@ -2,16 +2,15 @@
   --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --muted:#94a3b8;
   --accent:#22d3ee; --green:#22c55e; --blue:#3b82f6; --line:#1f2937; --orange:#f59e0b;
 
-  /* 1フレーム32px・3×4スプライト想定。見た目の大きさは scale を変える */
+  /* 1フレーム32px・3×4スプライト */
   --frame: 32px;
-  --scale: 3;
+  --hero-scale: 3.6;      /* ← ここで拡大率を調整 */
 }
 
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0; font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink)}
 
-/* Header */
 .app-header{max-width:1200px; margin:16px auto 0; padding:16px 20px;
   display:grid; grid-template-columns: 1fr auto auto; gap:12px; align-items:center;}
 .app-header h1{margin:0; font-size:20px}
@@ -26,57 +25,43 @@ body{margin:0; font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif
 .xp-bar{height:10px; background:#0b1220; border-radius:999px; overflow:hidden; border:1px solid #0a1020}
 #xpFill{height:100%; width:0%; background:linear-gradient(90deg,#22d3ee,#3b82f6); transition:width .4s ease}
 
-/* Layout */
 .layout{max-width:1200px; margin:0 auto; padding:12px 20px 24px; display:grid; grid-template-columns:7fr 5fr; gap:16px}
 .stage-card,.side-card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px; box-shadow:0 6px 20px rgba(0,0,0,.25)}
 
-/* Stage */
 .stage-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px}
 .stat{font-size:13px; color:var(--muted)}
 .ghost-btn{background:transparent; color:var(--ink); border:1px solid #263144; padding:6px 10px; border-radius:10px; cursor:pointer}
+
 .stage{position:relative; height:520px; border-radius:16px; overflow:hidden; background:radial-gradient(ellipse at 30% 30%, #0f2438, #0c1827 60%); outline:1px solid #0c2238}
 .grid-bg{position:absolute; inset:0; background-image:linear-gradient(#14314d 1px,transparent 1px),linear-gradient(90deg,#14314d 1px,transparent 1px); background-size:40px 40px; opacity:.35}
 
 /* --- キャラ（3×4 スプライト）--- */
-/* 1人だけ・大きく見せる：要素サイズは1コマ分(32x32)にし、拡大は transform で */
-:root{
-  --hero-scale: 3.6;        /* ←ここで大きさを調整（例: 3.0〜4.5） */
-}
-
-/* 背景グリッドや他のCSSはそのままでOK */
-
 .char{
   position:absolute;
-  width:32px;               /* ← ここが重要：32px(1コマ) */
-  height:32px;              /* ← ここが重要：32px(1コマ) */
+  width:32px; height:32px;                  /* 1コマのサイズ */
   left:50%; top:55%;
   transform: translate(-50%,-50%) scale(var(--hero-scale));
   transform-origin: center bottom;
   image-rendering: pixelated;
 
-  background-image:url("project-root/char1.png");  /* 画像パスはそのまま */
+  /* 画像は JS から url("project-root/char.png") を当てる */
   background-repeat:no-repeat;
-
-  /* スプライト全体サイズ（横3×縦4） */
-  background-size: 96px 128px; /* 32*3, 32*4 */
+  background-size: 96px 128px;              /* 32*3, 32*4 全体サイズ */
 
   z-index:1;
 }
-
-/* 横3コマの歩行 */
+/* 横3コマの歩行アニメ（背景のXを 0 → -96px まで送る） */
 @keyframes walk3 { from{ background-position-x:0 } to{ background-position-x:-96px } }
 .char.walking{ animation: walk3 .6s steps(3) infinite; }
 
-/* 行オフセット（1行=32px） */
+/* 縦方向の行切替（1行=32px） */
 .dir-front { background-position-y:   0px; }
 .dir-left  { background-position-y: -32px; }
 .dir-right { background-position-y: -64px; }
 .dir-back  { background-position-y: -96px; }
 
-/* 念のため、複数いたら1体以外は表示させない */
+/* 念のため、複数いた場合は1体以外を非表示 */
 .stage .char:not(:first-of-type){ display:none !important; }
-
-
 
 .speech{position:absolute; left:50%; top:22%; transform:translateX(-50%); background:#0f172a; color:#e5e7eb; border:1px solid #203049; border-radius:14px; padding:8px 12px; font-size:14px}
 .speech::after{content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%); border:8px solid transparent; border-top-color:#203049}
@@ -105,7 +90,6 @@ button:disabled{opacity:.6; cursor:not-allowed}
 .log{margin:8px 0 0; padding-left:18px; max-height:160px; overflow:auto}
 .app-footer{max-width:1200px; margin:0 auto 24px; padding:12px 20px; display:flex; justify-content:space-between; align-items:center; color:#94a3b8}
 
-/* Responsive */
 @media (max-width:1024px){
   .layout{grid-template-columns:1fr; gap:12px}
   .xp-wrap{min-width:260px}
