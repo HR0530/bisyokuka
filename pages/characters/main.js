@@ -9,6 +9,26 @@ const satiText = document.getElementById("satisfactionText");
 const character = document.getElementById("character");
 const speech = document.getElementById("speech");
 
+/* ===== 歩行開始／停止（前進感の制御） ===== */
+const gridBg = document.querySelector('.grid-bg');
+const toggleRunBtn = document.getElementById('toggleRun');
+let running = true;
+
+function setWalking(on){
+  if (!character) return;
+  character.classList.toggle('walking', on);                  // スプライト＆バウンド
+  if (gridBg) gridBg.style.animationPlayState = on ? 'running' : 'paused'; // 背景スクロール
+}
+
+setWalking(true); // 初期は歩行スタート
+
+toggleRunBtn?.addEventListener('click', ()=>{
+  running = !running;
+  toggleRunBtn.textContent = running ? '一時停止' : '再開';
+  setWalking(running);
+});
+
+
 /* ===== 画像パスを最初に強制適用（階層ズレ保険） ===== */
 (async ()=>{
   const candidates = [
