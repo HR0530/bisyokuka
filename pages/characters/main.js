@@ -343,3 +343,71 @@ function init(){
 
 /* ===== 起動 ===== */
 init();
+
+/* ====== DEX連携（育成 ↔ 図鑑）完成ブロック ====== */
+/* 既存の CHAR_KEY があるなら一致させてください */
+const CHAR_KEY = 'bs_char_state_v1';
+const DEX_KEY  = 'dex_state_v1';
+
+function lsLoad(key){ try{ return JSON.parse(localStorage.getItem(key)||'null'); }catch{ return null; } }
+function lsSave(key,val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+/* レベルに応じて 3レベルごとに解放（最大32体）
+   Lv1=1体, Lv4=2体, Lv7=3体, ... */
+function syncDexUnlocksByLevel(){
+  const st = lsLoad(CHAR_KEY) || { level:1 };
+  const level = +st.level || 1;
+
+  const maxCount = Math.min(32, Math.floor((level-1)/3) + 1); // 1..32
+  const dex = lsLoad(DEX_KEY) || {};
+  const unlocked = dex.unlocked || {};
+  for(let i=0;i<maxCount;i++) unlocked[i] = true;
+
+  dex.unlocked = unlocked;
+  if(!dex.selected) dex.selected = 'char.png'; // 初期選択。お好みで変更OK
+  lsSave(DEX_KEY, dex);
+}
+
+/* 図鑑で選ばれた“ファイル名だけ”を使ってスキンを適用 */
+async function applySkinFromDex(){
+  const character = document.getElementById('character');
+  if(!character) return;
+
+  const dex = lsLoad(DEX_KEY) || {};
+  const filename = dex.selected || 'char.png';
+  const candidates = [
+    `./project-root/${filename}`,
+    `project-root/${filename}`,
+    `../project-root/${filename}`,
+    `/project-root/${filename}`
+  ];
+  for (const p of candidates){
+    const ok = await new Promise(res=>{
+      const img = new Image();
+      img.onload = ()=>res(true);
+      img.onerror = ()=>res(false);
+      img.src = p + '?v=' + Date.now();
+    });
+    if(ok){
+      character.style.backgroundImage = `url("${p}")`;
+      return;
+    }
+  }
+  // 最後の保険
+  character.style.backgroundImage = `url("project-root/char.png")`;
+}
+
+/* 初期化フック（既存initがあるなら、その中/直後で呼んでもOK） */
+document.addEventListener('DOMContentLoaded', ()=>{
+  syncDexUnlocksByLevel();
+  applySkinFromDex();
+});
+
+/* 図鑑で切り替えられたら自動反映（同一オリジン前提） */
+window.addEventListener('storage', (e)=>{
+  if(e.key === DEX_KEY){
+    applySkinFromDex();
+  }
+});
+/* ====== /DEX連携ブロック ====== */
+
