@@ -1,8 +1,10 @@
 :root{
   --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --muted:#94a3b8;
   --accent:#22d3ee; --green:#22c55e; --blue:#3b82f6; --line:#1f2937; --orange:#f59e0b;
-  --frame: 32px;              /* 1コマ */
-  --hero-scale: 3.6;          /* 拡大率 */
+  --frame: 32px;
+  --hero-scale: 3.6;              /* 拡大率 */
+  --hero-x: 50%;                   /* 中央に配置 */
+  --hero-y: 62%;                   /* 少し下に */
 }
 
 *{box-sizing:border-box}
@@ -36,27 +38,34 @@ body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:va
 
 /* ==== キャラ（静止画：正面のみ） ==== */
 .char{
-  position:absolute; left:40px; top:40px;   /* 好きな場所に */
+  position:absolute;
+  left:var(--hero-x);              /* 中央寄せ */
+  top:var(--hero-y);
   width:var(--frame);
   height:var(--frame);
-  background-image:url('./project-root/char.png'); /* 画像の実配置に合わせる */
+  background-image:url('./project-root/char.png');
   background-repeat:no-repeat;
-  background-position:0 0;                  /* 1行目1列目 = 正面 */
+  background-position:0 0;        /* 1行目1列目 */
   image-rendering:pixelated;
-  transform:scale(var(--hero-scale));
+  transform:translate(-50%,-100%) scale(var(--hero-scale));
   transform-origin:top left;
   z-index:2;
 }
-
-/* アニメ停止（保険） */
+/* 念のためアニメ停止 */
 .walking{ animation:none !important; }
 .dir-front,.dir-left,.dir-right,.dir-back{ background-position:0 0 !important; }
 
-.speech{position:absolute; left:50%; top:22%; transform:translateX(-50%);
+/* 吹き出し（キャラの上。画面中央ではなく固定位置） */
+.speech{
+  position:absolute; left:var(--hero-x); top:calc(var(--hero-y) - 70px);
+  transform:translateX(-50%);
   background:#0f172a; color:#e5e7eb; border:1px solid #203049; border-radius:14px;
-  padding:8px 12px; font-size:14px}
-.speech::after{content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%);
-  border:8px solid transparent; border-top-color:#203049}
+  padding:8px 12px; font-size:14px; z-index:3;
+}
+.speech::after{
+  content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%);
+  border:8px solid transparent; border-top-color:#203049;
+}
 
 .stage-fab{position:absolute; right:10px; bottom:10px; display:flex; gap:8px; z-index:3}
 .fab{width:40px; height:40px; border-radius:10px; border:1px solid #21304a; background:#0b1626; color:#e5e7eb; cursor:pointer; font-size:18px}
