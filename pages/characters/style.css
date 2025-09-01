@@ -56,17 +56,11 @@ body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:va
   background-repeat:no-repeat;
   background-position:0 0;        /* 1行目1列目 */
   image-rendering:pixelated;
-  translate(-50%, calc(-100% + var(--bob, 0px))) scale(var(--hero-scale)); ... }
+  transform: translate(-50%, calc(-100% + var(--bob, 0px))) scale(var(--hero-scale));
   transform-origin:top left;
   z-index:2;
 }
 
-
-/* --- 歩行アニメ（横3コマ）＋ ふわっと上下バウンド --- */
-.walking{
-  animation: walkAnim 0.6s steps(3) infinite,
-             bob     0.6s ease-in-out infinite;
-}
 
 @keyframes walkAnim{
   from { background-position-x:   0px; }
