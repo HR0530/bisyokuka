@@ -270,11 +270,31 @@ function init(){
   evaluate();
 
   // 吹き出しを数秒後にフェードアウト
-  if (speech){
+const speech = document.getElementById('speech');
+
+// 交代させたい台詞たち（自由に追加OK）
+const SPEECH_LINES = [
+  "今日のPFCバランス、いい感じ？",
+  "お水を一杯どうぞ💧",
+  "写真を撮って記録しよ📷",
+  "ストレッチでリフレッシュ🧘",
+  "たんぱく質は意識できた？🍗"
+];
+
+let spIndex = 0;
+function rotateSpeech() {
+  if (!speech) return;
+  spIndex = (spIndex + 1) % SPEECH_LINES.length;
+  speech.style.opacity = 0;
+  setTimeout(() => {
+    speech.textContent = SPEECH_LINES[spIndex];
     speech.style.opacity = 1;
-    setTimeout(()=>{ speech.style.transition='opacity .4s'; speech.style.opacity=0; }, 2200);
-    setTimeout(()=>{ speech.style.display='none'; }, 2800);
-  }
+  }, 220); // フェード時間と合わせる
+}
+
+// 9秒ごとに台詞変更（好みで調整）
+setInterval(rotateSpeech, 9000);
+
 
   // 動作トリガ
   window.addEventListener('focus', evaluate);
@@ -287,3 +307,5 @@ function init(){
   setInterval(evaluate, 10000);
 }
 init();
+
+
