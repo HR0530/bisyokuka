@@ -270,27 +270,47 @@ function evaluate(){
 }
 
 /* ---------- キャラ挙動（数秒ごとに向きを切替） ---------- */
-function setRow(dir){
-  character.classList.remove('dir-front','dir-left','dir-right','dir-back');
-  character.classList.add(`dir-${dir}`);
-}
-let running = true;
-toggleBtn?.addEventListener('click', ()=>{
-  running = !running;
-  toggleBtn.textContent = running ? '一時停止' : '再開';
-  character.classList.toggle('walking', running);
-});
-const wait = ms => new Promise(r=>setTimeout(r,ms));
-async function loopWalk(){
-  character.classList.add('walking');
-  let side = true;
-  for(;;){
-    while(!running) await wait(150);
-    setRow('front'); for(let i=0;i<25;i++){ if(!running) break; await wait(200); } // 約5秒
-    while(!running) await wait(150);
-    setRow(side?'left':'right'); side=!side; for(let i=0;i<10;i++){ if(!running) break; await wait(200); } // 約2秒
+// main.js
+document.addEventListener('DOMContentLoaded', () => {
+  const character = document.querySelector('#character');
+  const toggleBtn = document.querySelector('#toggleBtn');
+
+  if (!character) { console.error('character 要素が見つかりません'); return; }
+
+  // ---------- キャラ挙動（数秒ごとに向きを切替） ----------
+  function setRow(dir){
+    character.classList.remove('dir-front','dir-left','dir-right','dir-back');
+    character.classList.add(`dir-${dir}`);
   }
-}
+
+  let running = true;
+
+  toggleBtn?.addEventListener('click', ()=>{
+    running = !running;
+    if (toggleBtn) toggleBtn.textContent = running ? '一時停止' : '再開';
+    character.classList.toggle('walking', running);
+  });
+
+  const wait = ms => new Promise(r=>setTimeout(r,ms));
+
+  async function loopWalk(){
+    character.classList.add('walking');
+    let side = true;
+    while (true) {
+      if (!running) { await wait(150); continue; }
+      setRow('front');
+      for (let i = 0; i < 25 && running; i++) await wait(200); // 約5秒
+
+      if (!running) continue;
+      setRow(side ? 'left' : 'right');
+      side = !side;
+      for (let i = 0; i < 10 && running; i++) await wait(200); // 約2秒
+    }
+  }
+
+  // ★ 忘れがち：ループ開始
+  loopWalk();
+});
 
 /* ---------- 初期化 ---------- */
 function init(){
