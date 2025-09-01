@@ -1,20 +1,17 @@
 :root{
   --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --muted:#94a3b8;
   --accent:#22d3ee; --green:#22c55e; --blue:#3b82f6; --line:#1f2937; --orange:#f59e0b;
-
-  /* 1フレーム32px・3×4スプライト */
-  --frame: 32px;
-  --hero-scale: 3.6;      /* ← ここで拡大率を調整 */
+  --frame: 32px;              /* 1コマ */
+  --hero-scale: 3.6;          /* 拡大率 */
 }
 
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0; font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--ink)}
+body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:var(--ink)}
 
 .app-header{max-width:1200px; margin:16px auto 0; padding:16px 20px;
   display:grid; grid-template-columns: 1fr auto auto; gap:12px; align-items:center;}
-.app-header h1{margin:0; font-size:20px}
-.nav-buttons{display:flex; gap:10px; justify-self:center}
+.nav-buttons{display:flex; gap:10px}
 .nav-buttons .ghost-btn{border:none; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer}
 #btnHome{background:var(--blue); color:#fff}
 #btnDex{background:var(--orange); color:#171717}
@@ -27,44 +24,43 @@ body{margin:0; font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif
 
 .layout{max-width:1200px; margin:0 auto; padding:12px 20px 24px; display:grid; grid-template-columns:7fr 5fr; gap:16px}
 .stage-card,.side-card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px; box-shadow:0 6px 20px rgba(0,0,0,.25)}
-
 .stage-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px}
 .stat{font-size:13px; color:var(--muted)}
 .ghost-btn{background:transparent; color:var(--ink); border:1px solid #263144; padding:6px 10px; border-radius:10px; cursor:pointer}
 
-.stage{position:relative; height:520px; border-radius:16px; overflow:hidden; background:radial-gradient(ellipse at 30% 30%, #0f2438, #0c1827 60%); outline:1px solid #0c2238}
-.grid-bg{position:absolute; inset:0; background-image:linear-gradient(#14314d 1px,transparent 1px),linear-gradient(90deg,#14314d 1px,transparent 1px); background-size:40px 40px; opacity:.35}
+.stage{position:relative; height:520px; border-radius:16px; overflow:hidden;
+  background:radial-gradient(ellipse at 30% 30%, #0f2438, #0c1827 60%); outline:1px solid #0c2238}
+.grid-bg{position:absolute; inset:0;
+  background-image:linear-gradient(#14314d 1px,transparent 1px),linear-gradient(90deg,#14314d 1px,transparent 1px);
+  background-size:40px 40px; opacity:.35}
 
-/* --- キャラ（3×4 スプライト）--- */
+/* ==== キャラ（静止画：正面のみ） ==== */
 .char{
-  width: var(--frame);
-  height: var(--frame);
-  background-image: url('./project-root/char.png'); /* 正面1枚だけ */
-  background-repeat: no-repeat;
-  image-rendering: pixelated;
-  transform: scale(var(--hero-scale));
-  transform-origin: top left;
-
-  /* 正面コマだけ見えるように */
-  background-position-x: 0px;
-  background-position-y: 0px;
+  position:absolute; left:40px; top:40px;   /* 好きな場所に */
+  width:var(--frame);
+  height:var(--frame);
+  background-image:url('./project-root/char.png'); /* 画像の実配置に合わせる */
+  background-repeat:no-repeat;
+  background-position:0 0;                  /* 1行目1列目 = 正面 */
+  image-rendering:pixelated;
+  transform:scale(var(--hero-scale));
+  transform-origin:top left;
+  z-index:2;
 }
 
-/* アニメーション・向き切替は全部無効化 */
-.walking{ animation: none; }
-.dir-front, .dir-left, .dir-right, .dir-back { background-position: 0 0; }
+/* アニメ停止（保険） */
+.walking{ animation:none !important; }
+.dir-front,.dir-left,.dir-right,.dir-back{ background-position:0 0 !important; }
 
-
-/* 念のため、複数いた場合は1体以外を非表示 */
-.stage .char:not(:first-of-type){ display:none !important; }
-
-.speech{position:absolute; left:50%; top:22%; transform:translateX(-50%); background:#0f172a; color:#e5e7eb; border:1px solid #203049; border-radius:14px; padding:8px 12px; font-size:14px}
-.speech::after{content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%); border:8px solid transparent; border-top-color:#203049}
+.speech{position:absolute; left:50%; top:22%; transform:translateX(-50%);
+  background:#0f172a; color:#e5e7eb; border:1px solid #203049; border-radius:14px;
+  padding:8px 12px; font-size:14px}
+.speech::after{content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%);
+  border:8px solid transparent; border-top-color:#203049}
 
 .stage-fab{position:absolute; right:10px; bottom:10px; display:flex; gap:8px; z-index:3}
 .fab{width:40px; height:40px; border-radius:10px; border:1px solid #21304a; background:#0b1626; color:#e5e7eb; cursor:pointer; font-size:18px}
 
-/* Quests */
 .side-card h2{margin:4px 0 10px}
 .quest-list{display:flex; flex-direction:column; gap:10px}
 .quest{border:1px solid #203049; background:#0e1726; border-radius:12px; padding:10px 12px}
