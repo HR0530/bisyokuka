@@ -56,11 +56,6 @@ body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:va
 .dir-front,.dir-left,.dir-right,.dir-back{ background-position:0 0 !important; }
 
 /* 吹き出し（キャラの上。画面中央ではなく固定位置） */
-:root{
-  --hero-scale: 8.2;
-  --hero-x: 50%;
-  --hero-y: 30%;  /* ← ここを上げる。計算上の下限は 約54% */
-}
 
 
 /* キャラは今のままでOK（transform: translate(-50%,-100%) scale(...) 前提） */
