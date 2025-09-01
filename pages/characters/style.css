@@ -59,7 +59,7 @@ body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:va
 :root{
   --hero-scale: 8.2;
   --hero-x: 32%;
-  --hero-y: 62%;  /* ← ここを上げる。計算上の下限は 約54% */
+  --hero-y: 54%;  /* ← ここを上げる。計算上の下限は 約54% */
 }
 
 
