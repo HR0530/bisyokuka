@@ -2,9 +2,9 @@
   --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --muted:#94a3b8;
   --accent:#22d3ee; --green:#22c55e; --blue:#3b82f6; --line:#1f2937; --orange:#f59e0b;
   --frame: 32px;
-  --hero-scale: 3.6;              /* 拡大率 */
-  --hero-x: 50%;                   /* 中央に配置 */
-  --hero-y: 62%;                   /* 少し下に */
+  --hero-scale: 8.2;              /* 拡大率 */
+  --hero-x: 38%;                   /* 中央に配置 */
+  --hero-y: 50%;                   /* 少し下に */
 }
 
 *{box-sizing:border-box}
