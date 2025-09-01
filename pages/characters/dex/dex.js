@@ -12,12 +12,31 @@ function loadChar(){ try{ return JSON.parse(localStorage.getItem(CHAR_KEY)||'{}'
 */
 const ASSET_BASE = '../project-root/';
 
-// 自動生成（char_01.png .. char_32.png）
-const CHARACTERS = Array.from({length:32}, (_,i)=>{
-  const n = i+1;
+const CHARACTERS = Array.from({length:64}, (_,i)=>{
+  const n  = i+1;
   const fn = `char_${String(n).padStart(2,'0')}.png`;
-  return { id:i, name:`キャラ #${n}`, filename:fn, rarity: 1 + Math.floor(i/8), unlockHint:`Lv${1 + i*3} 付近で解放` };
+  const rarity = 1 + Math.floor(i/16); // お好みで
+  return {
+    id:i,
+    name:`キャラ #${n}`,
+    filename:fn,
+    rarity,
+    unlockHint: i < 32
+      ? `Lv${1 + i*3} 付近で解放`          // #1-32 はレベル
+      : `ベストスコア ${300 + (i-32)*100}+` // #33-64 はスコア
+  };
 });
+
+
+/* #33〜#64：ベストスコア到達で解放（300,400,…,3400） */
+const SCORE_MILESTONES = Array.from({length:32}, (_,i)=> 300 + i*100);
+function unlockedByScore(best){
+  const u = {};
+  SCORE_MILESTONES.forEach((th, i)=>{
+    if (best >= th) u[32+i] = true; // id 32..63
+  });
+  return u;
+}
 
 /* --- 手動でやる場合の例（↑を削除して↓を使う）
 const CHARACTERS = [
