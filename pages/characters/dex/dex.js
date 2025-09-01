@@ -38,6 +38,20 @@ function unlockedByScore(best){
   return u;
 }
 
+// 追加：#65 のIDを予約
+const SECRET65_ID = 64; // 0始まり配列なので 64 = #65
+
+// 既存 CHARACTERS にシークレット枠を push（ファイル名は未公開）
+CHARACTERS.push({
+  id: SECRET65_ID,
+  name: '？？？',
+  filename: null,           // ここは解放まで null
+  rarity: 5,
+  secret: true,
+  unlockHint: '挑戦'        // モーダルに「挑戦」とだけ出す
+});
+
+
 /* --- 手動でやる場合の例（↑を削除して↓を使う）
 const CHARACTERS = [
   { id:0, name:'男スーツ1', filename:'男_スーツ1.png', rarity:1, unlockHint:'Lv1' },
