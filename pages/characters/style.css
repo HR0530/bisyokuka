@@ -3,7 +3,7 @@
   --accent:#22d3ee; --green:#22c55e; --blue:#3b82f6; --line:#1f2937; --orange:#f59e0b;
   --frame: 32px;
   --hero-scale: 8.2;              /* 拡大率 */
-  --hero-x: 35%;                   /* 中央に配置 */
+  --hero-x: 30%;                   /* 中央に配置 */
   --hero-y: 30%;                   /* 少し下に */
 }
 
