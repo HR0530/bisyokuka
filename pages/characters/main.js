@@ -317,6 +317,23 @@ function rotateSpeech() {
   }, 220); // フェード時間と合わせる
 }
 
+ function init(){
+   renderQuests();
+   refreshHeader();
+   evaluate();
+
++  // 初期文言の見た目サイズで吹き出しを固定
++  lockSpeechSize();
+
+   // 動作トリガ
+   window.addEventListener('focus', evaluate);
+   window.addEventListener('storage', (e)=>{
+     ...
+   });
+   setInterval(evaluate, 10000);
+ }
+
+
 // 9秒ごとに台詞変更（好みで調整）
 setInterval(rotateSpeech, 9000);
 
@@ -331,9 +348,6 @@ setInterval(rotateSpeech, 9000);
   });
   setInterval(evaluate, 10000);
 }
-
-// init() の最後あたりに追加
-lockSpeechSize();
 
 init();
 
