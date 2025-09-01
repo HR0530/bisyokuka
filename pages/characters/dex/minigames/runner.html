@@ -25,10 +25,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple
 .meta .score{color:#a5f3fc}
 .meta .best{color:#86efac}
 .stage{
-  position:relative;
-  width: min(92vw, var(--stage-w));
-  height: var(--stage-h);
-  margin:0 auto;
+  position:relative; width:var(--stage-w); height:var(--stage-h); margin:0 auto;
   border:1px solid #0f2a46; border-radius:16px; overflow:hidden;
   background:radial-gradient(ellipse at 40% 20%, #0f2438, #0b1a2b 60%);
 }
@@ -153,7 +150,6 @@ let lastSpawn = 0;
 let running = false;
 let score = 0;
 let best = +(localStorage.getItem('runner_best')||0);
-let rafStarted = false; // ← ループを一度だけ開始するフラグ
 bestEl.textContent = best;
 
 const obstacles = new Set();
@@ -199,8 +195,7 @@ function loop(ts){
     obj.y += speed * dt;
     obj.el.style.transform = `translateY(${obj.y}px)`;
 
-    const removeAt = stage.clientHeight + 80; // ← 画面高さに追従
-    if (obj.y > removeAt){
+    if (obj.y > 680){
       obj.el.remove();
       obstacles.delete(obj);
       continue;
@@ -240,18 +235,14 @@ stage.addEventListener('touchmove',  e=>{
 function start(){
   howto.hidden = true;
   over.hidden = true;
-
-  // ここで完全クリア（DOM + Set）
-  stage.querySelectorAll('.obstacle, .item').forEach(el => el.remove());
-  obstacles.clear();
-
+  for(const o of Array.from(obstacles)){ o.el.remove(); obstacles.delete(o); }
   score = 0; speed = 220; spawnGap = 950; last = 0; lastSpawn = 0;
   setLane(1);
   hero.classList.add('walking');
   grid.style.animationPlayState = 'running';
   running = true;
   pauseBtn.textContent = '⏸ 一時停止';
-  // requestAnimationFrame(loop) は呼ばない（多重起動防止）
+  requestAnimationFrame(loop);
 }
 function pause(){
   running = false;
@@ -273,22 +264,11 @@ function gameOver(){
   if (score > best){ best = Math.floor(score); localStorage.setItem('runner_best', best); }
   finalBest.textContent = best;
   over.hidden = false;
+  retry.href = location.href;
 }
-
-// 「もう一度」はページリロードせず安全に再スタート
-retry.addEventListener('click', (e)=>{
-  e.preventDefault();
-  start();
-});
 
 document.getElementById('startBtn').addEventListener('click', start);
 document.getElementById('pauseBtn').addEventListener('click', ()=> running ? pause() : resume());
-
-// ループは一度だけ起動
-if(!rafStarted){
-  rafStarted = true;
-  requestAnimationFrame(loop);
-}
 </script>
 </body>
 </html>
