@@ -61,11 +61,12 @@ body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:va
 /* キャラは今のままでOK（transform: translate(-50%,-100%) scale(...) 前提） */
 
 /* 吹き出し（キャラの真上に常時表示） */
-:root { --bubble-shift: -16px; } /* 負で左、正で右 */
-
 .speech{
-  transform: translateX(calc(-50% + var(--bubble-shift)));
-}
+  position:absolute;
+  left: var(--hero-x);
+  top: calc(var(--hero-y) - var(--hero-size) - var(--bubble-offset));
+  transform: translateX(-10%);
+  z-index: 5;
 
 
   max-width: var(--bubble-maxw);
