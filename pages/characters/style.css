@@ -36,29 +36,29 @@ body{margin:0; font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif
 .grid-bg{position:absolute; inset:0; background-image:linear-gradient(#14314d 1px,transparent 1px),linear-gradient(90deg,#14314d 1px,transparent 1px); background-size:40px 40px; opacity:.35}
 
 /* --- キャラ（3×4 スプライト）--- */
-.char{
-  position:absolute;
-  width:32px; height:32px;                  /* 1コマのサイズ */
-  left:50%; top:55%;
-  transform: translate(-50%,-50%) scale(var(--hero-scale));
-  transform-origin: center bottom;
-  image-rendering: pixelated;
-
-  /* 画像は JS から url("project-root/char.png") を当てる */
-  background-repeat:no-repeat;
-  background-size: 96px 128px;              /* 32*3, 32*4 全体サイズ */
-
-  z-index:1;
+.char {
+  width: 32px;
+  height: 32px;
+  background-image: url('./char.png');
+  image-rendering: pixelated; /* ドットをくっきり表示 */
 }
-/* 横3コマの歩行アニメ（背景のXを 0 → -96px まで送る） */
-@keyframes walk3 { from{ background-position-x:0 } to{ background-position-x:-96px } }
-.char.walking{ animation: walk3 .6s steps(3) infinite; }
 
-/* 縦方向の行切替（1行=32px） */
-.dir-front { background-position-y:   0px; }
-.dir-left  { background-position-y: -32px; }
-.dir-right { background-position-y: -64px; }
-.dir-back  { background-position-y: -96px; }
+/* --- 向きごとのコマ（正面=下, 左, 右, 背面=上） --- */
+.dir-front  { background-position-y:   0px; }
+.dir-left   { background-position-y: -32px; }
+.dir-right  { background-position-y: -64px; }
+.dir-back   { background-position-y: -96px; }
+
+/* アニメーション: 3コマ横並びを往復 */
+.walking {
+  animation: walkAnim 0.6s steps(3) infinite;
+}
+
+@keyframes walkAnim {
+  from { background-position-x:   0px; }
+  to   { background-position-x: -96px; } /* 32px × 3コマ */
+}
+
 
 /* 念のため、複数いた場合は1体以外を非表示 */
 .stage .char:not(:first-of-type){ display:none !important; }
