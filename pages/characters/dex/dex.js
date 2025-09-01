@@ -7,8 +7,8 @@ function saveDex(v){ localStorage.setItem(DEX_KEY, JSON.stringify(v||{})); }
 function loadChar(){ try{ return JSON.parse(localStorage.getItem(CHAR_KEY)||'{}'); }catch{ return {}; } }
 
 /* ===== 図鑑データ（32体）
-   ▼ファイル名が「char_01.png〜char_32.png」の場合はこの自動生成でOK
-   ▼別名の場合は、下の自動生成の代わりに“手動配列”を使ってください。
+   ▼ファイル名が「char_01.png〜char_32.png」の場合は自動生成でOK
+   ▼別名の場合は、“手動配列”に切り替えてください。
 */
 const ASSET_BASE = '../project-root/';
 
@@ -43,6 +43,7 @@ const mname = document.getElementById('mname');
 const mr    = document.getElementById('mrarity');
 const mhint = document.getElementById('mhint');
 const useBtn= document.getElementById('useBtn');
+const playBtn= document.getElementById('playBtn'); // ← ミニゲーム起動
 document.getElementById('close').addEventListener('click', ()=> modal.hidden=true);
 
 let current = null;
@@ -100,6 +101,15 @@ function openModal(ch, locked){
   mhint.textContent = locked ? `解放ヒント：${ch.unlockHint || 'レベルを上げよう'}` : '解放済み！';
   useBtn.disabled = locked;
   useBtn.textContent = locked ? '未解放' : 'このキャラにする';
+
+  // ★ ミニゲーム（ランナー）へ：ロック時は無効／解放済みなら href 付与
+  if (locked){
+    playBtn.classList.add('disabled');
+    playBtn.removeAttribute('href');
+  } else {
+    playBtn.classList.remove('disabled');
+    playBtn.href = `minigames/runner.html?skin=${encodeURIComponent(ch.filename)}`;
+  }
 }
 
 useBtn.addEventListener('click', ()=>{
