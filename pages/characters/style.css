@@ -57,12 +57,11 @@ body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:va
 
 /* 吹き出し（キャラの上。画面中央ではなく固定位置） */
 :root{
-  /* 既存に追加 */
-  --hero-size: calc(var(--frame) * var(--hero-scale)); /* 拡大後のキャラ1辺(px) */
-  --bubble-offset: 4px;                                /* 頭からの距離 */
-  --bubble-tail: clamp(8px, calc(var(--hero-scale) * 1.2px), 14px);
-  --bubble-maxw: clamp(160px, calc(var(--hero-size) * 0.9), 420px);
+  --hero-scale: 8.2;
+  --hero-x: 32%;
+  --hero-y: 62%;  /* ← ここを上げる。計算上の下限は 約54% */
 }
+
 
 /* キャラは今のままでOK（transform: translate(-50%,-100%) scale(...) 前提） */
 
