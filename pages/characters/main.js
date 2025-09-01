@@ -262,30 +262,15 @@ function evaluate(){
   badge.textContent = `今日の集計: P ${Math.round(P)}g / F ${Math.round(F)}g / C ${Math.round(C)}g / ${Math.round(K)}kcal（目標 ${goal}kcal）・記録 ${count}件`;
 }
 
-/* ---------- キャラ挙動（数秒ごとに向きを切替） ---------- */
-const wait = (ms) => new Promise(r=>setTimeout(r,ms));
-function setRow(dir){
-  character.classList.remove('dir-front','dir-left','dir-right','dir-back');
-  character.classList.add(`dir-${dir}`);
-}
-let running = true;
-toggleBtn?.addEventListener('click', ()=>{
-  running = !running;
-  toggleBtn.textContent = running ? '一時停止' : '再開';
-  character.classList.toggle('walking', running);
+// キャラ挙動は使わない
+// function setRow(dir){ ... }
+// async function loopWalk(){ ... }
+
+// 一時停止ボタンも無効化
+const toggleBtn = document.getElementById("toggleRun");
+toggleBtn?.addEventListener("click", ()=>{
+  alert("いまは静止画モードです。");
 });
-async function loopWalk(){
-  character.classList.add('walking');
-  let side = true;
-  while(true){
-    if(!running){ await wait(150); continue; }
-    setRow('front');                       // 約5秒
-    for(let i=0;i<25 && running;i++) await wait(200);
-    if(!running) continue;
-    setRow(side?'left':'right'); side=!side; // 約2秒
-    for(let i=0;i<10 && running;i++) await wait(200);
-  }
-}
 
 /* ---------- 初期化 ---------- */
 function init(){
