@@ -1,10 +1,22 @@
 :root{
   --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --muted:#94a3b8;
   --accent:#22d3ee; --green:#22c55e; --blue:#3b82f6; --line:#1f2937; --orange:#f59e0b;
+
   --frame: 32px;
-  --hero-scale: 8.2;              /* 拡大率 */
-  --hero-x: 30%;                   /* 中央に配置 */
-  --hero-y: 30%;                   /* 少し下に */
+  --hero-scale: 8.2;          /* 拡大率 */
+  --hero-x: 30%;              /* X位置（%） */
+  --hero-y: 30%;              /* Y位置（%） */
+
+  /* 吹き出し計算用（.speech が参照） */
+  --hero-size: calc(var(--frame) * var(--hero-scale));
+  --bubble-offset: 18px;
+  --bubble-tail: clamp(8px, calc(var(--hero-scale) * 1.2px), 14px);
+  --bubble-maxw: clamp(160px, calc(var(--hero-size) * 0.9), 420px);
+
+  /* アニメ速度（好みで変更可） */
+  --walk-dur: 0.9s;   /* 足踏み */
+  --bob-dur:  0.9s;   /* 上下バウンド */
+  --grid-dur: 1.8s;   /* 背景スクロール */
 }
 
 *{box-sizing:border-box}
@@ -30,91 +42,64 @@ body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:va
 .stat{font-size:13px; color:var(--muted)}
 .ghost-btn{background:transparent; color:var(--ink); border:1px solid #263144; padding:6px 10px; border-radius:10px; cursor:pointer}
 
-.stage{position:relative; height:520px; border-radius:16px; overflow:hidden;
-  background:radial-gradient(ellipse at 30% 30%, #0f2438, #0c1827 60%); outline:1px solid #0c2238}
-.grid-bg{position:absolute; inset:0;
+.stage{
+  position:relative; height:520px; border-radius:16px; overflow:hidden;
+  background:radial-gradient(ellipse at 30% 30%, #0f2438, #0c1827 60%); outline:1px solid #0c2238
+}
+.grid-bg{
+  position:absolute; inset:0;
   background-image:linear-gradient(#14314d 1px,transparent 1px),linear-gradient(90deg,#14314d 1px,transparent 1px);
-  background-size:40px 40px; opacity:.35}
-
-grid-bg{
-  animation: gridMove 1.2s linear infinite;
+  background-size:40px 40px; opacity:.35;
+  animation: gridMove var(--grid-dur) linear infinite;
   will-change: background-position;
-
+}
 @keyframes gridMove{
   to { background-position: 0 40px, 0 40px; } /* 下へ流れて前進感 */
 }
 
-
-/* ==== キャラ（静止画：正面のみ） ==== */
+/* ==== キャラ（3×4スプライトの左上を基準に拡大） ==== */
 .char{
   position:absolute;
-  left:var(--hero-x);              /* 中央寄せ */
+  left:var(--hero-x);
   top:var(--hero-y);
   width:var(--frame);
   height:var(--frame);
   background-image:url('./project-root/char.png');
   background-repeat:no-repeat;
-  background-position:0 0;        /* 1行目1列目 */
+  background-position:0 0; /* 1行目1列目（正面1コマ目） */
   image-rendering:pixelated;
   transform: translate(-50%, calc(-100% + var(--bob, 0px))) scale(var(--hero-scale));
-  transform-origin:top left;
+  transform-origin: top left;
   z-index:2;
 }
 
-
+/* 歩行アニメ（横3コマ）＋上下バウンド */
+.walking{
+  animation: walkAnim var(--walk-dur) steps(3) infinite,
+             bob      var(--bob-dur)  ease-in-out infinite;
+}
 @keyframes walkAnim{
-  from { background-position-x:   0px; }
+  from { background-position-x: 0px; }
   to   { background-position-x: -96px; } /* 32px × 3コマ */
 }
-
-/* CSS変数を使って“transform”に干渉せず上下バウンド */
 @keyframes bob{
   0%,100%{ --bob: 0px; }
   50%    { --bob: 1.5px; }
 }
 
-/* --- 歩行アニメ（横3コマ）＋ ふわっと上下バウンド --- */
--.walking{
--  animation: walkAnim 0.6s steps(3) infinite,
--             bob     0.6s ease-in-out infinite;
--}
-  
-@keyframes walkAnim{
-  from { background-position-x:   0px; }
-  to   { background-position-x: -96px; } /* 32px × 3コマ */
-}
-
-/* CSS変数を使って“transform”に干渉せず上下バウンド */
-@keyframes bob{
-  0%,100%{ --bob: 0px; }
-  50%    { --bob: 1.5px; }
-}
-
-
-
-/* 吹き出し（キャラの上。画面中央ではなく固定位置） */
-
-
-/* キャラは今のままでOK（transform: translate(-50%,-100%) scale(...) 前提） */
-
-/* 吹き出し（キャラの真上に常時表示） */
+/* ==== 吹き出し（キャラの真上に常時表示） ==== */
 .speech{
   position:absolute;
   left: var(--hero-x);
   top: calc(var(--hero-y) - var(--hero-size) - var(--bubble-offset));
+  /* 中央基準にしたい場合は -50% に変更。今は少し左寄せ（-10%） */
   transform: translateX(calc(-10% + var(--bubble-shift, 0px)));
   z-index: 5;
+
   pointer-events: none;
   text-align: center;
   word-break: keep-all;
-
   overflow: hidden;
-  /* 行数で切りたい時だけ↓を使う（不要なら付けない） */
-  /*
-  display: -webkit-box;
-  -webkit-line-clamp: var(--bubble-lines, 3);
-  -webkit-box-orient: vertical;
-  */
 
   max-width: var(--bubble-maxw);
   padding: calc(6px + (var(--hero-scale) - 1) * 1px)
@@ -124,8 +109,8 @@ grid-bg{
 
   background:#0f172a; color:#e5e7eb;
   border:1px solid #203049; border-radius:14px;
-  transition: opacity .3s ease;  /* フェード用 */
-  opacity:1;                      /* 常時表示 */
+  transition: opacity .3s ease;
+  opacity:1;
 }
 .speech::after{
   content:"";
@@ -136,7 +121,6 @@ grid-bg{
   border-top-color:#203049;
 }
 
-
 .stage-fab{position:absolute; right:10px; bottom:10px; display:flex; gap:8px; z-index:3}
 .fab{width:40px; height:40px; border-radius:10px; border:1px solid #21304a; background:#0b1626; color:#e5e7eb; cursor:pointer; font-size:18px}
 
@@ -145,7 +129,7 @@ grid-bg{
 .quest{border:1px solid #203049; background:#0e1726; border-radius:12px; padding:10px 12px}
 .quest .top{display:flex; justify-content:space-between; align-items:center; gap:8px}
 .quest .name{font-weight:600}
-.quest .xp{font-size:12px; color:var(--muted)}
+.quest .xp{font-size:12px; color: var(--muted)}
 .quest .desc{margin:6px 0 10px; color:#b6c2d1; font-size:13px}
 .quest .actions{display:flex; gap:8px}
 button.blue{background:var(--blue); color:#fff; border:none; padding:8px 10px; border-radius:10px; font-weight:600}
