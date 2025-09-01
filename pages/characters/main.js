@@ -270,7 +270,32 @@ function init(){
   evaluate();
 
   // 吹き出しを数秒後にフェードアウト
-const speech = document.getElementById('speech');
+// ---- 吹き出しサイズを初期文言の大きさで固定 ----
+function lockSpeechSize() {
+  const el = document.getElementById('speech');
+  if (!el) return;
+  // 自動サイズで一度レイアウト
+  const prevW = el.style.width, prevH = el.style.height;
+  el.style.width = ''; el.style.height = '';
+  requestAnimationFrame(() => {
+    const w = Math.ceil(el.offsetWidth);
+    const h = Math.ceil(el.offsetHeight);
+    el.style.width = w + 'px';
+    el.style.height = h + 'px';
+  });
+}
+
+// ---- 文言だけ差し替える（サイズは固定のまま）----
+function setSpeechText(text) {
+  const el = document.getElementById('speech');
+  if (!el) return;
+  el.style.opacity = 0;
+  setTimeout(() => {
+    el.textContent = text;
+    el.style.opacity = 1;
+  }, 150);
+}
+
 
 // 交代させたい台詞たち（自由に追加OK）
 const SPEECH_LINES = [
@@ -306,6 +331,10 @@ setInterval(rotateSpeech, 9000);
   });
   setInterval(evaluate, 10000);
 }
+
+// init() の最後あたりに追加
+lockSpeechSize();
+
 init();
 
 
