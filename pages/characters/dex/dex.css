@@ -10,6 +10,7 @@ h1{margin:0;font-size:22px}
 .nav{display:flex;gap:8px}
 .btn{background:var(--accent);color:#111;padding:8px 12px;border:none;border-radius:10px;font-weight:700;cursor:pointer}
 .btn.ghost{background:var(--brand);color:#031422}
+.btn.disabled{ opacity:.55; pointer-events:none; }
 
 .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
 
