@@ -65,9 +65,19 @@ body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:va
   position:absolute;
   left: var(--hero-x);
   top: calc(var(--hero-y) - var(--hero-size) - var(--bubble-offset));
-  transform: translateX(-10%);
+  transform: translateX(calc(-50% + var(--bubble-shift, 0px)));
   z-index: 5;
+  pointer-events: none;
+  text-align: center;
+  word-break: keep-all;
 
+  overflow: hidden;
+  /* 行数で切りたい時だけ↓を使う（不要なら付けない） */
+  /*
+  display: -webkit-box;
+  -webkit-line-clamp: var(--bubble-lines, 3);
+  -webkit-box-orient: vertical;
+  */
 
   max-width: var(--bubble-maxw);
   padding: calc(6px + (var(--hero-scale) - 1) * 1px)
