@@ -16,37 +16,16 @@ let running = true;
 
 function setWalking(on){
   if (!character) return;
-  character.classList.toggle('walking', on);                  // スプライト＆バウンド
-  if (gridBg) gridBg.style.animationPlayState = on ? 'running' : 'paused'; // 背景スクロール
+  character.classList.toggle('walking', on);
+  if (gridBg) gridBg.style.animationPlayState = on ? 'running' : 'paused';
 }
-
-setWalking(true); // 初期は歩行スタート
+setWalking(true);
 
 toggleRunBtn?.addEventListener('click', ()=>{
   running = !running;
   toggleRunBtn.textContent = running ? '一時停止' : '再開';
   setWalking(running);
 });
-
-
-/* ===== 画像パスを最初に強制適用（階層ズレ保険） ===== */
-(async ()=>{
-  const candidates = [
-    "./project-root/char.png",
-    "project-root/char.png",
-    "../project-root/char.png",
-    "/project-root/char.png",
-  ];
-  for (const p of candidates){
-    const ok = await new Promise(res=>{
-      const img = new Image();
-      img.onload = ()=>res(true);
-      img.onerror = ()=>res(false);
-      img.src = p + "?v=" + Date.now();
-    });
-    if (ok){ character.style.backgroundImage = `url("${p}")`; break; }
-  }
-})();
 
 /* ===== ルーティング ===== */
 function resolveHomePath(){
@@ -71,7 +50,7 @@ document.getElementById("goInsights")?.addEventListener("click", ()=> location.h
 
 /* ===== ステータス／XP ===== */
 const STORAGE_VERSION = "v1";
-const CHAR_KEY  = `bs_char_state_${STORAGE_VERSION}`;
+const CHAR_KEY  = `bs_char_state_${STORAGE_VERSION}`;   // ← ここで一度だけ宣言（DEXでもこれを使う）
 const STREAK_KEY = `bs_target_streak_${STORAGE_VERSION}`;
 const AWARD_D_PREFIX = `bs_quest_awards_${STORAGE_VERSION}_`;
 const QSTATE_D_PREFIX= `bs_quest_state_${STORAGE_VERSION}_`;
@@ -286,7 +265,6 @@ function evaluate(){
 function lockSpeechSize() {
   const el = document.getElementById('speech');
   if (!el) return;
-  // 自動サイズで一度レイアウト
   el.style.width = '';
   el.style.height = '';
   requestAnimationFrame(() => {
@@ -315,22 +293,17 @@ const SPEECH_LINES = [
 let spIndex = 0;
 function rotateSpeech() {
   spIndex = (spIndex + 1) % SPEECH_LINES.length;
-  setSpeechText(SPEECH_LINES[spIndex]); // ← サイズ固定のまま差し替え
+  setSpeechText(SPEECH_LINES[spIndex]);
 }
 
-/* ===== 初期化（1回だけ定義） ===== */
+/* ===== 初期化 ===== */
 function init(){
   renderQuests();
   refreshHeader();
   evaluate();
-
-  // 初期文言の見た目サイズで吹き出しを固定
   lockSpeechSize();
-
-  // 台詞ローテーション開始（好みで間隔を調整）
   setInterval(rotateSpeech, 9000);
 
-  // 動作トリガ
   window.addEventListener('focus', evaluate);
   window.addEventListener('storage', (e)=>{
     if(!e.key) return;
@@ -340,18 +313,14 @@ function init(){
   });
   setInterval(evaluate, 10000);
 }
-
-/* ===== 起動 ===== */
 init();
 
 /* ====== DEX連携（育成 ↔ 図鑑）改訂版 ====== */
 const DEX_KEY  = 'dex_state_v1';
-const CHAR_KEY = (window.CHAR_KEY || 'bs_char_state_v1'); // 既存定義があればそれを使用
-
 function lsLoad(key){ try{ return JSON.parse(localStorage.getItem(key)||'null'); }catch{ return null; } }
 function lsSave(key,val){ localStorage.setItem(key, JSON.stringify(val)); }
 
-/* --- #33〜#64 をスコアで解放するための閾値（300,400,…,3400） --- */
+/* #33〜#64 をスコアで解放する閾値（例：300〜3400点、100刻み） */
 const SCORE_MILESTONES = Array.from({length:32}, (_,i)=> 300 + i*100);
 
 /* 3レベルごとに解放（最大32体） */
@@ -365,7 +334,7 @@ function syncDexUnlocksByLevel(){
   for(let i=0;i<maxCount;i++) unlocked[i] = true;
 
   dex.unlocked = unlocked;
-  if(!dex.selected) dex.selected = 'char.png'; // 初期選択（任意で変更OK）
+  if(!dex.selected) dex.selected = 'char.png';
   lsSave(DEX_KEY, dex);
 }
 
@@ -388,9 +357,8 @@ function syncDexAll(){
   syncDexUnlocksByScore();
 }
 
-/* 図鑑で選ばれた“ファイル名だけ”を使ってスキン適用 */
+/* 図鑑で選んだスキンを適用（CSS変数で確実に上書き） */
 async function applySkinFromDex(){
-  const character = document.getElementById('character');
   if(!character) return;
 
   const dex = lsLoad(DEX_KEY) || {};
@@ -406,27 +374,34 @@ async function applySkinFromDex(){
       const img = new Image(); img.onload=()=>res(true); img.onerror=()=>res(false);
       img.src = p + '?v=' + Date.now();
     });
-    if(ok){ character.style.backgroundImage = `url("${p}")`; return; }
+    if(ok){
+      // ✨ 変更：CSS変数を上書きして安全に適用
+      character.style.setProperty('--char-img', `url("${p}")`);
+      return;
+    }
   }
-  character.style.backgroundImage = `url("project-root/char.png")`;
+  character.style.setProperty('--char-img', `url("project-root/char.png")`);
 }
 
-/* 初期同期：ページ読み込み時にレベル＆スコア解放を反映し、スキンも適用 */
-document.addEventListener('DOMContentLoaded', ()=>{
+/* 起動タイミングに依存しない安全ブート */
+function bootDex(){
   syncDexAll();
   applySkinFromDex();
-});
+}
+if (document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', bootDex);
+} else {
+  bootDex();
+}
 
-/* 図鑑で切り替えられたら自動反映＋外部（ミニゲーム/育成）からの更新も拾う */
+/* 図鑑やミニゲームからの更新を拾って即反映 */
 window.addEventListener('storage', (e)=>{
   if (e.key === DEX_KEY){
-    // スキン変更など
-    applySkinFromDex();
+    applySkinFromDex();         // スキン切替
   }
   if (e.key === 'runner_best' || e.key === CHAR_KEY){
-    // ベストスコア更新 or レベル更新 → 解放再計算
-    syncDexAll();
+    syncDexAll();               // 解放再計算
+    // もし selected が未設定なら最初の解放キャラに寄せる等の処理を入れてもOK
   }
 });
 /* ====== /DEX連携 ====== */
-
