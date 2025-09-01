@@ -7,6 +7,13 @@
   --hero-y: 30%;                   /* 少し下に */
 }
 
+/* 追記（好みで調整OK） */
+:root{
+  --walk-dur: 0.9s;   /* 足踏み（少し遅く：0.6s→0.9s） */
+  --bob-dur:  0.9s;   /* 上下バウンド（足踏みと同じに） */
+  --grid-dur: 1.8s;   /* 背景スクロール（少し遅く：1.2s→1.8s） */
+}
+
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:var(--ink)}
