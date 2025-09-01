@@ -65,7 +65,7 @@ body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:va
   position:absolute;
   left: var(--hero-x);
   top: calc(var(--hero-y) - var(--hero-size) - var(--bubble-offset));
-  transform: translateX(-50%);
+  transform: translateX(-65%);
   z-index: 3;
 
   max-width: var(--bubble-maxw);
