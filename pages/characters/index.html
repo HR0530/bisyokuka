@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>美食家さん｜キャラ育成</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <header class="app-header">
@@ -37,12 +37,12 @@
 
       <div class="stage">
         <div class="grid-bg" aria-hidden="true"></div>
-        <!-- キャラ本体（画像は JS で差し替え） -->
-<div id="character" class="char dir-front" title="主人公"></div>
 
+        <!-- ★ 正面の静止画だけ表示 -->
+        <div id="character" class="char dir-front" title="主人公"></div>
 
         <div class="stage-fab">
-          <button class="fab" id="fabDex" title="図鑑へ">📚</button>
+          <button class="fab" id="fabDex"  title="図鑑へ">📚</button>
           <button class="fab" id="fabHome" title="ホームへ">🏠</button>
         </div>
       </div>
@@ -50,10 +50,10 @@
       <details class="howto" open>
         <summary>称号・経験値はこう上がる（原理）</summary>
         <ul>
-          <li>📷 <strong>食事記録を投稿</strong>：+20 XP（写真つきなら +30）</li>
-          <li>🎯 <strong>カロリー目標を達成</strong>：+40 XP（連続達成で +10 ずつボーナス）</li>
-          <li>🧪 <strong>研究クエスト</strong>：クエスト毎に XP を付与</li>
-          <li>🔥 <strong>連続ログイン</strong>：日数 × 5 XP（最大 +25）</li>
+          <li>📷 食事記録を投稿：+20 XP（写真つき +30）</li>
+          <li>🎯 カロリー目標達成：+40 XP（連続で +10 ずつ）</li>
+          <li>🧪 研究クエスト：各XP付与</li>
+          <li>🔥 連続ログイン：日数 × 5 XP（最大 +25）</li>
         </ul>
       </details>
     </section>
@@ -70,11 +70,11 @@
   <footer class="app-footer">
     © Bishokuka-san
     <div class="footer-actions">
-      <button class="blue" id="goInsights">確認する</button>
+      <button class="blue"  id="goInsights">確認する</button>
       <button class="green" id="quickClear">達成！ログをクリア</button>
     </div>
   </footer>
 
-  <script src="main.js"></script>
+  <script src="./main.js"></script>
 </body>
 </html>
