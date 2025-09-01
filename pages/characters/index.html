@@ -38,8 +38,11 @@
       <div class="stage">
         <div class="grid-bg" aria-hidden="true"></div>
 
-        <!-- ★ 正面の静止画だけ表示 -->
+        <!-- ★ キャラ（正面の静止画のみ） -->
         <div id="character" class="char dir-front" title="主人公"></div>
+
+        <!-- ★ 吹き出し（復活） -->
+        <div class="speech" id="speech">今日のPFCバランス、いい感じ？</div>
 
         <div class="stage-fab">
           <button class="fab" id="fabDex"  title="図鑑へ">📚</button>
@@ -51,10 +54,11 @@
         <summary>称号・経験値はこう上がる（原理）</summary>
         <ul>
           <li>📷 食事記録を投稿：+20 XP（写真つき +30）</li>
-          <li>🎯 カロリー目標達成：+40 XP（連続で +10 ずつ）</li>
+          <li>🎯 カロリー目標達成：+40 XP（連続ボーナスあり）</li>
           <li>🧪 研究クエスト：各XP付与</li>
           <li>🔥 連続ログイン：日数 × 5 XP（最大 +25）</li>
         </ul>
+        <div id="nutritionBadge" style="margin-top:8px;color:#94a3b8;font-size:12px"></div>
       </details>
     </section>
 
