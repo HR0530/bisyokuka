@@ -59,7 +59,7 @@ body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:va
 :root{
   /* 既存に追加 */
   --hero-size: calc(var(--frame) * var(--hero-scale)); /* 拡大後のキャラ1辺(px) */
-  --bubble-offset: 18px;                                /* 頭からの距離 */
+  --bubble-offset: 4px;                                /* 頭からの距離 */
   --bubble-tail: clamp(8px, calc(var(--hero-scale) * 1.2px), 14px);
   --bubble-maxw: clamp(160px, calc(var(--hero-size) * 0.9), 420px);
 }
