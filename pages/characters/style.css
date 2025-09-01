@@ -56,16 +56,44 @@ body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:va
 .dir-front,.dir-left,.dir-right,.dir-back{ background-position:0 0 !important; }
 
 /* 吹き出し（キャラの上。画面中央ではなく固定位置） */
+:root{
+  /* 既存に追加 */
+  --hero-size: calc(var(--frame) * var(--hero-scale)); /* 拡大後のキャラ1辺(px) */
+  --bubble-offset: 18px;                                /* 頭からの距離 */
+  --bubble-tail: clamp(8px, calc(var(--hero-scale) * 1.2px), 14px);
+  --bubble-maxw: clamp(160px, calc(var(--hero-size) * 0.9), 420px);
+}
+
+/* キャラは今のままでOK（transform: translate(-50%,-100%) scale(...) 前提） */
+
+/* 吹き出し（キャラの真上に常時表示） */
 .speech{
-  position:absolute; left:var(--hero-x); top:calc(var(--hero-y) - 70px);
-  transform:translateX(-50%);
-  background:#0f172a; color:#e5e7eb; border:1px solid #203049; border-radius:14px;
-  padding:8px 12px; font-size:14px; z-index:3;
+  position:absolute;
+  left: var(--hero-x);
+  top: calc(var(--hero-y) - var(--hero-size) - var(--bubble-offset));
+  transform: translateX(-50%);
+  z-index: 3;
+
+  max-width: var(--bubble-maxw);
+  padding: calc(6px + (var(--hero-scale) - 1) * 1px)
+           calc(10px + (var(--hero-scale) - 1) * 2px);
+  font-size: calc(12px + (var(--hero-scale) - 1) * 1.2px);
+  line-height: 1.25;
+
+  background:#0f172a; color:#e5e7eb;
+  border:1px solid #203049; border-radius:14px;
+  transition: opacity .3s ease;  /* フェード用 */
+  opacity:1;                      /* 常時表示 */
 }
 .speech::after{
-  content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%);
-  border:8px solid transparent; border-top-color:#203049;
+  content:"";
+  position:absolute; left:50%;
+  bottom: calc(var(--bubble-tail) * -1);
+  transform: translateX(-50%);
+  border: var(--bubble-tail) solid transparent;
+  border-top-color:#203049;
 }
+
 
 .stage-fab{position:absolute; right:10px; bottom:10px; display:flex; gap:8px; z-index:3}
 .fab{width:40px; height:40px; border-radius:10px; border:1px solid #21304a; background:#0b1626; color:#e5e7eb; cursor:pointer; font-size:18px}
