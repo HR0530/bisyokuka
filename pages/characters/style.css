@@ -37,8 +37,8 @@ body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:va
   background-size:40px 40px; opacity:.35}
 
 grid-bg{
--  animation: gridMove 1.2s linear infinite;
--  will-change: background-position;
+  animation: gridMove 1.2s linear infinite;
+  will-change: background-position;
 
 @keyframes gridMove{
   to { background-position: 0 40px, 0 40px; } /* 下へ流れて前進感 */
