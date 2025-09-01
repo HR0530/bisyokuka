@@ -38,7 +38,19 @@
       <div class="stage">
         <div class="grid-bg" aria-hidden="true"></div>
         <!-- キャラ本体（画像は JS で差し替え） -->
-        <div id="character" class="char dir-front" title="主人公"></div>
+        <!-- 強制表示デバッグ版：まずは出す -->
+<div
+  id="character"
+  title="主人公"
+  style="
+    position:absolute; left:40px; top:40px;
+    width:96px; height:128px;           /* 画像全体サイズ（32×3, 32×4） */
+    background:url('./project-root/char.png') no-repeat 0 0 / contain;
+    image-rendering: pixelated;
+    z-index: 2;                          /* 背景グリッドより前に出す */
+    outline: 1px solid #22d3ee;          /* 見える枠：出たら外してOK */
+  ">
+</div>
 
 
         <div class="stage-fab">
