@@ -39,11 +39,17 @@ body{margin:0; font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif
 .char{
   width: var(--frame);
   height: var(--frame);
-  background-image: url('./project-root/char.png'); /* ←ココ修正 */
-  background-repeat: no-repeat;
-  image-rendering: pixelated;
-  transform: scale(var(--hero-scale));
-  transform-origin: top left;
+  /* まずは必ず見えるように */
+  position:absolute; left:40px; top:40px;
+  outline:1px solid #22d3ee;           /* ←見える枠（後で消してOK） */
+
+  /* 画像はJSで最終決定するので、ここは保険として何でもOK */
+  background-repeat:no-repeat;
+  image-rendering:pixelated;
+  transform:scale(var(--hero-scale));
+  transform-origin:top left;
+}
+
 
   /* まず確実に見える位置に出す（任意で調整） */
   position: absolute;
