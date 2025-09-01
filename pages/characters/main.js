@@ -12,23 +12,23 @@ const speech = document.getElementById("speech");
 /* ===== 画像パスを最初に強制適用（階層ズレ保険） ===== */
 (async ()=>{
   const candidates = [
-    './project-root/char.png',
-    'project-root/char.png',
-    '../project-root/char.png',
-    '/project-root/char.png'
+    "./project-root/char.png",
+    "project-root/char.png",
+    "../project-root/char.png",
+    "/project-root/char.png",
   ];
   for (const p of candidates){
     const ok = await new Promise(res=>{
       const img = new Image();
       img.onload = ()=>res(true);
       img.onerror = ()=>res(false);
-      img.src = p + '?v=' + Date.now();
+      img.src = p + "?v=" + Date.now();
     });
     if (ok){ character.style.backgroundImage = `url("${p}")`; break; }
   }
 })();
 
-/* ===== ルーティング（必要なら使う） ===== */
+/* ===== ルーティング ===== */
 function resolveHomePath(){
   if (location.pathname.includes('/pages/characters/')) return '../../index_pc.html';
   if (location.pathname.includes('/pages/'))           return '../index_pc.html';
@@ -101,7 +101,6 @@ function refreshHeader(){
   const t = titles.reduce((acc,cur)=> state.level>=cur.minLv ? cur.name : acc, titles[0].name);
   titleBadge.textContent = t;
 }
-refreshHeader();
 
 /* ===== クエスト（UI） ===== */
 const QUESTS = [
@@ -152,7 +151,7 @@ function setQuestUI(id,status){
   saveQState();
 }
 
-/* ===== meal 集計 & 判定（簡略版：あなたの前コードを踏襲） ===== */
+/* ===== meal 集計 & 判定 ===== */
 const MEAL_KEYS = ["bisyokuka_meals_v2","mealEntries","meals","mealRecords","bisyokuka_meals","mealList","mealData","meals_today","bs_meals","mealHistory"];
 function getCalorieGoal(){
   const ks = ["calorieGoal","calorieTarget","bisyokuka_calorie_goal","goalCalories","dailyCalorieGoal"];
@@ -237,11 +236,11 @@ function evaluate(){
   setQuestUI("carb",    okC?'ready':'check');
   setQuestUI("total",   okT?'ready':'check');
 
-  // バッジ表示（今日の集計）
   const badge = document.getElementById('nutritionBadge');
-  badge.textContent = `今日の集計: P ${Math.round(P)}g / F ${Math.round(F)}g / C ${Math.round(C)}g / ${Math.round(K)}kcal（目標 ${goal}kcal）・記録 ${count}件`;
+  if (badge) {
+    badge.textContent = `今日の集計: P ${Math.round(P)}g / F ${Math.round(F)}g / C ${Math.round(C)}g / ${Math.round(K)}kcal（目標 ${goal}kcal）・記録 ${count}件`;
+  }
 
-  // 初回達成時にXP付与
   for(const q of QUESTS){
     const hit = (q.id==="protein"&&okP)||(q.id==="fat"&&okF)||(q.id==="carb"&&okC)||(q.id==="total"&&okT);
     if(hit && !awards[q.id]){
@@ -263,20 +262,13 @@ function evaluate(){
   }
 }
 
-/* ===== 初期化 ===== */
-function init(){
-  renderQuests();
-  refreshHeader();
-  evaluate();
-
-  // 吹き出しを数秒後にフェードアウト
-// ---- 吹き出しサイズを初期文言の大きさで固定 ----
+/* ===== 吹き出し：サイズ固定＆文言変更 ===== */
 function lockSpeechSize() {
   const el = document.getElementById('speech');
   if (!el) return;
   // 自動サイズで一度レイアウト
-  const prevW = el.style.width, prevH = el.style.height;
-  el.style.width = ''; el.style.height = '';
+  el.style.width = '';
+  el.style.height = '';
   requestAnimationFrame(() => {
     const w = Math.ceil(el.offsetWidth);
     const h = Math.ceil(el.offsetHeight);
@@ -284,8 +276,6 @@ function lockSpeechSize() {
     el.style.height = h + 'px';
   });
 }
-
-// ---- 文言だけ差し替える（サイズは固定のまま）----
 function setSpeechText(text) {
   const el = document.getElementById('speech');
   if (!el) return;
@@ -295,48 +285,30 @@ function setSpeechText(text) {
     el.style.opacity = 1;
   }, 150);
 }
-
-
-// 交代させたい台詞たち（自由に追加OK）
 const SPEECH_LINES = [
   "今日のPFCバランス、いい感じ？",
   "お水を一杯どうぞ💧",
   "写真を撮って記録しよ📷",
   "ストレッチでリフレッシュ🧘",
-  "たんぱく質は意識できた？🍗"
+  "たんぱく質は意識できた？🍗",
 ];
-
 let spIndex = 0;
 function rotateSpeech() {
-  if (!speech) return;
   spIndex = (spIndex + 1) % SPEECH_LINES.length;
-  speech.style.opacity = 0;
-  setTimeout(() => {
-    speech.textContent = SPEECH_LINES[spIndex];
-    speech.style.opacity = 1;
-  }, 220); // フェード時間と合わせる
+  setSpeechText(SPEECH_LINES[spIndex]); // ← サイズ固定のまま差し替え
 }
 
- function init(){
-   renderQuests();
-   refreshHeader();
-   evaluate();
+/* ===== 初期化（1回だけ定義） ===== */
+function init(){
+  renderQuests();
+  refreshHeader();
+  evaluate();
 
-+  // 初期文言の見た目サイズで吹き出しを固定
-+  lockSpeechSize();
+  // 初期文言の見た目サイズで吹き出しを固定
+  lockSpeechSize();
 
-   // 動作トリガ
-   window.addEventListener('focus', evaluate);
-   window.addEventListener('storage', (e)=>{
-     ...
-   });
-   setInterval(evaluate, 10000);
- }
-
-
-// 9秒ごとに台詞変更（好みで調整）
-setInterval(rotateSpeech, 9000);
-
+  // 台詞ローテーション開始（好みで間隔を調整）
+  setInterval(rotateSpeech, 9000);
 
   // 動作トリガ
   window.addEventListener('focus', evaluate);
@@ -349,6 +321,5 @@ setInterval(rotateSpeech, 9000);
   setInterval(evaluate, 10000);
 }
 
+/* ===== 起動 ===== */
 init();
-
-
