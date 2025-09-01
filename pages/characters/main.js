@@ -344,11 +344,15 @@ function init(){
 /* ===== 起動 ===== */
 init();
 
-/* ====== DEX連携（育成 ↔ 図鑑）完成ブロック ====== */
+/* ====== DEX連携（育成 ↔ 図鑑）改訂版 ====== */
 const DEX_KEY  = 'dex_state_v1';
+const CHAR_KEY = (window.CHAR_KEY || 'bs_char_state_v1'); // 既存定義があればそれを使用
 
 function lsLoad(key){ try{ return JSON.parse(localStorage.getItem(key)||'null'); }catch{ return null; } }
 function lsSave(key,val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+/* --- #33〜#64 をスコアで解放するための閾値（300,400,…,3400） --- */
+const SCORE_MILESTONES = Array.from({length:32}, (_,i)=> 300 + i*100);
 
 /* 3レベルごとに解放（最大32体） */
 function syncDexUnlocksByLevel(){
@@ -363,6 +367,25 @@ function syncDexUnlocksByLevel(){
   dex.unlocked = unlocked;
   if(!dex.selected) dex.selected = 'char.png'; // 初期選択（任意で変更OK）
   lsSave(DEX_KEY, dex);
+}
+
+/* ベストスコア到達で #33〜#64 を解放 */
+function syncDexUnlocksByScore(){
+  const best = +(localStorage.getItem('runner_best') || 0);
+  const dex = lsLoad(DEX_KEY) || {};
+  const unlocked = dex.unlocked || {};
+  SCORE_MILESTONES.forEach((th, i)=>{
+    if (best >= th) unlocked[32 + i] = true; // id:32..63（= #33〜#64）
+  });
+  dex.unlocked = unlocked;
+  if(!dex.selected) dex.selected = 'char.png';
+  lsSave(DEX_KEY, dex);
+}
+
+/* 両方まとめて実行 */
+function syncDexAll(){
+  syncDexUnlocksByLevel();
+  syncDexUnlocksByScore();
 }
 
 /* 図鑑で選ばれた“ファイル名だけ”を使ってスキン適用 */
@@ -388,8 +411,22 @@ async function applySkinFromDex(){
   character.style.backgroundImage = `url("project-root/char.png")`;
 }
 
-/* 図鑑で切り替えられたら自動反映（同一オリジン前提） */
+/* 初期同期：ページ読み込み時にレベル＆スコア解放を反映し、スキンも適用 */
+document.addEventListener('DOMContentLoaded', ()=>{
+  syncDexAll();
+  applySkinFromDex();
+});
+
+/* 図鑑で切り替えられたら自動反映＋外部（ミニゲーム/育成）からの更新も拾う */
 window.addEventListener('storage', (e)=>{
-  if(e.key === DEX_KEY) applySkinFromDex();
+  if (e.key === DEX_KEY){
+    // スキン変更など
+    applySkinFromDex();
+  }
+  if (e.key === 'runner_best' || e.key === CHAR_KEY){
+    // ベストスコア更新 or レベル更新 → 解放再計算
+    syncDexAll();
+  }
 });
 /* ====== /DEX連携 ====== */
+
