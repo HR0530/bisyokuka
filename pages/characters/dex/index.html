@@ -4,37 +4,42 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>キャラ図鑑</title>
-  <style>
-    :root{--bg:#0f172a;--card:#111827;--ink:#e5e7eb;--line:#1f2937;--brand:#0ea5e9;--accent:#f59e0b}
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);
-      font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial}
-    .wrap{max-width:1100px;margin:0 auto;padding:16px}
-    .topbar{display:grid;grid-template-columns:140px 1fr 140px;gap:8px;align-items:center;margin-bottom:12px}
-    h1{margin:0;text-align:center;font-size:20px}
-    .btn{background:var(--accent);color:#111;padding:8px 10px;border:none;border-radius:10px;
-      font-weight:700;text-decoration:none;text-align:center;display:inline-block}
-    .btn.ghost{background:var(--brand);color:#031422}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;
-      display:grid;place-items:center}
-    .card img{width:96px;image-rendering:pixelated}
-    .name{margin-top:8px;font-weight:700}
-  </style>
+  <link rel="stylesheet" href="dex.css" />
 </head>
 <body>
-  <div class="wrap">
-    <div class="topbar">
+  <div class="page">
+    <div class="header">
       <h1>📚 キャラ図鑑</h1>
-      <a class="btn" href="../index.html">育成に戻る</a>
+      <div class="nav">
+        <a class="btn ghost" href="../index.html">育成に戻る</a>
+      </div>
     </div>
 
-    <div class="grid">
-      <!-- 例：スプライトを並べる（必要に応じて増やしてください） -->
-      <div class="card"><img src="../project-root/男_スーツ1.png" alt=""><div class="name">キャラ#1</div></div>
-      <div class="card"><img src="../project-root/女_スーツ1.png" alt=""><div class="name">キャラ#2</div></div>
-      <div class="card"><img src="../project-root/女_学生1.png" alt=""><div class="name">キャラ#3</div></div>
-      <!-- ... -->
+    <div class="panel">
+      <div class="grid" id="grid"></div>
+    </div>
+
+    <!-- modal -->
+    <div class="modal" id="modal" hidden>
+      <div class="sheet">
+        <button class="close" id="close">閉じる</button>
+        <img class="big" id="mimg" alt="">
+        <div class="meta">
+          <div class="name" id="mname"></div>
+          <div class="rarity" id="mrarity"></div>
+          <div class="hint" id="mhint"></div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="useBtn">このキャラにする</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer muted">
+      解放条件：3レベルごとに1体ずつ追加解放（最大32体）
     </div>
   </div>
+
+  <script src="dex.js"></script>
 </body>
 </html>
