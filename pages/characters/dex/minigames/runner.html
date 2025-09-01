@@ -260,11 +260,35 @@ function gameOver(){
   running = false;
   hero.classList.remove('walking');
   grid.style.animationPlayState = 'paused';
-  finalScore.textContent = Math.floor(score);
-  if (score > best){ best = Math.floor(score); localStorage.setItem('runner_best', best); }
+
+  const sc = Math.floor(score);
+  finalScore.textContent = sc;
+
+  // ベスト更新
+  if (sc > best){
+    best = sc;
+    localStorage.setItem('runner_best', best);
+  }
   finalBest.textContent = best;
+
+  // ★ スコア解放を dex_state_v1 に反映
+  syncDexScoreUnlocksByBest(best);
+
   over.hidden = false;
-  retry.href = location.href;
+}
+
+/* 追加：ベストスコア→#33〜#64のロック解除 */
+function syncDexScoreUnlocksByBest(best){
+  try{
+    const DEX_KEY = 'dex_state_v1';
+    const milestones = Array.from({length:32}, (_,i)=> 300 + i*100); // 300,400,…,3400
+    const dex = JSON.parse(localStorage.getItem(DEX_KEY)||'{}') || {};
+    dex.unlocked = dex.unlocked || {};
+    milestones.forEach((th, i)=>{
+      if (best >= th) dex.unlocked[32+i] = true;  // id:32..63
+    });
+    localStorage.setItem(DEX_KEY, JSON.stringify(dex));
+  }catch(e){}
 }
 
 document.getElementById('startBtn').addEventListener('click', start);
