@@ -8,13 +8,13 @@
 :root{
   --bg:#0b1422; --card:#111827; --ink:#e5e7eb; --line:#1f2937;
   --accent:#22d3ee; --warn:#f59e0b; --good:#22c55e;
-  --frame:32px; --scale:3.2; /* キャラの大きさ */
+  --frame:32px; --scale:3.2;
   --lane1: 20%; --lane2: 50%; --lane3: 80%;
-  --stage-w: 420px; --stage-h: 600px;
-  --grid-dur: 1.2s; /* 速く/遅く：背景の流れ */
+  --stage-w: 420px;
+  --stage-h: min(78svh, 680px); /* ←下の見切れ対策 */
+  --grid-dur: 1.2s; /* 背景の流れ */
   --walk-dur: .75s;  /* 足踏み速度（大きいほどゆっくり） */
 }
-
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto}
 .wrap{max-width:calc(var(--stage-w) + 24px); margin:14px auto; padding:0 12px; display:grid; gap:10px}
@@ -24,9 +24,11 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple
 .meta{display:flex; gap:10px; align-items:center; font-weight:700}
 .meta .score{color:#a5f3fc}
 .meta .best{color:#86efac}
-
 .stage{
-  position:relative; width:var(--stage-w); height:var(--stage-h); margin:0 auto;
+  position:relative;
+  width: min(92vw, var(--stage-w));
+  height: var(--stage-h);
+  margin:0 auto;
   border:1px solid #0f2a46; border-radius:16px; overflow:hidden;
   background:radial-gradient(ellipse at 40% 20%, #0f2438, #0b1a2b 60%);
 }
@@ -38,20 +40,17 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple
   animation:gridMove var(--grid-dur) linear infinite;
 }
 @keyframes gridMove { to { background-position: 0 40px, 0 40px; } }
-
 .char{
   position:absolute; bottom: 36px; left:50%;
   width:var(--frame); height:var(--frame);
   transform: translate(-50%, 0) scale(var(--scale));
   transform-origin:bottom center;
   image-rendering:pixelated;
-  background-repeat:no-repeat;
-  background-position:0 0;
+  background-repeat:no-repeat; background-position:0 0;
   z-index:3;
 }
 .walking{ animation: walkAnim var(--walk-dur) steps(3) infinite; }
 @keyframes walkAnim { from { background-position-x: 0px; } to { background-position-x: -96px; } }
-
 .obstacle{
   position:absolute; top:-60px; width:48px; height:48px; border-radius:10px;
   background:#ef4444; border:2px solid #7f1d1d; box-shadow:0 0 12px rgba(239,68,68,.3);
@@ -62,19 +61,14 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple
   background:#10b981; border:2px solid #064e3b; box-shadow:0 0 10px rgba(16,185,129,.35);
   z-index:2;
 }
-
-.overlay{
-  position:absolute; inset:0; display:grid; place-items:center; background:rgba(0,0,0,.55);
-}
+.overlay{ position:absolute; inset:0; display:grid; place-items:center; background:rgba(0,0,0,.55); }
 .overlay[hidden]{display:none}
 .sheet{background:#0f172a; border:1px solid #1e2f47; border-radius:14px; padding:16px; width:min(92%, 420px); display:grid; gap:10px; text-align:center}
 .title{font-weight:800; font-size:20px}
 .big{font-size:26px}
 .small{color:#9ca3af}
-
 .help{color:#9ca3af; font-size:12px; text-align:center}
 kbd{background:#0a1320; border:1px solid #1a2a45; border-radius:6px; padding:2px 6px}
-
 .footer{display:flex; justify-content:space-between; align-items:center}
 </style>
 </head>
@@ -93,7 +87,6 @@ kbd{background:#0a1320; border:1px solid #1a2a45; border-radius:6px; padding:2px
     <div class="grid-bg" id="gridBg"></div>
     <div class="char walking" id="hero" title="主人公"></div>
 
-    <!-- ゲームオーバー -->
     <div class="overlay" id="gameOver" hidden>
       <div class="sheet">
         <div class="title">ゲームオーバー</div>
@@ -106,7 +99,6 @@ kbd{background:#0a1320; border:1px solid #1a2a45; border-radius:6px; padding:2px
       </div>
     </div>
 
-    <!-- チュートリアル（最初だけ） -->
     <div class="overlay" id="howto">
       <div class="sheet">
         <div class="title">左右でレーン移動・障害物回避！</div>
@@ -121,16 +113,13 @@ kbd{background:#0a1320; border:1px solid #1a2a45; border-radius:6px; padding:2px
 </div>
 
 <script>
-/* ===== 共有ストレージ ===== */
 const DEX_KEY = 'dex_state_v1';
 function loadDex(){ try{ return JSON.parse(localStorage.getItem(DEX_KEY)||'{}'); }catch{ return {}; } }
 
-/* ===== ユーティリティ ===== */
 const qs = new URLSearchParams(location.search);
-const skinParam = qs.get('skin'); // filename 指定可
+const skinParam = qs.get('skin');
 const ASSET_BASES = ['../../project-root/','../project-root/','/pages/characters/project-root/','/project-root/'];
 
-/* ===== DOM ===== */
 const stage = document.getElementById('stage');
 const hero  = document.getElementById('hero');
 const grid  = document.getElementById('gridBg');
@@ -144,7 +133,6 @@ const howto = document.getElementById('howto');
 const startBtn = document.getElementById('startBtn');
 const pauseBtn = document.getElementById('pauseBtn');
 
-/* ===== スキン適用 ===== */
 (async function applySkin(){
   const dex = loadDex();
   const filename = skinParam || dex?.selected || 'char.png';
@@ -157,18 +145,18 @@ const pauseBtn = document.getElementById('pauseBtn');
   }
 })();
 
-/* ===== ゲームロジック ===== */
 const lanes = [ '20%', '50%', '80%' ];
 let laneIdx = 1; // 中央スタート
-let speed = 220; // px/秒（上から下） 初速
+let speed = 220; // px/秒
 let spawnGap = 950; // ms
 let lastSpawn = 0;
 let running = false;
 let score = 0;
 let best = +(localStorage.getItem('runner_best')||0);
+let rafStarted = false; // ← ループを一度だけ開始するフラグ
 bestEl.textContent = best;
 
-const obstacles = new Set(); // {el, y, kind:'ob'|'item'}
+const obstacles = new Set();
 function setLane(idx){
   laneIdx = Math.max(0, Math.min(2, idx));
   hero.style.left = lanes[laneIdx];
@@ -176,7 +164,7 @@ function setLane(idx){
 setLane(laneIdx);
 
 function spawn(){
-  const kind = Math.random()<0.2 ? 'item' : 'ob'; // 20%でボーナス
+  const kind = Math.random()<0.2 ? 'item' : 'ob';
   const el = document.createElement('div');
   el.className = kind==='item' ? 'item' : 'obstacle';
   const pos = Math.floor(Math.random()*3);
@@ -184,7 +172,6 @@ function spawn(){
   stage.appendChild(el);
   obstacles.add({el, y:-60, kind});
 }
-
 function aabb(el1, el2){
   const r1 = el1.getBoundingClientRect();
   const r2 = el2.getBoundingClientRect();
@@ -195,35 +182,31 @@ let last = 0;
 function loop(ts){
   if(!running){ requestAnimationFrame(loop); return; }
   if(!last) last = ts;
-  const dt = (ts - last)/1000; // 秒
+  const dt = (ts - last)/1000;
   last = ts;
 
-  // スコアと難易度
   score += dt * 10;
   scoreEl.textContent = Math.floor(score);
-  speed  += dt * 3;      // 徐々に加速
-  spawnGap = Math.max(520, spawnGap - dt*20); // だんだん湧きやすく
+  speed  += dt * 3;
+  spawnGap = Math.max(520, spawnGap - dt*20);
 
-  // スポーン
   if (ts - lastSpawn > spawnGap){
     spawn();
     lastSpawn = ts;
   }
 
-  // 移動＆衝突
   for (const obj of Array.from(obstacles)){
     obj.y += speed * dt;
     obj.el.style.transform = `translateY(${obj.y}px)`;
 
-    if (obj.y > 680){
+    const removeAt = stage.clientHeight + 80; // ← 画面高さに追従
+    if (obj.y > removeAt){
       obj.el.remove();
       obstacles.delete(obj);
       continue;
     }
-
     if (aabb(hero, obj.el)){
       if (obj.kind==='item'){
-        // ボーナス
         score += 50;
         obj.el.remove(); obstacles.delete(obj);
       }else{
@@ -231,11 +214,9 @@ function loop(ts){
       }
     }
   }
-
   requestAnimationFrame(loop);
 }
 
-/* ===== 入力 ===== */
 function moveLeft(){ setLane(laneIdx-1); }
 function moveRight(){ setLane(laneIdx+1); }
 
@@ -245,7 +226,6 @@ document.addEventListener('keydown', (e)=>{
   if(e.key===' ' && !running && howto.hidden){ start(); }
 });
 
-// スワイプ（簡易）
 let tx=null;
 stage.addEventListener('touchstart', e=>{ tx = e.touches[0].clientX; }, {passive:true});
 stage.addEventListener('touchmove',  e=>{
@@ -257,19 +237,21 @@ stage.addEventListener('touchmove',  e=>{
   }
 },{passive:true});
 
-/* ===== フロー ===== */
 function start(){
   howto.hidden = true;
   over.hidden = true;
-  // 初期化
-  for(const o of Array.from(obstacles)){ o.el.remove(); obstacles.delete(o); }
+
+  // ここで完全クリア（DOM + Set）
+  stage.querySelectorAll('.obstacle, .item').forEach(el => el.remove());
+  obstacles.clear();
+
   score = 0; speed = 220; spawnGap = 950; last = 0; lastSpawn = 0;
   setLane(1);
   hero.classList.add('walking');
   grid.style.animationPlayState = 'running';
   running = true;
   pauseBtn.textContent = '⏸ 一時停止';
-  requestAnimationFrame(loop);
+  // requestAnimationFrame(loop) は呼ばない（多重起動防止）
 }
 function pause(){
   running = false;
@@ -291,14 +273,22 @@ function gameOver(){
   if (score > best){ best = Math.floor(score); localStorage.setItem('runner_best', best); }
   finalBest.textContent = best;
   over.hidden = false;
-  retry.href = location.href; // そのままリロード
 }
 
-/* UIボタン */
-startBtn.addEventListener('click', start);
-pauseBtn.addEventListener('click', ()=> running ? pause() : resume());
+// 「もう一度」はページリロードせず安全に再スタート
+retry.addEventListener('click', (e)=>{
+  e.preventDefault();
+  start();
+});
 
-// 自動で最初のオーバーレイ表示 → スタート待ち
+document.getElementById('startBtn').addEventListener('click', start);
+document.getElementById('pauseBtn').addEventListener('click', ()=> running ? pause() : resume());
+
+// ループは一度だけ起動
+if(!rafStarted){
+  rafStarted = true;
+  requestAnimationFrame(loop);
+}
 </script>
 </body>
 </html>
