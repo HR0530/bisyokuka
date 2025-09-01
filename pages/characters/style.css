@@ -61,11 +61,6 @@ body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:va
   z-index:2;
 }
 
-/* --- 向き（3×4スプライトの行指定）--- */
-.dir-front  { background-position-y:   0px; }  /* 正面 */
-.dir-left   { background-position-y: -32px; }
-.dir-right  { background-position-y: -64px; }
-.dir-back   { background-position-y: -96px; }
 
 /* --- 歩行アニメ（横3コマ）＋ ふわっと上下バウンド --- */
 .walking{
@@ -83,11 +78,6 @@ body{margin:0; font-family:system-ui, sans-serif; background:var(--bg); color:va
   0%,100%{ --bob: 0px; }
   50%    { --bob: 1.5px; }
 }
-/* --- 向き（3×4スプライトの行指定）--- */
-.dir-front  { background-position-y:   0px; }  /* 正面 */
-.dir-left   { background-position-y: -32px; }
-.dir-right  { background-position-y: -64px; }
-.dir-back   { background-position-y: -96px; }
 
 /* --- 歩行アニメ（横3コマ）＋ ふわっと上下バウンド --- */
 .walking{
