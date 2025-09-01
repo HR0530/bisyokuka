@@ -7,12 +7,6 @@
   --hero-x: 30%;              /* X位置（%） */
   --hero-y: 30%;              /* Y位置（%） */
 
-  /* 吹き出し計算用（.speech が参照） */
-  --hero-size: calc(var(--frame) * var(--hero-scale));
-  --bubble-offset: 18px;
-  --bubble-tail: clamp(8px, calc(var(--hero-scale) * 1.2px), 14px);
-  --bubble-maxw: clamp(160px, calc(var(--hero-size) * 0.9), 420px);
-
   /* アニメ速度（好みで変更可） */
   --walk-dur: 0.9s;   /* 足踏み */
   --bob-dur:  0.9s;   /* 上下バウンド */
