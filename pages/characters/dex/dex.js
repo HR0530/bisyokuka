@@ -6,60 +6,54 @@ function loadDex(){ try{ return JSON.parse(localStorage.getItem(DEX_KEY)||'{}');
 function saveDex(v){ localStorage.setItem(DEX_KEY, JSON.stringify(v||{})); }
 function loadChar(){ try{ return JSON.parse(localStorage.getItem(CHAR_KEY)||'{}'); }catch{ return {}; } }
 
-/* ===== 図鑑データ（32体）
-   ▼ファイル名が「char_01.png〜char_32.png」の場合は自動生成でOK
-   ▼別名の場合は、“手動配列”に切り替えてください。
+/* ===== 図鑑データ =====
+   ▼ char_01.png〜char_64.png がある前提（#1〜#64）
+   ▼ #1〜#32: レベル、#33〜#64: ランナーのベストスコアで解放
+   ▼ #65〜#70: シークレット（挑戦で解放）
 */
 const ASSET_BASE = '../project-root/';
 
 const CHARACTERS = Array.from({length:64}, (_,i)=>{
   const n  = i+1;
   const fn = `char_${String(n).padStart(2,'0')}.png`;
-  const rarity = 1 + Math.floor(i/16); // お好みで
+  const rarity = 1 + Math.floor(i/16);
   return {
     id:i,
     name:`キャラ #${n}`,
     filename:fn,
     rarity,
     unlockHint: i < 32
-      ? `Lv${1 + i*3} 付近で解放`          // #1-32 はレベル
-      : `ベストスコア ${300 + (i-32)*100}+` // #33-64 はスコア
+      ? `Lv${1 + i*3} 付近で解放`
+      : `ベストスコア ${300 + (i-32)*100}+`
   };
 });
-
 
 /* #33〜#64：ベストスコア到達で解放（300,400,…,3400） */
 const SCORE_MILESTONES = Array.from({length:32}, (_,i)=> 300 + i*100);
 function unlockedByScore(best){
   const u = {};
   SCORE_MILESTONES.forEach((th, i)=>{
-    if (best >= th) u[32+i] = true; // id 32..63
+    if (best >= th) u[32+i] = true; // id 32..63（= #33〜#64）
   });
   return u;
 }
 
-// 追加：#65 のIDを予約
-const SECRET65_ID = 64; // 0始まり配列なので 64 = #65
-
-// 既存 CHARACTERS にシークレット枠を push（ファイル名は未公開）
-CHARACTERS.push({
-  id: SECRET65_ID,
-  name: '？？？',
-  filename: null,           // ここは解放まで null
-  rarity: 5,
-  secret: true,
-  unlockHint: '挑戦'        // モーダルに「挑戦」とだけ出す
+/* --- Secret #65〜#70 を追加登録（idは0始まりで 65→64） --- */
+const SECRET_RANGE = [65,66,67,68,69,70];
+SECRET_RANGE.forEach((no, idx) => {
+  const id = 64 + idx;
+  CHARACTERS.push({
+    id,
+    name: '？？？',
+    filename: null,                          // 解放までは非公開
+    rarity: 5,
+    secret: true,
+    secretNo: no,                            // 65..70
+    route: `../secret/challenge.html?sid=${no}`, // 1枚の汎用ゲームに sid で入る
+    defaultFile: `secret_${no}.png`,         // 解放後の実体ファイル
+    unlockHint: '挑戦'
+  });
 });
-
-
-/* --- 手動でやる場合の例（↑を削除して↓を使う）
-const CHARACTERS = [
-  { id:0, name:'男スーツ1', filename:'男_スーツ1.png', rarity:1, unlockHint:'Lv1' },
-  { id:1, name:'女スーツ1', filename:'女_スーツ1.png', rarity:1, unlockHint:'Lv4' },
-  { id:2, name:'女学生1',   filename:'女_学生1.png',   rarity:1, unlockHint:'Lv7' },
-  // ... id:31 まで
-];
---- */
 
 /* ===== レベルから解放数を計算（Lv1=1体, Lv4=2体, ...） ===== */
 function unlockedByLevel(level){
@@ -76,7 +70,7 @@ const mname = document.getElementById('mname');
 const mr    = document.getElementById('mrarity');
 const mhint = document.getElementById('mhint');
 const useBtn= document.getElementById('useBtn');
-const playBtn= document.getElementById('playBtn'); // ← ミニゲーム起動
+const playBtn= document.getElementById('playBtn'); // ミニゲーム起動
 document.getElementById('close').addEventListener('click', ()=> modal.hidden=true);
 
 let current = null;
@@ -86,6 +80,9 @@ function build(){
   const st  = loadChar();
   const lv  = +st?.level || 1;
   const dex = loadDex();
+
+  // シークレット用のファイルマップを用意（{ "64":"secret_65.png", ... }）
+  dex.secretFiles = dex.secretFiles || {};
 
   // レベル解放（#1〜#32）
   dex.unlocked = Object.assign({}, dex.unlocked||{}, unlockedByLevel(lv));
@@ -103,49 +100,51 @@ function build(){
     card.className = 'card';
     card.dataset.id = ch.id;
 
-    const isSecret   = !!ch.secret;               // #65だけ true
-    const isUnlocked = !!dex.unlocked[ch.id];
+    const isSecret   = !!ch.secret;
+    const isUnlocked = !!(dex.unlocked||{})[ch.id];
 
+    // 画像
     const img = document.createElement('img');
     img.loading = 'lazy';
-
     if (isSecret && !isUnlocked) {
-      // 未解放の #65 は伏せる（silhouette.png を用意）
-      img.src = ASSET_BASE + 'silhouette.png';
+      img.src = ASSET_BASE + 'silhouette.png'; // 未解放は伏せる
       img.alt = '？？？';
     } else {
-      // 解放済み or 通常キャラ
-      const myFile = isSecret
-        ? (dex.secret65 || 'secret_65.png')       // 解放後の実体画像
+      const file = isSecret
+        ? (dex.secretFiles[String(ch.id)] || ch.defaultFile)
         : ch.filename;
-      img.src = ASSET_BASE + myFile;
-      img.alt = isSecret ? ch.name || 'シークレット' : ch.name;
+      img.src = ASSET_BASE + file;
+      img.alt = isSecret ? (ch.name || 'シークレット') : ch.name;
     }
     card.appendChild(img);
 
+    // 名前
     const name = document.createElement('div');
     name.className = 'name';
-    name.textContent = (isSecret && !isUnlocked) ? '？？？' : ch.name;
+    name.textContent = (isSecret && !isUnlocked) ? '？？？' : (ch.name || `#${ch.id+1}`);
     card.appendChild(name);
 
+    // ロック膜
     if (!isUnlocked) {
       const lock = document.createElement('div');
       lock.className = 'lock';
-      lock.textContent = isSecret ? '挑戦' : 'LOCKED'; // #65は「挑戦」
+      lock.textContent = isSecret ? '挑戦' : 'LOCKED';
       card.appendChild(lock);
     }
 
     // 選択中の見た目
     if (isUnlocked) {
-      const myFile = isSecret ? (dex.secret65 || 'secret_65.png') : ch.filename;
-      if (dex.selected === myFile) card.classList.add('selected');
+      const file = isSecret
+        ? (dex.secretFiles[String(ch.id)] || ch.defaultFile)
+        : ch.filename;
+      if ((dex.selected||'') === file) card.classList.add('selected');
     }
 
     // クリック挙動
     card.addEventListener('click', ()=>{
       if (isSecret && !isUnlocked) {
-        // #65 未解放 → 直接「挑戦」へ（モーダルを使いたければ openSecretModal() に変更）
-        location.href = '../secret/index.html';
+        // 未解放シークレット → 直接挑戦ページへ
+        location.href = ch.route;
         return;
       }
       openModal(ch, !isUnlocked);
@@ -153,7 +152,7 @@ function build(){
 
     grid.appendChild(card);
   });
-} // ←★★ build() の閉じカッコを忘れずに
+} // build
 
 function openModal(ch, locked){
   current = ch;
@@ -164,10 +163,12 @@ function openModal(ch, locked){
 
   // 画像と名前
   if (isSecret && locked) {
-    mimg.src = ASSET_BASE + 'silhouette.png'; // 未解放シークレットのシルエット
+    mimg.src = ASSET_BASE + 'silhouette.png';
     mname.textContent = '？？？';
   } else {
-    const file = isSecret ? (dex.secret65 || 'secret_65.png') : ch.filename;
+    const file = isSecret
+      ? (dex.secretFiles[String(ch.id)] || ch.defaultFile)
+      : ch.filename;
     mimg.src = ASSET_BASE + file;
     mname.textContent = ch.name;
   }
@@ -182,14 +183,13 @@ function openModal(ch, locked){
   useBtn.textContent = locked ? '未解放' : 'このキャラにする';
 
   // ミニゲーム導線
-  if (isSecret) {
-    // #65 は未解放でも挑戦可能
+  if (isSecret){
     playBtn?.classList.remove('disabled');
-    if (playBtn) {
-      playBtn.href = `../secret/index.html`;
+    if (playBtn){
+      playBtn.href = ch.route;                       // それぞれの挑戦へ
       playBtn.textContent = locked ? '挑戦する' : 'もう一度挑戦';
     }
-  } else if (locked) {
+  } else if (locked){
     playBtn?.classList.add('disabled');
     if (playBtn){
       playBtn.removeAttribute('href');
@@ -209,14 +209,14 @@ useBtn.addEventListener('click', ()=>{
   const dex = loadDex();
   const isSecret = !!current.secret;
   const selectedFilename = isSecret
-    ? (dex.secret65 || 'secret_65.png') // 解放後はこの実体を選択
+    ? (dex.secretFiles[String(current.id)] || current.defaultFile)
     : current.filename;
 
   if (!selectedFilename) return; // 念のため
   dex.selected = selectedFilename;
   saveDex(dex);
   modal.hidden = true;
-  build(); // 選択強調の更新
+  build();
 });
 
 /* 初期化 */
