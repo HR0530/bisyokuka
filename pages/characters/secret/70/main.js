@@ -1,19 +1,21 @@
 // ===== 図鑑パス解決 & 解放 =====
 function resolveDexPath(){
   const p = location.pathname;
+  // /pages/characters/secret/70/index.html → ../../dex/index.html が正
   if (p.includes('/pages/characters/secret/')) return '../../dex/index.html';
   if (p.includes('/pages/characters/'))        return 'dex/index.html';
   if (p.includes('/pages/'))                   return 'characters/dex/index.html';
   return '/pages/characters/dex/index.html';
 }
-for (const id of ['backBtn','backBtn2']){
-  const a = document.getElementById(id);
-  if (a){
-    const href = resolveDexPath();
-    a.setAttribute('href', href);
-    a.addEventListener('click', (e)=>{ e.preventDefault(); location.href = href; });
-  }
+function wireBack(elId){
+  const a = document.getElementById(elId);
+  if (!a) return;
+  const href = resolveDexPath();
+  a.setAttribute('href', href);
+  a.addEventListener('click', (e)=>{ e.preventDefault(); location.href = href; });
 }
+wireBack('backBtn'); wireBack('backBtn2');
+
 function unlock70(){
   if (typeof unlockSecret==='function'){ unlockSecret(70,'secret_70.png'); return; }
   const DEX_KEY='dex_state_v1', id=69;
@@ -66,7 +68,7 @@ window.addEventListener('keyup',(e)=>{
   if(e.code==='Space') keys.jump=false;
 });
 
-// ===== 共通パラメータ & ユーティリティ =====
+// ===== 共通ユーティリティ =====
 function U(){ return Math.max(18, Math.min(42, cv.clientHeight/22)); }
 const PWk=1.2, PHk=1.8;
 const G=1650, MOVE=340, JUMP_V=-540, COYOTE=0.09, FRICTION=0.9;
@@ -80,9 +82,7 @@ const state = {
   camX:0, worldW:2000,
   last:0, stageStartAt:0, globalStartAt:0,
   px:0, py:0, vx:0, vy:0, onGround:false, coyote:0,
-  // エンティティ
   platforms:[], tiles:[], lasers:[], coins:[], spikes:[], goal:null,
-  // モードフラグ
   runner:null, survival:null, laserMaze:null, precision:null, tilesMode:null, gauntlet:null,
 };
 function clearEntities(){
@@ -92,8 +92,8 @@ function clearEntities(){
 }
 function setCond(t){ condEl.textContent=t; }
 
-// ====== ビルダー（main.js に実装・各ステージは設定だけ） ======
-function buildRunner(p){ // {sec, coinsNeed, speed, endSpeed}
+// ===== ビルダー =====
+function buildRunner(p){
   clearEntities(); state.camX=0;
   const gy = cv.clientHeight - U()*2;
   state.platforms.push({x:0,y:gy,w:999999,h:U()*0.9,type:'ground'});
@@ -128,7 +128,7 @@ function observeTile(t){
   t.safe=Math.random()<p;
   if(!t.safe){ t.state='crack'; t.breakAt=state.stageTime+BREAK_DELAY; t.shake=1; } else t.state='solid';
 }
-function buildTiles(p){ // {cols}
+function buildTiles(p){
   clearEntities(); state.camX=0;
   const gy = cv.clientHeight - U()*2;
   const start={x:U()*1.0,y:gy,w:U()*4,h:U()*0.9};
@@ -150,8 +150,7 @@ function buildTiles(p){ // {cols}
   state.worldW=state.goal.x+U()*6;
   setCond('条件：ゴール到達（量子床。割れる床は0.35s後に崩落）');
 }
-
-function buildLaserMaze(p){ // {segments}
+function buildLaserMaze(p){
   clearEntities(); state.camX=0;
   const gy=cv.clientHeight-U()*2;
   let x=U()*2, y=gy-U()*2.8;
@@ -168,8 +167,7 @@ function buildLaserMaze(p){ // {segments}
   state.px=start.x+start.w*0.5-PW()/2; state.py=start.y-PH(); state.vx=state.vy=0; state.onGround=true; state.coyote=0;
   setCond('条件：ゴール到達（移動レーザー）');
 }
-
-function buildSurvival(p){ // {sec, withLaser}
+function buildSurvival(p){
   clearEntities(); state.camX=0;
   const w=Math.max(cv.clientWidth, U()*28), h=cv.clientHeight, gy=h-U()*2;
   state.platforms.push({x:0,y:gy,w:999999,h:U()*0.9,type:'ground'});
@@ -187,11 +185,6 @@ function buildSurvival(p){ // {sec, withLaser}
   state.px=U()*4; state.py=gy-PH(); state.vx=state.vy=0; state.onGround=true; state.coyote=0;
   setCond(`条件：${p.sec}s 生存${p.withLaser?'（＋移動レーザー回避）':''}`);
 }
-function spawnFallingSpike(){
-  const x=state.camX+Math.random()*cv.clientWidth+U()*2, w=U()*0.9, h=U()*0.9;
-  state.spikes.push({x,y:-U()*2,w,h,vy:220+Math.random()*180});
-}
-
 function buildPrecision(){
   clearEntities(); state.camX=0;
   const gy=cv.clientHeight-U()*2;
@@ -212,7 +205,6 @@ function buildPrecision(){
   state.px=start.x+start.w/2-PW()/2; state.py=start.y-PH(); state.vx=state.vy=0; state.onGround=true; state.coyote=0;
   setCond('条件：ゴール到達（狭い足場＋移動レーザー＋下スパイク）');
 }
-
 function buildGauntlet(){
   clearEntities(); state.camX=0;
   const gy=cv.clientHeight-U()*2;
@@ -246,7 +238,6 @@ function buildGauntlet(){
   setCond('条件：ゴール到達（総合：Runner→量子床→レーザー）');
 }
 
-// ===== ステージディスパッチ =====
 function buildByType(cfg){
   switch(cfg.type){
     case 'runner':    buildRunner(cfg.params); break;
@@ -259,8 +250,15 @@ function buildByType(cfg){
   }
 }
 
-// ===== 進行制御 =====
+// ===== 進行 =====
 function startGame(){
+  if (!Array.isArray(window.STAGES) || window.STAGES.length===0){
+    ov.style.display='grid';
+    ovMsg.textContent='ステージが読み込めませんでした';
+    ovSub.textContent='stages/*.js の <script> が正しく読み込まれているか確認してください。';
+    return;
+  }
+  STAGES = window.STAGES; // ← ここで取得
   state.playing=true; state.paused=false; state.stageIdx=1; state.totalTime=0; state.stageTime=0; state.camX=0;
   state.globalStartAt=performance.now(); state.stageStartAt=state.globalStartAt; state.last=state.globalStartAt;
   buildByType(STAGES[0]); stageEl.textContent=state.stageIdx; ov.style.display='none';
@@ -290,6 +288,7 @@ function fail(msg){
 }
 
 // ===== ループ =====
+let STAGES = window.STAGES || [];
 function loop(ts){
   if (!state.playing) return;
   if (!state.last) state.last=ts;
@@ -300,7 +299,6 @@ function loop(ts){
   state.totalTime = (ts - state.globalStartAt)/1000;
   timeEl.textContent = state.totalTime.toFixed(1);
 
-  // 入力
   if (keys.left)  state.vx=-MOVE;
   if (keys.right) state.vx= MOVE;
   if (!keys.left && !keys.right) state.vx*=FRICTION;
@@ -308,11 +306,8 @@ function loop(ts){
     if (state.onGround || state.coyote>0){ state.vy=JUMP_V; state.onGround=false; state.coyote=0; }
     keys.jump=false;
   }
-
-  // 重力
   state.vy+=G*dt;
 
-  // Runner 世界スクロール
   if (state.runner){
     const k=Math.min(1, state.stageTime/state.runner.timeNeed);
     const sc=state.runner.scrollVX+(state.runner.endSpeed-state.runner.scrollVX)*k;
@@ -324,13 +319,9 @@ function loop(ts){
     [state.platforms,state.spikes,state.coins].forEach(arr=>arr.forEach(o=>{ if(!o.static) o.x-=flow*0.25; }));
   }
 
-  // 位置更新
   state.px+=state.vx*dt; state.py+=state.vy*dt;
-
-  // 画面外
   if (state.py>cv.clientHeight+U()*4 || state.px<-U()*6 || state.px>state.worldW+U()*6){ fail('奈落に落ちた…'); return; }
 
-  // 接地
   const P=PR(); state.onGround=false;
   state.platforms.forEach(p=>{
     const prevBottom=P.y+P.h - state.vy*dt;
@@ -341,7 +332,6 @@ function loop(ts){
     }
   });
 
-  // 量子床
   state.tiles.forEach(t=>{
     if (t.state==='broken') return;
     if (t.state==='crack' && state.stageTime>=t.breakAt){ t.state='broken'; return; }
@@ -354,14 +344,12 @@ function loop(ts){
     }
   });
 
-  // コイン
   state.coins.forEach(c=>{
     if (c.taken) return;
     const dx=Math.abs(c.x-(P.x+P.w/2)), dy=Math.abs(c.y-(P.y+P.h/2));
     if (dx<(P.w/2+c.r) && dy<(P.h/2+c.r)) c.taken=true;
   });
 
-  // レーザー（全部移動式）
   for (const L of state.lasers){
     if (L.horiz){
       L.x+=L.spd*dt; if (L.x<L.minX){L.x=L.minX;L.spd*=-1;} if (L.x>L.maxX){L.x=L.maxX;L.spd*=-1;}
@@ -374,14 +362,12 @@ function loop(ts){
     }
   }
 
-  // スパイク
   for (const s of state.spikes){
     if (s.vy) s.y+=s.vy*dt;
     const r={x:s.x, y:s.y, w:s.w, h:s.h};
     if (overlap(PR(),r)){ fail('トゲに当たった…'); return; }
   }
 
-  // クリア条件
   if (state.survival && state.stageTime>=state.survival.timeNeed){ nextStage(); return; }
   if (state.runner){
     const need=state.runner.coinNeed, got=state.coins.filter(c=>c.taken).length;
@@ -390,12 +376,10 @@ function loop(ts){
   }
   if (state.goal && overlap(PR(),state.goal)){ nextStage(); return; }
 
-  // カメラ
   const view=cv.clientWidth;
   const target=Math.max(0, Math.min(state.px - view*0.35, state.worldW - view + U()*4));
   state.camX += (target - state.camX)*0.12;
 
-  // 描画
   draw(); state.raf=requestAnimationFrame(loop);
 }
 
@@ -411,13 +395,11 @@ function draw(){
 
   ctx.save(); ctx.translate(-state.camX,0);
 
-  // 足場
   state.platforms.forEach(p=>{
     ctx.fillStyle = p.type==='ground' ? '#0e243a' : '#334155';
     ctx.fillRect(p.x,p.y,p.w,p.h);
   });
 
-  // 量子床
   state.tiles.forEach(t=>{
     let ox=0; if (t.shake>0){ ox=(Math.random()*2-1)*2; t.shake=Math.max(0,t.shake-0.08); }
     if (t.state==='unknown') ctx.fillStyle='#475569';
@@ -431,14 +413,12 @@ function draw(){
     }
   });
 
-  // コイン
   state.coins.forEach(c=>{
     if (c.taken) return;
     ctx.beginPath(); ctx.arc(c.x,c.y,c.r,0,Math.PI*2); ctx.closePath();
     ctx.fillStyle='#fbbf24'; ctx.fill(); ctx.strokeStyle='#fde68a'; ctx.lineWidth=2; ctx.stroke();
   });
 
-  // スパイク（三角）
   state.spikes.forEach(s=>{
     ctx.fillStyle='#ef4444';
     ctx.beginPath();
@@ -448,7 +428,6 @@ function draw(){
     ctx.closePath(); ctx.fill();
   });
 
-  // レーザー
   state.lasers.forEach(L=>{
     const x0 = L.horiz ? (L.x - U()*0.2) : (L.x - L.w/2);
     const ww = L.horiz ? U()*0.4 : L.w;
@@ -461,31 +440,15 @@ function draw(){
     else         ctx.fillRect(x0, 0, ww, h);
   });
 
-  // ゴール
   if (state.goal){ ctx.fillStyle='#10b981'; ctx.fillRect(state.goal.x,state.goal.y,state.goal.w,state.goal.h); }
-
-  // プレイヤー
   ctx.fillStyle='#22d3ee'; ctx.fillRect(state.px,state.py,PW(),PH());
-
   ctx.restore();
 }
 
-// ===== ステージ設定をインポート（10本） =====
-import S1 from './stages/01.js';
-import S2 from './stages/02.js';
-import S3 from './stages/03.js';
-import S4 from './stages/04.js';
-import S5 from './stages/05.js';
-import S6 from './stages/06.js';
-import S7 from './stages/07.js';
-import S8 from './stages/08.js';
-import S9 from './stages/09.js';
-import S10 from './stages/10.js';
-const STAGES = [S1,S2,S3,S4,S5,S6,S7,S8,S9,S10];
+// 初期プレビュー（ステージ1があれば描画）
+if (Array.isArray(window.STAGES) && window.STAGES.length){
+  buildByType(window.STAGES[0]); draw();
+}
 
-// 初期プレビュー（ステージ1の画面だけ作って待機）
-buildByType(STAGES[0]); draw();
-
-// 操作
 startBtn.addEventListener('click', startGame);
 retryBtn.addEventListener('click', startGame);
