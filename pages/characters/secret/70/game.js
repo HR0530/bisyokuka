@@ -1,10 +1,7 @@
-/* 美食家さん｜激むず70（ボンバーマン型・2フェーズ＋ボス弾）
- * Phase1: ランダムマップ → ゴールで Phase2（👻はランダム徘徊）
- * Phase2: ボス戦（弾を撃つ／HP=3、爆風のみダメージ）
- * A: 当たり判定ゆるめ＋ヒット硬直
- * B: 爆風滞留延長（Phase2のみ）
- * D: 射撃後硬直
- * 勝利: ボス撃破時に unlockSecret(70,"secret_70.png")
+/* 美食家さん｜激むず70（ボンバーマン型・3フェーズ）
+ * P1: ランダムマップ → ゴールで P2
+ * P2: ボス戦（弾＆HP=3）… A:ゆる判定＋硬直 / B:炎寿命延長 / D:射撃後硬直
+ * P3: 最終耐久（15s）… 弾幕を避け切ればクリア → unlockSecret(70,"secret_70.png")
  */
 
 window.addEventListener("load", () => {
@@ -36,18 +33,26 @@ function boot(){
   const safeBind=(el,ev,fn,opts)=>{ if(!el){console.warn("[bind-skip]",ev);return;} el.addEventListener(ev,fn,opts); };
 
   // ===== 定数 =====
-  const GHOST_STEP_TICKS = 20;     // 👻歩調（大きいほど遅い）
-  const GHOST_TURN_CHANCE = 0.20;  // 方向転換確率
+  // 👻
+  const GHOST_STEP_TICKS = 50;
+  const GHOST_TURN_CHANCE = 0.20;
 
-  const BOSS_STEP_TICKS  = 50;     // ボス歩調
+  // ボス
+  const BOSS_STEP_TICKS  = 70;
   const BOSS_HP_MAX      = 3;
 
-  const BULLET_STEP_TICKS   = 5;   // 弾歩調（小さいほど速い）
-  const BOSS_SHOOT_COOLDOWN = 48;  // 発射間隔 ≒0.8s
-  const BOSS_PATTERN_ALT    = true;// 狙い撃ち↔十字 交互
+  // 弾
+  const BULLET_STEP_TICKS   = 5;
+  const BOSS_SHOOT_COOLDOWN = 48;
+  const BOSS_PATTERN_ALT    = true;
 
-  // 置いた直後の誤爆防止（リモート無しでも安全）
-  const BOMB_ARM_TICKS = 8; // ≒0.13s
+  // 爆弾
+  const BOMB_ARM_TICKS = 8; // 誤爆防止
+
+  // Phase3（最終耐久）
+  const PH3_TIME_SEC = 15;        // 生存秒数
+  const PH3_SHOOT_CD = 24;        // 発射間隔（短いほどキツい）
+  const PH3_ROTATE_STEP = Math.PI/8; // 弾の回転オフセット
 
   const COLS=15, ROWS=13, TILE=40;
   canvas.width = COLS*TILE; canvas.height = ROWS*TILE;
@@ -69,7 +74,7 @@ function boot(){
 
   // ===== 状態 =====
   const state = {
-    phase: 1, // 1=通常, 2=ボス, 3=完全クリア
+    phase: 1, // 1=通常, 2=ボス, 3=耐久, 4=完全クリア（幕）
     grid: null,
     timeLeft: 180, life: 3, power: 2, capacity: 1, cal: 0,
     player: { x:1, y:1, dir:"right" },
@@ -77,6 +82,7 @@ function boot(){
     ghosts: [],    // {x,y,moveCD,dir}
     boss:   null,  // {x,y,moveCD,dir,hp,shootCD,shootAlt,stun}
     bullets: [],   // {x,y,dx,dy,moveCD}
+    ph3: { tLeft: PH3_TIME_SEC, shootCD: PH3_SHOOT_CD, angle: 0 },
     cleared:false, gameOver:false,
     tick:0,
     goalPos: {x: COLS-2, y: ROWS-2}
@@ -92,10 +98,8 @@ function boot(){
   // ===== マップ生成 =====
   function generateStageMap(){
     const g = Array.from({length:ROWS}, ()=>Array(COLS).fill(FLOOR));
-    // 外周硬壁
     for(let x=0;x<COLS;x++){ g[0][x]=HARD; g[ROWS-1][x]=HARD; }
     for(let y=0;y<ROWS;y++){ g[y][0]=HARD; g[y][COLS-1]=HARD; }
-    // 内部硬壁（隣接禁止）
     const hardProb = 0.18;
     for(let y=1;y<ROWS-1;y++){
       for(let x=1;x<COLS-1;x++){
@@ -103,7 +107,6 @@ function boot(){
         if (maybe(hardProb) && canPlaceHard(g,x,y)) g[y][x] = HARD;
       }
     }
-    // ソフト壁（多め）
     for(let y=1;y<ROWS-1;y++){
       for(let x=1;x<COLS-1;x++){
         if (g[y][x]===FLOOR && (x!==1||y!==1) && (x!==state.goalPos.x||y!==state.goalPos.y)){
@@ -111,7 +114,6 @@ function boot(){
         }
       }
     }
-    // スタート/ゴール周りの通路確保（2x2）
     for (const p of [{x:1,y:1},{x:state.goalPos.x,y:state.goalPos.y}]){
       for(let dy=0; dy<=1; dy++) for(let dx=0; dx<=1; dx++){
         const xx = clamp(p.x+dx,1,COLS-2), yy = clamp(p.y+dy,1,ROWS-2);
@@ -125,11 +127,25 @@ function boot(){
 
   function generateBossArena(){
     const g = Array.from({length:ROWS}, ()=>Array(COLS).fill(FLOOR));
-    // 外周硬壁
     for(let x=0;x<COLS;x++){ g[0][x]=HARD; g[ROWS-1][x]=HARD; }
     for(let y=0;y<ROWS;y++){ g[y][0]=HARD; g[y][COLS-1]=HARD; }
-    // 柱：低密度（隣接禁止）
     const pillarProb = 0.12;
+    for(let y=2;y<ROWS-2;y++){
+      for(let x=2;x<COLS-2;x++){
+        if ((x%2===0 && y%2===0) && canPlaceHard(g,x,y) && maybe(pillarProb)){
+          g[y][x] = HARD;
+        }
+      }
+    }
+    return g;
+  }
+
+  function generateFinalArena(){
+    // P3 は開けたアリーナ（柱少なめ）
+    const g = Array.from({length:ROWS}, ()=>Array(COLS).fill(FLOOR));
+    for(let x=0;x<COLS;x++){ g[0][x]=HARD; g[ROWS-1][x]=HARD; }
+    for(let y=0;y<ROWS;y++){ g[y][0]=HARD; g[y][COLS-1]=HARD; }
+    const pillarProb = 0.08;
     for(let y=2;y<ROWS-2;y++){
       for(let x=2;x<COLS-2;x++){
         if ((x%2===0 && y%2===0) && canPlaceHard(g,x,y) && maybe(pillarProb)){
@@ -153,7 +169,7 @@ function boot(){
   // ===== 初期化 =====
   enterPhase1();
 
-  // HUD表示
+  // HUD
   if (HUD.time) HUD.time.textContent = state.timeLeft;
   if (HUD.life) HUD.life.textContent = state.life;
   if (HUD.power) HUD.power.textContent = state.power;
@@ -162,7 +178,7 @@ function boot(){
 
   // ===== 入力（1押し=1マス） =====
   document.addEventListener("keydown",(e)=>{
-    if (e.repeat) return; // 長押しの連発防止
+    if (e.repeat) return;
     if (state.gameOver || state.cleared) return;
     if (DIR_KEYS.has(e.key)) { e.preventDefault(); tryMovePlayer(DIR_KEYS.get(e.key)); }
     else if (e.key === " ") { e.preventDefault(); placeBomb(); }
@@ -195,9 +211,7 @@ function boot(){
     state.grid = generateBossArena();
     state.bombs.length=0; state.flames.length=0; state.items.length=0;
     state.ghosts.length=0; state.bullets.length=0;
-    // プレイヤーを左上へ
     state.player.x = 1; state.player.y = 1;
-    // ボス中央
     const bx = (COLS/2)|0, by = (ROWS/2)|0;
     state.boss = {
       x: bx, y: by,
@@ -205,16 +219,27 @@ function boot(){
       dir: randDir(),
       hp: BOSS_HP_MAX,
       shootCD: BOSS_SHOOT_COOLDOWN,
-      shootAlt: false, // 交互パターン
+      shootAlt: false,
       stun: 0
     };
     toast("⚔️ ボス戦開始！");
   }
 
+  function startPhase3(){
+    state.phase = 3;
+    state.grid = generateFinalArena();
+    state.bombs.length=0; state.flames.length=0; state.items.length=0;
+    state.ghosts.length=0; state.bullets.length=0;
+    state.boss = null;
+    state.player.x = 1; state.player.y = 1;
+    state.ph3 = { tLeft: PH3_TIME_SEC, shootCD: PH3_SHOOT_CD, angle: 0 };
+    toast("⚠️ 最終ステージ：15秒耐久！");
+  }
+
   function finalClear(){
     state.cleared = true;
-    state.phase = 3;
-    toast("🎉 CLEAR! ボス撃破！");
+    state.phase = 4;
+    toast("🎉 CLEAR! コンプリート！");
     try { window.unlockSecret?.(70, "secret_70.png"); } catch (e) { console.warn("unlockSecret failed:", e); }
   }
 
@@ -230,20 +255,14 @@ function boot(){
     if (!bombHere && cell(nx,ny)!==HARD && cell(nx,ny)!==SOFT){
       state.player.x=nx; state.player.y=ny;
       if (state.phase===1) pickupItem(nx,ny);
-      // ステージ1のゴール到達 → ボス戦へ
       if (state.phase===1 && nx===state.goalPos.x && ny===state.goalPos.y){
         startBossBattle();
       }
     }
 
-    // 👻接触（Phase1）
-    if (state.phase===1 && state.ghosts.some(g=>g.x===state.player.x && g.y===state.player.y)){
-      die("ゴーストに触れた…");
-    }
-    // ボス接触（Phase2）
-    if (state.phase===2 && state.boss && state.boss.x===state.player.x && state.boss.y===state.player.y){
-      die("ボスに触れた…");
-    }
+    // 接触
+    if (state.phase===1 && state.ghosts.some(g=>g.x===state.player.x && g.y===state.player.y)) die("ゴーストに触れた…");
+    if (state.phase===2 && state.boss && state.boss.x===state.player.x && state.boss.y===state.player.y) die("ボスに触れた…");
   }
 
   // ===== ゴースト（Phase1のみ）=====
@@ -252,9 +271,7 @@ function boot(){
     for (const g of state.ghosts){
       if (--g.moveCD > 0) continue;
       g.moveCD = GHOST_STEP_TICKS;
-
       if (!g.dir || Math.random() < GHOST_TURN_CHANCE) g.dir = randDir();
-
       let tries = 0;
       while (tries < 4){
         const d = DIRS[g.dir];
@@ -263,10 +280,7 @@ function boot(){
         if (cell(nx,ny) !== HARD){ g.x = nx; g.y = ny; break; }
         g.dir = randDir(); tries++;
       }
-
-      if (g.x === state.player.x && g.y === state.player.y){
-        die("ゴーストに触れた…");
-      }
+      if (g.x === state.player.x && g.y === state.player.y) die("ゴーストに触れた…");
     }
   }
 
@@ -275,7 +289,7 @@ function boot(){
     if (state.phase!==2 || !state.boss) return;
     const b = state.boss;
 
-    // ★A: ヒット硬直中は動かない＆撃たない
+    // ヒット硬直
     if (b.stun && --b.stun > 0) return;
 
     // 歩き
@@ -302,26 +316,19 @@ function boot(){
       } else {
         shootAimed(b);
       }
-      // ★D: 射撃後の硬直（短め）
-      b.stun = Math.max(b.stun||0, 10); // ≒0.17s
+      // 射撃後硬直（D）
+      b.stun = Math.max(b.stun||0, 10);
     }
   }
 
-  // --- 射撃パターン：プレイヤー狙い（軸最短） ---
+  // --- 射撃（Phase2） ---
   function shootAimed(b){
     const dx = state.player.x - b.x;
     const dy = state.player.y - b.y;
-    let dir;
-    if (Math.abs(dx) >= Math.abs(dy)){
-      dir = dx >= 0 ? "right" : "left";
-    } else {
-      dir = dy >= 0 ? "down" : "up";
-    }
+    let dir = Math.abs(dx) >= Math.abs(dy) ? (dx>=0?"right":"left") : (dy>=0?"down":"up");
     pushBulletFrom(b.x, b.y, dir);
     toast("🔸 ボスが撃ってきた！");
   }
-
-  // --- 射撃パターン：十字（上下左右へ同時に） ---
   function shootCross(b){
     pushBulletFrom(b.x, b.y, "up");
     pushBulletFrom(b.x, b.y, "down");
@@ -330,9 +337,48 @@ function boot(){
     toast("✝ ボスが十字弾を放った！");
   }
 
+  // --- Phase3 射撃（回転交差＋斜め交差で弾幕） ---
+  function updatePhase3(){
+    if (state.phase!==3) return;
+    // 残り時間（内部カウント）
+    if (state.tick % 60 === 0){
+      state.ph3.tLeft--;
+      if (state.ph3.tLeft <= 0){ finalClear(); return; }
+    }
+
+    // 発射
+    if (--state.ph3.shootCD <= 0){
+      state.ph3.shootCD = PH3_SHOOT_CD;
+      const cx = (COLS/2)|0, cy = (ROWS/2)|0;
+      const ang = state.ph3.angle;
+      // 交差（上下左右）＋ 斜め（4方向）に近いベクトル
+      // 角度回転付きで微妙にズレる＝弾幕らしさ
+      shootVec(cx, cy,  Math.cos(ang),  Math.sin(ang));
+      shootVec(cx, cy, -Math.cos(ang), -Math.sin(ang));
+      shootVec(cx, cy,  Math.cos(ang+Math.PI/2),  Math.sin(ang+Math.PI/2));
+      shootVec(cx, cy, -Math.cos(ang+Math.PI/2), -Math.sin(ang+Math.PI/2));
+      // 斜め4方向
+      shootVec(cx, cy,  Math.cos(ang+Math.PI/4),  Math.sin(ang+Math.PI/4));
+      shootVec(cx, cy,  Math.cos(ang+3*Math.PI/4),Math.sin(ang+3*Math.PI/4));
+      shootVec(cx, cy,  Math.cos(ang- Math.PI/4), Math.sin(ang- Math.PI/4));
+      shootVec(cx, cy,  Math.cos(ang-3*Math.PI/4),Math.sin(ang-3*Math.PI/4));
+
+      state.ph3.angle += PH3_ROTATE_STEP;
+    }
+  }
+
+  // ===== 弾ユーティリティ =====
   function pushBulletFrom(x,y,dirName){
     const d = DIRS[dirName]; if(!d) return;
     state.bullets.push({ x, y, dx:d.x, dy:d.y, moveCD: BULLET_STEP_TICKS });
+  }
+  function shootVec(x,y,dx,dy){
+    // 正規化して±1の格子ベクトルに寄せる
+    const ax=Math.abs(dx), ay=Math.abs(dy);
+    let vx=0, vy=0;
+    if (ax >= ay){ vx = dx>=0?1:-1; vy = 0; }
+    else { vx = 0; vy = dy>=0?1:-1; }
+    state.bullets.push({ x, y, dx:vx, dy:vy, moveCD: BULLET_STEP_TICKS });
   }
 
   // ===== 弾更新 =====
@@ -348,7 +394,7 @@ function boot(){
         blt.x = nx; blt.y = ny;
       }
       if (blt.x === state.player.x && blt.y === state.player.y){
-        die("ボスの弾に当たった…");
+        die("弾に当たった…");
         continue;
       }
       next.push(blt);
@@ -376,16 +422,14 @@ function boot(){
   function updateBombs(){
     for(const b of state.bombs){
       if (b.exploded) continue;
-      if (state.tick < (b.armTick || 0)) continue;   // 武装前は減らさない
+      if (state.tick < (b.armTick || 0)) continue;
       if (--b.timer <= 0){ explode(b); b.exploded = true; }
     }
   }
 
   // ===== 爆発処理 =====
   function explode(b){
-    // ★B: Phase2は炎の寿命を延長
-    const ttl = (state.phase===2 ? 36 : 24);
-
+    const ttl = (state.phase===2 ? 36 : 24); // B: Phase2は延長
     addFlame(b.x,b.y,ttl);
     for (const dirName of ["up","down","left","right"]){
       const d = DIRS[dirName];
@@ -405,7 +449,6 @@ function boot(){
     checkFlameHits();
   }
 
-  // ★B: 可変TTL
   const addFlame=(x,y,ttl=24)=>state.flames.push({x,y,timer:ttl});
   function updateFlames(){ state.flames = state.flames.filter(f=>--f.timer>0); }
 
@@ -415,7 +458,7 @@ function boot(){
     // プレイヤー
     if (hits.has(`${state.player.x},${state.player.y}`)) die("爆風に巻き込まれた…");
 
-    // ★A: ボス判定ゆるめ（Chebyshev距離<=1）＋ヒット硬直
+    // A: ボス判定ゆるめ（Chebyshev距離<=1）＋ヒット硬直
     if (state.phase===2 && state.boss){
       const b = state.boss;
       let bossHit = false;
@@ -425,9 +468,9 @@ function boot(){
       }
       if (bossHit){
         b.hp--;
-        b.stun = Math.max(b.stun||0, 18); // ≒0.3s 硬直
+        b.stun = Math.max(b.stun||0, 18);
         toast(`💥 ボスにダメージ！ (HP:${Math.max(0,b.hp)})`);
-        if (b.hp<=0){ finalClear(); }
+        if (b.hp<=0){ startPhase3(); }
       }
     }
   }
@@ -467,14 +510,20 @@ function boot(){
     state.life--; if(HUD.life) HUD.life.textContent = state.life;
     toast(`💥 ${reason}`);
     if (state.life<=0){ state.gameOver=true; toast("💀 GAME OVER"); return; }
+    // リスポーン
     if (state.phase===1){ state.player.x = 1; state.player.y = 1; }
     else if (state.phase===2){ state.player.x = 1; state.player.y = 1; }
+    else if (state.phase===3){ state.player.x = 1; state.player.y = 1; }
   }
 
   function resetGame(){
     state.bombs.length=0; state.flames.length=0; state.items.length=0;
     state.ghosts.length=0; state.bullets.length=0;
-    Object.assign(state, {phase:1, timeLeft:180, life:3, power:2, capacity:1, cal:0, cleared:false, gameOver:false, tick:0, boss:null});
+    Object.assign(state, {
+      phase:1, timeLeft:180, life:3, power:2, capacity:1, cal:0,
+      cleared:false, gameOver:false, tick:0, boss:null,
+      ph3:{ tLeft: PH3_TIME_SEC, shootCD: PH3_SHOOT_CD, angle: 0 }
+    });
     enterPhase1();
     if (HUD.time) HUD.time.textContent = state.timeLeft;
     if (HUD.life) HUD.life.textContent = state.life;
@@ -494,6 +543,7 @@ function boot(){
     updateFlames();
     updateGhosts();
     updateBoss();
+    updatePhase3();
     updateBullets();
   }
 
@@ -507,7 +557,7 @@ function boot(){
       else if (c===SOFT && state.phase===1){ ctx.fillStyle=C.soft; ctx.fillRect(px+4,py+4,TILE-8,TILE-8); }
       else if (state.phase===1 && x===state.goalPos.x && y===state.goalPos.y){ ctx.strokeStyle=C.goal; ctx.lineWidth=3; ctx.strokeRect(px+6,py+6,TILE-12,TILE-12); }
     }
-    // アイテム（Phase1のみ）
+    // アイテム（P1のみ）
     if (state.phase===1){
       for(const it of state.items){
         const px=it.x*TILE, py=it.y*TILE;
@@ -534,7 +584,7 @@ function boot(){
       const px=f.x*TILE, py=f.y*TILE, pad=6+(f.timer%4);
       ctx.fillStyle=C.flame; ctx.fillRect(px+pad,py+pad,TILE-pad*2,TILE-pad*2);
     }
-    // ゴースト（Phase1）
+    // ゴースト（P1）
     if (state.phase===1){
       for(const g of state.ghosts){
         const px=g.x*TILE, py=g.y*TILE;
@@ -545,7 +595,7 @@ function boot(){
         ctx.globalAlpha = 1;
       }
     }
-    // ボス（Phase2）
+    // ボス（P2）
     if (state.phase===2 && state.boss){
       const b=state.boss, px=b.x*TILE, py=b.y*TILE;
       ctx.fillStyle=C.boss;
@@ -554,6 +604,14 @@ function boot(){
       ctx.fillStyle="#000"; ctx.fillRect(px+6, py+6, TILE-12, 6);
       ctx.fillStyle="#ffea00"; ctx.fillRect(px+6, py+6, (TILE-12)* (b.hp/BOSS_HP_MAX), 6);
     }
+
+    // P3 残り秒数表示
+    if (state.phase===3){
+      ctx.fillStyle="rgba(0,0,0,.35)"; ctx.fillRect(0,0,canvas.width,34);
+      ctx.fillStyle="#fff"; ctx.font="bold 20px system-ui"; ctx.textAlign="center"; ctx.textBaseline="middle";
+      ctx.fillText(`最終耐久：${state.ph3.tLeft}s`, canvas.width/2, 17);
+    }
+
     // プレイヤー
     const p=state.player, ppx=p.x*TILE, ppy=p.y*TILE;
     ctx.fillStyle=C.player; ctx.fillRect(ppx+5,ppy+5,TILE-10,TILE-10);
@@ -571,8 +629,8 @@ function boot(){
   function loop(ts){
     const dt = (ts - last) / 16.67; last = ts;
     update(dt); draw();
-    window.__hard70RafId = requestAnimationFrame(loop); // ハンドル保持
+    window.__hard70RafId = requestAnimationFrame(loop);
   }
-  if (window.__hard70RafId) cancelAnimationFrame(window.__hard70RafId); // 既存を止める
+  if (window.__hard70RafId) cancelAnimationFrame(window.__hard70RafId);
   window.__hard70RafId = requestAnimationFrame(loop);
 }
