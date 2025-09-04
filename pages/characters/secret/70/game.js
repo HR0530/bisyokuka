@@ -181,7 +181,20 @@ function boot(){
       if (nx===state.goalPos.x && ny===state.goalPos.y){
         state.cleared=true; toast("🎉 クリア！");
       }
+      // 例：ゴール到達時
+state.cleared = true;
+toast("🎉 クリア！");
+
+// ★ 図鑑解放：番号(no)と図鑑で使うファイル名(file)を渡す
+try {
+  // 例：No.70 を "secret_70.png" として登録する場合
+  window.unlockSecret?.(70, "secret_70.png");
+} catch (e) {
+  console.warn("unlockSecret failed:", e);
+}
+
     }
+    
     // ゴースト接触
     if (state.ghosts.some(g=>g.x===state.player.x && g.y===state.player.y)){
       die("ゴーストに触れた…");
