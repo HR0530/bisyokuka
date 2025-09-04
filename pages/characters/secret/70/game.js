@@ -1,8 +1,8 @@
-/* 美食家さん｜激むず70（ボンバーマン型・3フェーズ：崩落P3）
+/* 美食家さん｜激むず70（ボンバーマン型・3フェーズ：色指定崩落P3）
  * P1: ランダムマップ → ゴールで P2
- * P2: ボス戦（HP=3・弾）… A:ゆる判定＋硬直 / B:炎寿命延長 / D:射撃後硬直
- * P3: 崩落（15s耐久）… ランダムに床がヒビ→崩落（穴）。穴に触れると失敗
- * CLEAR: unlockSecret(70,"secret_70.png")
+ * P2: ボス戦（HP=3・弾）… 起爆なし／炎寿命延長・ゆる判定
+ * P3: 色指定崩落：指定色タイル以外が落ちるラウンド×N → 最後は1マスのGOLDへ到達でクリア
+ * CLEAR: unlockSecret(70,"/pages/characters/secret/70/secret_70.png")
  */
 
 window.addEventListener("load", () => {
@@ -33,25 +33,35 @@ function boot(){
   const safeBind=(el,ev,fn,opts)=>{ if(!el){console.warn("[bind-skip]",ev);return;} el.addEventListener(ev,fn,opts); };
 
   // ===== 定数 =====
+  // 👻
   const GHOST_STEP_TICKS = 50;
   const GHOST_TURN_CHANCE = 0.20;
 
+  // ボス
   const BOSS_STEP_TICKS  = 70;
   const BOSS_HP_MAX      = 3;
 
+  // ボス弾
   const BULLET_STEP_TICKS   = 5;
   const BOSS_SHOOT_COOLDOWN = 48;
   const BOSS_PATTERN_ALT    = true;
 
   const BOMB_ARM_TICKS = 8; // 誤爆防止
 
-  // Phase3（崩落）
-  const PH3_TIME_SEC     = 15;  // 生存秒
-  const PH3_SPAWN_TICKS  = 28;  // 新規ヒビの発生間隔（tick）
-  const PH3_CRACK_TTL    = 36;  // ヒビ→崩落までのtick（≈0.6s）
-  const PH3_SAFE_RADIUS  = 1;   // プレイヤー近傍はヒビ対象外（Chebyshev距離）
-  const PH3_BATCH_MIN    = 3;   // 1バッチの最小ヒビ数
-  const PH3_BATCH_MAX    = 7;   // 1バッチの最大ヒビ数（時間経過で上限寄りに）
+  // === Phase3：色指定崩落 ===
+  const PH3_COLORS = [
+    { key:"RED",    fill:"#ef4444" },
+    { key:"BLUE",   fill:"#3b82f6" },
+    { key:"GREEN",  fill:"#10b981" },
+    { key:"PURPLE", fill:"#a855f7" },
+  ];
+  const PH3_GOLD = { key:"GOLD", fill:"#fbbf24" };
+
+  const PH3_ROUNDS            = 3;   // 通常色ラウンド数
+  const PH3_ANNOUNCE_TICKS    = 120; // 色提示 → 移動猶予（~2s）
+  const PH3_COLLAPSE_HOLD     = 90;  // 落下後の小休止（~1.5s）
+  const PH3_GOLD_ANNOUNCE     = 120; // GOLD 告知
+  const PH3_GOLD_COUNTDOWN    = 210; // GOLD に移動する猶予（~3.5s）
 
   const COLS=15, ROWS=13, TILE=40;
   canvas.width = COLS*TILE; canvas.height = ROWS*TILE;
@@ -62,19 +72,19 @@ function boot(){
   const randDir = ()=>dirs[(Math.random()*4)|0];
 
   // セル種別
-  const HARD = 1, SOFT = 2, P_SPAWN = 3, GOAL = 5, FLOOR = 0, VOID = 9; // VOID=穴
+  const HARD = 1, SOFT = 2, P_SPAWN = 3, GOAL = 5, FLOOR = 0, VOID = 9;
 
-  // 色
+  // 色（描画）
   const C = {
-    floor:"#1a2234", hard:"#3c4766", soft:"#6e7aa0", goal:"#a48bff",
+    floor:"#0f1a2b", hard:"#3c4766", soft:"#6e7aa0", goal:"#a48bff",
     bomb:"#ffd166", flame:"#ff6b6b", item:"#8dd3ff",
     player:"#7cf29a", ghost:"#b784ff", boss:"#ff5bb0", bullet:"#ffe06b",
-    crack:"#ef4444", hole:"#05070c"
+    hole:"#05070c"
   };
 
   // ===== 状態 =====
   const state = {
-    phase: 1, // 1=通常, 2=ボス, 3=崩落, 4=完全クリア
+    phase: 1, // 1=通常, 2=ボス, 3=色崩落, 4=完全クリア
     grid: null,
     timeLeft: 180, life: 3, power: 2, capacity: 1, cal: 0,
     player: { x:1, y:1, dir:"right" },
@@ -82,8 +92,17 @@ function boot(){
     ghosts: [],    // {x,y,moveCD,dir}
     boss:   null,  // {x,y,moveCD,dir,hp,shootCD,shootAlt,stun}
     bullets: [],   // {x,y,dx,dy,moveCD}
-    // P3 崩落管理
-    ph3: { tLeft: PH3_TIME_SEC, spawnCD: PH3_SPAWN_TICKS, cracks: [] }, // cracks: {x,y,ttl}
+
+    // Phase3（色指定崩落）
+    ph3: {
+      round: 0,
+      mode: "idle",   // 'announce'|'collapse'|'wait'|'gold_announce'|'gold_countdown'|'gold_active'
+      cd: 0,
+      safeIdx: 0,     // PH3_COLORS index
+      colorMap: null, // ROWS x COLS（-1=対象外／0..n-1色）
+      goldPos: null
+    },
+
     cleared:false, gameOver:false,
     tick:0,
     goalPos: {x: COLS-2, y: ROWS-2}
@@ -95,7 +114,6 @@ function boot(){
   const cell=(x,y)=>state.grid[y]?.[x] ?? HARD;
   const setCell=(x,y,v)=>{ if(state.grid[y] && typeof state.grid[y][x]!=="undefined") state.grid[y][x]=v; };
   const maybe=(p)=>Math.random()<p;
-  const cheb=(ax,ay,bx,by)=>Math.max(Math.abs(ax-bx),Math.abs(ay-by));
 
   // ===== マップ生成 =====
   function generateStageMap(){
@@ -142,8 +160,8 @@ function boot(){
     return g;
   }
 
-  function generateCollapseArena(){
-    // 柱少なめの広めアリーナ
+  function generateColorArena(){
+    // 柱は少なめで動きやすく
     const g = Array.from({length:ROWS}, ()=>Array(COLS).fill(FLOOR));
     for(let x=0;x<COLS;x++){ g[0][x]=HARD; g[ROWS-1][x]=HARD; }
     for(let y=0;y<ROWS;y++){ g[y][0]=HARD; g[y][COLS-1]=HARD; }
@@ -224,20 +242,27 @@ function boot(){
 
   function startPhase3(){
     state.phase = 3;
-    state.grid = generateCollapseArena();
+    state.grid = generateColorArena();
     state.bombs.length=0; state.flames.length=0; state.items.length=0;
     state.ghosts.length=0; state.bullets.length=0;
     state.boss = null;
     state.player.x = 1; state.player.y = 1;
-    state.ph3 = { tLeft: PH3_TIME_SEC, spawnCD: PH3_SPAWN_TICKS, cracks: [] };
-    toast("⚠️ 最終ステージ：崩落を耐えろ（15s）！");
+
+    // カラーマップ生成
+    ph3RepaintColors();
+    state.ph3.round = 1;
+    state.ph3.mode = "announce";
+    state.ph3.cd   = PH3_ANNOUNCE_TICKS;
+    toast(`🎨 指定色に移動せよ：${PH3_COLORS[state.ph3.safeIdx].key}`);
   }
 
   function finalClear(){
     state.cleared = true;
     state.phase = 4;
     toast("🎉 CLEAR! コンプリート！");
-    try { window.unlockSecret?.(70, "secret_70.png"); } catch (e) { console.warn("unlockSecret failed:", e); }
+    try {
+      window.unlockSecret?.(70, "/pages/characters/secret/70/secret_70.png");
+    } catch (e) { console.warn("unlockSecret failed:", e); }
   }
 
   // ===== プレイヤー移動 =====
@@ -257,13 +282,17 @@ function boot(){
       }
     }
 
-    // P1 接触
     if (state.phase===1 && state.ghosts.some(g=>g.x===state.player.x && g.y===state.player.y)) die("ゴーストに触れた…");
-    // P2 接触
     if (state.phase===2 && state.boss && state.boss.x===state.player.x && state.boss.y===state.player.y) die("ボスに触れた…");
 
-    // P3 穴チェック（移動直後）
-    if (state.phase===3 && cell(state.player.x, state.player.y)===VOID) die("穴に落ちた…");
+    // P3：穴判定／GOLD 到達判定
+    if (state.phase===3){
+      if (cell(state.player.x, state.player.y)===VOID) die("穴に落ちた…");
+      if (state.ph3.mode==="gold_active" && state.ph3.goldPos){
+        const g = state.ph3.goldPos;
+        if (state.player.x===g.x && state.player.y===g.y) finalClear();
+      }
+    }
   }
 
   // ===== ゴースト（Phase1のみ）=====
@@ -326,72 +355,123 @@ function boot(){
     toast("✝ ボスが十字弾を放った！");
   }
 
-  // ===== 崩落（Phase3）=====
-  function updatePhase3Collapse(){
-    if (state.phase!==3) return;
-
-    // 残り時間カウント（1秒単位）
-    if (state.tick % 60 === 0){
-      state.ph3.tLeft--;
-      if (state.ph3.tLeft <= 0){ finalClear(); return; }
+  // ===== Phase3：色指定崩落ロジック =====
+  function ph3RepaintColors(){
+    // フロアに色を割当て（-1: 対象外）
+    state.ph3.colorMap = Array.from({length:ROWS}, ()=>Array(COLS).fill(-1));
+    // 全ての床をFLOORへ（VOIDを戻す）
+    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+      if (state.grid[y][x]!==HARD) setCell(x,y,FLOOR);
     }
-
-    // 既存ヒビの寿命→穴化
-    const nextCracks = [];
-    for (const c of state.ph3.cracks){
-      c.ttl--;
-      if (c.ttl <= 0){
-        // 穴に変化
-        if (cell(c.x,c.y)!==HARD) setCell(c.x,c.y,VOID);
-      }else{
-        nextCracks.push(c);
-      }
-    }
-    state.ph3.cracks = nextCracks;
-
-    // 穴の上に立っていたらアウト（足元が崩れた）
-    if (cell(state.player.x, state.player.y)===VOID) { die("床が崩れた…"); return; }
-
-    // 新規ヒビの発生
-    if (--state.ph3.spawnCD <= 0){
-      // 経過に応じて数を増やす（終盤ほど多い）
-      const prog = 1 - (state.ph3.tLeft/PH3_TIME_SEC); // 0→1
-      const bmin = PH3_BATCH_MIN;
-      const bmax = PH3_BATCH_MAX;
-      const batch = Math.floor(bmin + (bmax-bmin)*prog + 0.5);
-
-      spawnCracks(batch);
-      state.ph3.spawnCD = PH3_SPAWN_TICKS;
-    }
-  }
-
-  function spawnCracks(n){
-    // 対象候補：床 or ソフト（P3ではソフトは残してあるが、impassableじゃないのでOK）
-    // ただし HARD と VOID は除外。既にヒビのセルも除外。プレイヤー周囲は除外。
-    const px = state.player.x, py = state.player.y;
-    const isCrackAt = (x,y)=>state.ph3.cracks.some(c=>c.x===x && c.y===y);
-    const candidates = [];
+    // ランダムカラー
+    const counts = new Array(PH3_COLORS.length).fill(0);
     for(let y=1;y<ROWS-1;y++){
       for(let x=1;x<COLS-1;x++){
-        const c = cell(x,y);
-        if (c===HARD || c===VOID) continue;
-        if (cheb(x,y,px,py) <= PH3_SAFE_RADIUS) continue;
-        if (isCrackAt(x,y)) continue;
-        candidates.push({x,y});
+        if (cell(x,y)!==FLOOR) continue;
+        const idx = (Math.random()*PH3_COLORS.length)|0;
+        state.ph3.colorMap[y][x] = idx;
+        counts[idx]++;
       }
     }
-    // シャッフルして先頭n件
-    for (let i=candidates.length-1;i>0;i--){
-      const j=(Math.random()*(i+1))|0; const t=candidates[i]; candidates[i]=candidates[j]; candidates[j]=t;
-    }
-    const pick = candidates.slice(0,n);
-    for (const p of pick){
-      state.ph3.cracks.push({x:p.x, y:p.y, ttl: PH3_CRACK_TTL});
-    }
-    if (pick.length>0) toast("⚡ 床にヒビが入った！");
+    // 安全色選定（必ず1枚以上あるように）
+    let idxs = counts.map((c,i)=>({c,i})).filter(o=>o.c>0).map(o=>o.i);
+    if (idxs.length===0) idxs=[0];
+    state.ph3.safeIdx = idxs[(Math.random()*idxs.length)|0];
   }
 
-  // ===== 弾ユーティリティ／更新 =====
+  function updatePhase3ColorGame(){
+    if (state.phase!==3) return;
+
+    // タイマー処理
+    if (state.ph3.cd>0 && state.tick%1===0) state.ph3.cd--;
+
+    const mode = state.ph3.mode;
+
+    if (mode==="announce"){
+      if (state.ph3.cd<=0){
+        // 指定色以外を崩落
+        collapseNonSafe();
+        // 乗っている足場が消えた？
+        if (cell(state.player.x, state.player.y)===VOID) { die("床が消えた…"); return; }
+        state.ph3.mode = "wait";
+        state.ph3.cd = PH3_COLLAPSE_HOLD;
+      }
+    }
+    else if (mode==="wait"){
+      if (state.ph3.cd<=0){
+        if (state.ph3.round < PH3_ROUNDS){
+          state.ph3.round++;
+          ph3RepaintColors();
+          state.ph3.mode="announce";
+          state.ph3.cd = PH3_ANNOUNCE_TICKS;
+          toast(`🎨 指定色に移動：${PH3_COLORS[state.ph3.safeIdx].key}`);
+        }else{
+          // GOLD フェーズへ
+          startGoldPhase();
+        }
+      }
+    }
+    else if (mode==="gold_announce"){
+      if (state.ph3.cd<=0){
+        state.ph3.mode = "gold_countdown";
+        state.ph3.cd   = PH3_GOLD_COUNTDOWN;
+        toast("⭐ 間もなく他の床が崩落！GOLDへ！");
+      }
+    }
+    else if (mode==="gold_countdown"){
+      if (state.ph3.cd<=0){
+        // GOLD 以外を崩落
+        collapseExceptGold();
+        if (state.player.x===state.ph3.goldPos.x && state.player.y===state.ph3.goldPos.y){
+          finalClear(); return;
+        }
+        if (cell(state.player.x, state.player.y)===VOID) { die("床が消えた…"); return; }
+        state.ph3.mode = "gold_active"; // GOLD 1マスのみ残る
+      }
+    }
+    else if (mode==="gold_active"){
+      // GOLD に到達すれば勝利
+      const g = state.ph3.goldPos;
+      if (g && state.player.x===g.x && state.player.y===g.y){ finalClear(); return; }
+    }
+  }
+
+  function collapseNonSafe(){
+    for(let y=1;y<ROWS-1;y++){
+      for(let x=1;x<COLS-1;x++){
+        if (cell(x,y)===FLOOR){
+          const idx = state.ph3.colorMap?.[y]?.[x];
+          if (idx!==state.ph3.safeIdx) setCell(x,y,VOID);
+        }
+      }
+    }
+  }
+  function startGoldPhase(){
+    // 盤面フルリセット→ランダムにGOLD 1マス
+    state.ph3.mode="gold_announce";
+    state.ph3.cd  = PH3_GOLD_ANNOUNCE;
+    // 盤面を床へ戻す
+    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){ if (state.grid[y][x]!==HARD) setCell(x,y,FLOOR); }
+    state.ph3.colorMap = Array.from({length:ROWS}, ()=>Array(COLS).fill(-1));
+    // GOLD 位置をランダムな床から選択（スタート/外周は除外）
+    const cand=[];
+    for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
+      if (cell(x,y)===FLOOR) cand.push({x,y});
+    }
+    const pick = cand[(Math.random()*cand.length)|0] || {x:(COLS/2)|0,y:(ROWS/2)|0};
+    state.ph3.goldPos = pick;
+    toast("⭐ GOLD タイルが指定された！");
+  }
+  function collapseExceptGold(){
+    const g = state.ph3.goldPos;
+    for(let y=1;y<ROWS-1;y++){
+      for(let x=1;x<COLS-1;x++){
+        if (cell(x,y)===FLOOR && !(g && g.x===x && g.y===y)) setCell(x,y,VOID);
+      }
+    }
+  }
+
+  // ===== 弾 =====
   function pushBulletFrom(x,y,dirName){
     const d = DIRS[dirName]; if(!d) return;
     state.bullets.push({ x, y, dx:d.x, dy:d.y, moveCD: BULLET_STEP_TICKS });
@@ -418,6 +498,7 @@ function boot(){
   // ===== 爆弾 =====
   function placeBomb(){
     if(state.gameOver||state.cleared) return;
+    if (state.phase===3){ toast("今は使えない…"); return; } // P3は使用不可
     const active = state.bombs.filter(b=>!b.exploded).length;
     if (active >= state.capacity){ toast("💣 これ以上置けない！"); return; }
     const {x,y} = state.player;
@@ -436,7 +517,6 @@ function boot(){
     }
   }
 
-  // ===== 爆発処理 =====
   function explode(b){
     const ttl = (state.phase===2 ? 36 : 24); // P2は炎寿命延長
     addFlame(b.x,b.y,ttl);
@@ -461,7 +541,6 @@ function boot(){
   const addFlame=(x,y,ttl=24)=>state.flames.push({x,y,timer:ttl});
   function updateFlames(){ state.flames = state.flames.filter(f=>--f.timer>0); }
 
-  // ===== 爆風当たり判定 =====
   function checkFlameHits(){
     const hits = new Set(state.flames.map(f=>`${f.x},${f.y}`));
     // プレイヤー
@@ -516,7 +595,6 @@ function boot(){
     state.life--; if(HUD.life) HUD.life.textContent = state.life;
     toast(`💥 ${reason}`);
     if (state.life<=0){ state.gameOver=true; toast("💀 GAME OVER"); return; }
-    // リスポーン
     state.player.x = 1; state.player.y = 1;
   }
 
@@ -526,7 +604,7 @@ function boot(){
     Object.assign(state, {
       phase:1, timeLeft:180, life:3, power:2, capacity:1, cal:0,
       cleared:false, gameOver:false, tick:0, boss:null,
-      ph3:{ tLeft: PH3_TIME_SEC, spawnCD: PH3_SPAWN_TICKS, cracks: [] }
+      ph3:{ round:0, mode:"idle", cd:0, safeIdx:0, colorMap:null, goldPos:null }
     });
     enterPhase1();
     if (HUD.time) HUD.time.textContent = state.timeLeft;
@@ -547,37 +625,48 @@ function boot(){
     updateFlames();
     updateGhosts();
     updateBoss();
-    updatePhase3Collapse();
+    updatePhase3ColorGame();
     updateBullets();
   }
 
   function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    // 地形
+
+    // 地形（P3は色タイル表示）
     for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
       const c=cell(x,y), px=x*TILE, py=y*TILE;
-      // 床ベース
+      // 背景床
       ctx.fillStyle=C.floor; ctx.fillRect(px,py,TILE,TILE);
-      if (c===HARD){ ctx.fillStyle=C.hard; ctx.fillRect(px+2,py+2,TILE-4,TILE-4); }
-      else if (c===SOFT && state.phase===1){ ctx.fillStyle=C.soft; ctx.fillRect(px+4,py+4,TILE-8,TILE-8); }
-      else if (state.phase===1 && x===state.goalPos.x && y===state.goalPos.y){ ctx.strokeStyle=C.goal; ctx.lineWidth=3; ctx.strokeRect(px+6,py+6,TILE-12,TILE-12); }
-      else if (c===VOID){ ctx.fillStyle=C.hole; ctx.fillRect(px+4,py+4,TILE-8,TILE-8); }
-    }
-    // P3: ヒビ可視化
-    if (state.phase===3){
-      ctx.strokeStyle=C.crack; ctx.lineWidth=3;
-      for (const c of state.ph3.cracks){
-        const px=c.x*TILE, py=c.y*TILE;
-        // ヒビ強度（残りTTLで太さを少し変える）
-        const w = 2 + Math.max(0, (PH3_CRACK_TTL - c.ttl)/PH3_CRACK_TTL)*1.5;
-        ctx.lineWidth = w;
-        ctx.beginPath(); ctx.moveTo(px+6, py+6); ctx.lineTo(px+TILE-6, py+TILE-6); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(px+TILE-10, py+8); ctx.lineTo(px+8, py+TILE-10); ctx.stroke();
+
+      if (c===HARD){
+        ctx.fillStyle=C.hard; ctx.fillRect(px+2,py+2,TILE-4,TILE-4);
+      } else if (state.phase===1 && c===SOFT){
+        ctx.fillStyle=C.soft; ctx.fillRect(px+4,py+4,TILE-8,TILE-8);
+      } else if (state.phase===1 && x===state.goalPos.x && y===state.goalPos.y){
+        ctx.strokeStyle=C.goal; ctx.lineWidth=3; ctx.strokeRect(px+6,py+6,TILE-12,TILE-12);
+      } else if (state.phase===3){
+        if (c===VOID){
+          ctx.fillStyle=C.hole; ctx.fillRect(px+4,py+4,TILE-8,TILE-8);
+        }else if (c===FLOOR){
+          const idx = state.ph3.colorMap?.[y]?.[x];
+          if (idx>=0){
+            ctx.fillStyle = PH3_COLORS[idx].fill;
+            ctx.fillRect(px+4,py+4,TILE-8,TILE-8);
+          }else{
+            // GOLDフェーズの無色床
+            ctx.fillStyle = "#334155"; ctx.fillRect(px+4,py+4,TILE-8,TILE-8);
+          }
+        }
       }
-      // 残り秒表示
-      ctx.fillStyle="rgba(0,0,0,.35)"; ctx.fillRect(0,0,canvas.width,34);
-      ctx.fillStyle="#fff"; ctx.font="bold 20px system-ui"; ctx.textAlign="center"; ctx.textBaseline="middle";
-      ctx.fillText(`崩落耐久：${state.ph3.tLeft}s`, canvas.width/2, 17);
+    }
+
+    // GOLDタイル表示
+    if (state.phase===3 && state.ph3.goldPos){
+      const g = state.ph3.goldPos, px=g.x*TILE, py=g.y*TILE;
+      ctx.strokeStyle = PH3_GOLD.fill; ctx.lineWidth=4;
+      ctx.strokeRect(px+6,py+6,TILE-12,TILE-12);
+      ctx.fillStyle = "rgba(251,191,36,0.2)";
+      ctx.fillRect(px+8,py+8,TILE-16,TILE-16);
     }
 
     // アイテム（P1のみ）
@@ -589,6 +678,7 @@ function boot(){
         ctx.fillText({6:"P",7:"C",8:"S",9:"K"}[it.type], px+TILE/2, py+TILE/2+1);
       }
     }
+
     // 爆弾
     for(const b of state.bombs){
       if (b.exploded) continue;
@@ -596,17 +686,20 @@ function boot(){
       ctx.fillStyle=C.bomb; ctx.beginPath(); ctx.arc(px+TILE/2,py+TILE/2,TILE*0.3,0,Math.PI*2); ctx.fill();
       ctx.strokeStyle="#333"; ctx.beginPath(); ctx.moveTo(px+TILE/2,py+TILE/2); ctx.lineTo(px+TILE*0.75,py+TILE*0.25); ctx.stroke();
     }
+
     // 弾
     for(const blt of state.bullets){
       const px=blt.x*TILE, py=blt.y*TILE;
       ctx.fillStyle=C.bullet;
       ctx.fillRect(px+14, py+14, TILE-28, TILE-28);
     }
+
     // 炎
     for(const f of state.flames){
       const px=f.x*TILE, py=f.y*TILE, pad=6+(f.timer%4);
       ctx.fillStyle=C.flame; ctx.fillRect(px+pad,py+pad,TILE-pad*2,TILE-pad*2);
     }
+
     // ゴースト（P1）
     if (state.phase===1){
       for(const g of state.ghosts){
@@ -618,6 +711,7 @@ function boot(){
         ctx.globalAlpha = 1;
       }
     }
+
     // ボス（P2）
     if (state.phase===2 && state.boss){
       const b=state.boss, px=b.x*TILE, py=b.y*TILE;
@@ -632,6 +726,20 @@ function boot(){
     const p=state.player, ppx=p.x*TILE, ppy=p.y*TILE;
     ctx.fillStyle=C.player; ctx.fillRect(ppx+5,ppy+5,TILE-10,TILE-10);
     ctx.fillStyle="#0d0f13"; ctx.fillRect(ppx+12,ppy+12,6,6); ctx.fillRect(ppx+TILE-18,ppy+12,6,6);
+
+    // P3 オーバーレイ案内
+    if (state.phase===3){
+      ctx.fillStyle="rgba(0,0,0,.35)"; ctx.fillRect(0,0,canvas.width,34);
+      ctx.fillStyle="#fff"; ctx.font="bold 18px system-ui"; ctx.textAlign="center"; ctx.textBaseline="middle";
+      const cd = Math.max(0, Math.ceil(state.ph3.cd/60));
+      let msg="";
+      if (state.ph3.mode==="announce")       msg=`指定色：${PH3_COLORS[state.ph3.safeIdx].key} まで ${cd}s`;
+      else if (state.ph3.mode==="wait")       msg=`ラウンド ${state.ph3.round}/${PH3_ROUNDS}`;
+      else if (state.ph3.mode==="gold_announce")  msg=`⭐ GOLD 指定まで ${cd}s`;
+      else if (state.ph3.mode==="gold_countdown") msg=`⭐ GOLD に移動せよ… 残り ${cd}s`;
+      else if (state.ph3.mode==="gold_active")    msg=`⭐ GOLD の上に乗れ！`;
+      ctx.fillText(msg, canvas.width/2, 17);
+    }
 
     if(state.cleared||state.gameOver){
       ctx.fillStyle="rgba(0,0,0,.45)"; ctx.fillRect(0,0,canvas.width,canvas.height);
