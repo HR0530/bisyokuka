@@ -12,6 +12,12 @@ window.addEventListener("load", () => {
 });
 
 function boot(){
+  if (window.__hard70Booted) { console.warn("hard70: already booted"); return; }
+  window.__hard70Booted = true;
+  // …既存のboot処理…
+}
+
+function boot(){
   // ===== DOM =====
   const canvas = document.getElementById("game");
   const ctx = canvas?.getContext("2d");
@@ -41,6 +47,8 @@ function boot(){
   const BULLET_STEP_TICKS   = 5;   // 弾の歩調（小さいほど速い）
   const BOSS_SHOOT_COOLDOWN = 48;  // 発射間隔 ≒0.8s（60fps換算）
   const BOSS_PATTERN_ALT    = true;// 交互パターンON: 狙い撃ち→十字→狙い撃ち→…
+
+  const BOMB_ARM_TICKS = 8; // ≒0.13秒。数値↑で“置いた直後の誤爆”をさらに防止
 
   const COLS=15, ROWS=13, TILE=40;
   canvas.width = COLS*TILE; canvas.height = ROWS*TILE;
@@ -355,26 +363,38 @@ function boot(){
     if (active >= state.capacity){ toast("💣 これ以上置けない！"); return; }
     const {x,y} = state.player;
     if (state.bombs.some(b=>!b.exploded && b.x===x && b.y===y)){ toast("そこには置けない！"); return; }
-    state.bombs.push({x,y,timer:120,range:state.power,exploded:false,owner:"player"});
+   state.bombs.push({
+  x, y,
+  timer: 120,
+  range: state.power,
+  exploded: false,
+  owner: "player",
+  armTick: state.tick + BOMB_ARM_TICKS   // ★ 追加
+});
+
   }
 
-  function updateBombs(){
-    for(const b of state.bombs){
-      if (b.exploded) continue;
-      if (--b.timer<=0){ explode(b); b.exploded=true; }
-    }
+ function updateBombs(){
+  for(const b of state.bombs){
+    if (b.exploded) continue;
+    if (state.tick < (b.armTick || 0)) continue;   // ★ 武装前は減らさない
+    if (--b.timer <= 0){ explode(b); b.exploded = true; }
   }
+}
+
 
   // ★ 追加：最も古い未爆発の爆弾を即起爆
 function detonateOldest(){
   if (state.gameOver || state.cleared) return;
-  const idx = state.bombs.findIndex(b => !b.exploded);
-  if (idx >= 0) {
-    state.bombs[idx].timer = 0;   // 次のupdateで即爆発
+  const b = state.bombs.find(bb => !bb.exploded);
+  if (b) {
+    b.armTick = state.tick; // ★ 即武装
+    b.timer = 0;            // 次のupdateで爆発（または即時にしたいなら explode(b); b.exploded=true;）
   } else {
     toast("💥 起爆できる爆弾がないよ");
   }
 }
+
 
   function explode(b){
     addFlame(b.x,b.y);
