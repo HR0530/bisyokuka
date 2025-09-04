@@ -1,8 +1,9 @@
 // pages/characters/secret/_unlock.js
-// 図鑑解放ヘルパ（#65〜）。相対/絶対パスの両対応・旧データ互換。
-// 使い方例：unlockSecret(70, "secret_70.png")
+// 図鑑解放ヘルパ（#65〜）。相対/絶対パスの両対応・旧データ互換・#70は既定で固定パス。
+// 使い方例：unlockSecret(70)                      // ← #70は既定パスに自動保存
+//           unlockSecret(70, "secret_70.png")     // ← ファイル名だけでもOK
 //           unlockSecret(70, "/pages/characters/secret/70/secret_70.png")
-// HTML側でベースを指定（任意）：window.DEX_IMG_BASE = './' など
+// HTML側でベース（任意）：window.DEX_IMG_BASE = './' など
 (function(){
   'use strict';
 
@@ -10,8 +11,12 @@
   const BASE_ID  = 64; // 0始まり: #65 → id=64
   const START_NO = 65; // 図鑑Noの起点
 
+  // === #70 だけデフォルトを固定 ===
+  const DEFAULT_SECRET_PATHS = {
+    70: "/pages/characters/secret/70/secret_70.png"
+  };
+
   // ===== 画像ベースパス =====
-  // 例: window.DEX_IMG_BASE = '/pages/characters/project-root/'
   let IMG_BASE = (window.DEX_IMG_BASE || '/pages/characters/project-root/');
   const normBase = s => (s||'').replace(/\\/g,'/').replace(/\/+$/,'') + '/';
   IMG_BASE = normBase(IMG_BASE);
@@ -41,7 +46,6 @@
       const str = JSON.stringify(dex || {});
       localStorage.setItem(DEX_KEY, str);
       try{
-        // 図鑑・ゲームへ変更通知
         window.dispatchEvent(new StorageEvent('storage', { key: DEX_KEY, newValue: str }));
       }catch(_){}
     }catch(_){}
@@ -66,22 +70,26 @@
 
   /**
    * 解放登録
-   * @param {number} no  図鑑No（65〜）
-   * @param {string} file ファイル名 or 絶対パス（例: "secret_70.png" / "/pages/.../secret_70.png"）
+   * @param {number} no   図鑑No（65〜）
+   * @param {string=} file 省略可。ファイル名 or 絶対パス
+   *                       省略時は DEFAULT_SECRET_PATHS[no] を使用（#70固定）
    */
   window.unlockSecret = function(no, file){
-    if (typeof no !== 'number' || !file) return;
-    file = toStoredName(file); // ← 正規化
+    if (typeof no !== 'number') return;
+    if (!file) file = DEFAULT_SECRET_PATHS[no] || ""; // ★ #70 はここで固定パスを採用
+    if (!file) return; // デフォルトも無ければ何もしない
+
+    file = toStoredName(file); // 正規化
     const id = BASE_ID + (no - START_NO);
     const dex = load();
 
     // 1) 解放フラグ（idベース）
     dex.unlocked = Object.assign({}, dex.unlocked, { [id]: true });
 
-    // 2) 新フォーマット: noキーでファイル名
+    // 2) 新フォーマット: noキーで保存
     dex.secrets  = Object.assign({}, dex.secrets,  { [no]: file });
 
-    // 3) 旧互換: idキーでファイル名
+    // 3) 旧互換: idキーでも保存
     const sf = Object.assign({}, dex.secretFiles || {});
     sf[String(id)] = file;
     dex.secretFiles = sf;
@@ -93,7 +101,7 @@
   };
 
   /**
-   * 図鑑Noから実URLを取得（新→旧の順で解決）
+   * 図鑑Noから実URLを取得（新→旧→デフォルト→fallback の順で解決）
    */
   window.getSecretFile = function(no, fallback){
     const dex = load();
@@ -102,6 +110,7 @@
       const id = BASE_ID + (no - START_NO);
       fname = dex.secretFiles && dex.secretFiles[String(id)];
     }
+    if (!fname) fname = DEFAULT_SECRET_PATHS[no] || null; // ★ #70 はここでも固定
     fname = fname || fallback || '';
     return toUrl(fname);
   };
@@ -126,6 +135,10 @@
     const id = Number(no);
     if (Number.isFinite(id) && dex.secretFiles && dex.secretFiles[String(id)]){
       dex.selected = dex.secretFiles[String(id)]; save(dex); return true;
+    }
+    // デフォルトがある番号はそれを選択にする（#70対策）
+    if (DEFAULT_SECRET_PATHS[no]){
+      dex.selected = toStoredName(DEFAULT_SECRET_PATHS[no]); save(dex); return true;
     }
     return false;
   };
