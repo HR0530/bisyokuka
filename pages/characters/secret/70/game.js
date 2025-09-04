@@ -34,6 +34,7 @@ function boot(){
   // ===== 定数 =====
   // ゴーストの歩幅：60fps想定で 12tick ≒ 0.20秒/歩
   const GHOST_STEP_TICKS = 100; // 遅くしたいほど数値を大きく（例: 14〜16）
+  const GHOST_TURN_CHANCE = 0.20; 
 
   const COLS=15, ROWS=13, TILE=40;
   canvas.width = COLS*TILE; canvas.height = ROWS*TILE;
@@ -188,30 +189,54 @@ function boot(){
   }
 
   // ===== ゴースト（爆弾無効・追尾）=====
-  function updateGhosts(){
-  // GHOST_STEP_TICKS ごとに1マスだけ動く
-  for(const g of state.ghosts){
+  // --- ランダム徘徊AI（追尾しない） ---
+function updateGhosts(){
+  for (const g of state.ghosts){
+    // 1マスずつ、GHOST_STEP_TICKS ごとに動く
     if (--g.moveCD > 0) continue;
     g.moveCD = GHOST_STEP_TICKS;
 
-    const step = nextStepTowards({x:g.x,y:g.y}, state.player);
-    if (step){
-      g.x = step.x; g.y = step.y;
-    }else{
-      // 経路が取れないときは硬壁以外へランダム1歩（爆弾は無視してOK仕様）
-      const dirs = Object.values(DIRS).sort(()=>Math.random()-0.5);
-      for (const d of dirs){
-        const nx = clamp(g.x + d.x, 0, COLS-1);
-        const ny = clamp(g.y + d.y, 0, ROWS-1);
-        if (cell(nx,ny)!==HARD){ g.x=nx; g.y=ny; break; }
+    // たまに向きを変える
+    if (!g.dir || Math.random() < GHOST_TURN_CHANCE){
+      g.dir = ["up","down","left","right"][(Math.random()*4)|0];
+    }
+
+    // 進行方向が壁なら、回せるだけ回して進める方向を探す
+    let tries = 0;
+    while (tries < 4){
+      const d = DIRS[g.dir];
+      const nx = clamp(g.x + d.x, 0, COLS-1);
+      const ny = clamp(g.y + d.y, 0, ROWS-1);
+      // ゴーストは爆弾・爆風無視、硬い壁だけは通れない
+      if (cell(nx,ny) !== 1 /* HARD */){
+        g.x = nx; g.y = ny;
+        break;
+      }else{
+        // 向きを変えて再試行
+        g.dir = ["up","down","left","right"][(Math.random()*4)|0];
+        tries++;
       }
     }
-    // 接触判定
-    if (g.x===state.player.x && g.y===state.player.y){
+
+    // 接触したらアウト
+    if (g.x === state.player.x && g.y === state.player.y){
       die("ゴーストに触れた…");
     }
   }
 }
+
+// --- 生成時：最初の向き＆クールダウン設定 ---
+function maybeSpawnGhost(x,y){
+  if (Math.random() < 0.25){ // 出現率はお好みで
+    state.ghosts.push({
+      x, y,
+      moveCD: GHOST_STEP_TICKS,                        // 生成直後から「遅いテンポ」
+      dir: ["up","down","left","right"][(Math.random()*4)|0]
+    });
+    toast("👻 ゴーストが現れた！");
+  }
+}
+
 
   // BFSで次の一歩（硬壁のみ障害、爆弾/炎は無視＝すり抜け）
   function nextStepTowards(from, to){
