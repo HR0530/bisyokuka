@@ -33,7 +33,7 @@ function boot(){
 
   // ===== 定数 =====
   // ゴーストの歩幅：60fps想定で 12tick ≒ 0.20秒/歩
-  const GHOST_STEP_TICKS = 70; // 遅くしたいほど数値を大きく（例: 14〜16）
+  const GHOST_STEP_TICKS = 12; // 遅くしたいほど数値を大きく（例: 14〜16）
   const GHOST_TURN_CHANCE = 0.20; 
 
   const COLS=15, ROWS=13, TILE=40;
