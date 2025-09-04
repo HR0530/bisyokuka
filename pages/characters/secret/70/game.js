@@ -155,10 +155,13 @@ function boot(){
 
   // ===== 入力（1押し=1マス） =====
   document.addEventListener("keydown",(e)=>{
-    if (state.gameOver || state.cleared) return;
-    if (DIR_KEYS.has(e.key)) { e.preventDefault(); tryMovePlayer(DIR_KEYS.get(e.key)); }
-    else if (e.key===" ") { e.preventDefault(); placeBomb(); }
-  });
+  if (state.gameOver || state.cleared) return;
+  if (DIR_KEYS.has(e.key)) { e.preventDefault(); tryMovePlayer(DIR_KEYS.get(e.key)); }
+  else if (e.key === " ") { e.preventDefault(); placeBomb(); }
+  // ★ ここを追加：Xでリモート起爆
+  else if (e.key.toLowerCase() === "x") { e.preventDefault(); detonateOldest(); }
+});
+
   document.querySelectorAll(".btn.dir").forEach(btn=>{
     const dir = btn.dataset.dir;
     safeBind(btn,"click",(e)=>{e.preventDefault(); tryMovePlayer(dir);});
@@ -361,6 +364,17 @@ function boot(){
       if (--b.timer<=0){ explode(b); b.exploded=true; }
     }
   }
+
+  // ★ 追加：最も古い未爆発の爆弾を即起爆
+function detonateOldest(){
+  if (state.gameOver || state.cleared) return;
+  const idx = state.bombs.findIndex(b => !b.exploded);
+  if (idx >= 0) {
+    state.bombs[idx].timer = 0;   // 次のupdateで即爆発
+  } else {
+    toast("💥 起爆できる爆弾がないよ");
+  }
+}
 
   function explode(b){
     addFlame(b.x,b.y);
