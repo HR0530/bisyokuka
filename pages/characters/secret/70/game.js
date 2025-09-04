@@ -1,6 +1,6 @@
-/* 美食家さん｜激むず70（ボンバーマン型・2フェーズ版）
- * Phase1: ランダムマップ → ゴール到達で Phase2 突入
- * Phase2: ボス戦アリーナ（👻出現なし）／ボスは爆風でHPを削る（HP=3）
+/* 美食家さん｜激むず70（ボンバーマン型・2フェーズ＋ボス弾）
+ * Phase1: ランダムマップ → ゴール到達で Phase2 突入（👻はランダム徘徊）
+ * Phase2: ボス戦アリーナ（弾を撃つ／HP=3、爆風のみダメージ）
  * 勝利: ボス撃破時に unlockSecret(70,"secret_70.png")
  */
 
@@ -29,10 +29,18 @@ function boot(){
   const safeBind=(el,ev,fn,opts)=>{ if(!el){console.warn("[bind-skip]",ev);return;} el.addEventListener(ev,fn,opts); };
 
   // ===== 定数 =====
-  const GHOST_STEP_TICKS = 12;     // 👻の歩調（大きいほど遅い）
-  const GHOST_TURN_CHANCE = 0.20;  // 👻が方向転換する確率
-  const BOSS_STEP_TICKS  = 10;     // ボスの歩調
+  // 👻
+  const GHOST_STEP_TICKS = 50;     // 大きいほど遅い
+  const GHOST_TURN_CHANCE = 0.20;  // 方向転換確率
+
+  // ボス
+  const BOSS_STEP_TICKS  = 40;     // ボスの歩調
   const BOSS_HP_MAX      = 3;
+
+  // ボス弾
+  const BULLET_STEP_TICKS   = 5;   // 弾の歩調（小さいほど速い）
+  const BOSS_SHOOT_COOLDOWN = 48;  // 発射間隔 ≒0.8s（60fps換算）
+  const BOSS_PATTERN_ALT    = true;// 交互パターンON: 狙い撃ち→十字→狙い撃ち→…
 
   const COLS=15, ROWS=13, TILE=40;
   canvas.width = COLS*TILE; canvas.height = ROWS*TILE;
@@ -49,7 +57,7 @@ function boot(){
   const C = {
     floor:"#1a2234", hard:"#3c4766", soft:"#6e7aa0", goal:"#a48bff",
     bomb:"#ffd166", flame:"#ff6b6b", item:"#8dd3ff",
-    player:"#7cf29a", ghost:"#b784ff", boss:"#ff5bb0"
+    player:"#7cf29a", ghost:"#b784ff", boss:"#ff5bb0", bullet:"#ffe06b"
   };
 
   // ===== 状態 =====
@@ -60,7 +68,8 @@ function boot(){
     player: { x:1, y:1, dir:"right" },
     bombs: [], flames: [], items: [],
     ghosts: [],    // {x,y,moveCD,dir}
-    boss:   null,  // {x,y,moveCD,dir,hp}
+    boss:   null,  // {x,y,moveCD,dir,hp,shootCD,shootAlt}
+    bullets: [],   // {x,y,dx,dy,moveCD}
     cleared:false, gameOver:false,
     tick:0,
     goalPos: {x: COLS-2, y: ROWS-2}
@@ -95,7 +104,7 @@ function boot(){
         }
       }
     }
-    // スタート/ゴール周りの通路確保
+    // スタート/ゴール周りの通路確保（2x2）
     for (const p of [{x:1,y:1},{x:state.goalPos.x,y:state.goalPos.y}]){
       for(let dy=0; dy<=1; dy++) for(let dx=0; dx<=1; dx++){
         const xx = clamp(p.x+dx,1,COLS-2), yy = clamp(p.y+dy,1,ROWS-2);
@@ -112,7 +121,7 @@ function boot(){
     // 外周硬壁
     for(let x=0;x<COLS;x++){ g[0][x]=HARD; g[ROWS-1][x]=HARD; }
     for(let y=0;y<ROWS;y++){ g[y][0]=HARD; g[y][COLS-1]=HARD; }
-    // 柱（偶数座標に低密度）※隣接しないようチェック
+    // 柱：低密度（隣接禁止）
     const pillarProb = 0.12;
     for(let y=2;y<ROWS-2;y++){
       for(let x=2;x<COLS-2;x++){
@@ -121,7 +130,6 @@ function boot(){
         }
       }
     }
-    // ソフトは基本置かない（純アリーナ）
     return g;
   }
 
@@ -163,7 +171,8 @@ function boot(){
   function enterPhase1(){
     state.phase = 1;
     state.grid = generateStageMap();
-    state.bombs.length=0; state.flames.length=0; state.items.length=0; state.ghosts.length=0;
+    state.bombs.length=0; state.flames.length=0; state.items.length=0;
+    state.ghosts.length=0; state.bullets.length=0;
     state.boss = null;
     // プレイヤー初期位置
     for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
@@ -175,12 +184,20 @@ function boot(){
   function startBossBattle(){
     state.phase = 2;
     state.grid = generateBossArena();
-    state.bombs.length=0; state.flames.length=0; state.items.length=0; state.ghosts.length=0;
-    // プレイヤーを左上寄りへ
+    state.bombs.length=0; state.flames.length=0; state.items.length=0;
+    state.ghosts.length=0; state.bullets.length=0;
+    // プレイヤーを左上へ
     state.player.x = 1; state.player.y = 1;
-    // ボスを中央に
+    // ボス中央
     const bx = (COLS/2)|0, by = (ROWS/2)|0;
-    state.boss = { x: bx, y: by, moveCD: BOSS_STEP_TICKS, dir: randDir(), hp: BOSS_HP_MAX };
+    state.boss = {
+      x: bx, y: by,
+      moveCD: BOSS_STEP_TICKS,
+      dir: randDir(),
+      hp: BOSS_HP_MAX,
+      shootCD: BOSS_SHOOT_COOLDOWN,
+      shootAlt: false // 交互パターン用フラグ
+    };
     toast("⚔️ ボス戦開始！");
   }
 
@@ -209,7 +226,7 @@ function boot(){
       }
     }
 
-    // 👻接触（Phase1のみ）
+    // 👻接触（Phase1）
     if (state.phase===1 && state.ghosts.some(g=>g.x===state.player.x && g.y===state.player.y)){
       die("ゴーストに触れた…");
     }
@@ -248,9 +265,9 @@ function boot(){
     if (state.phase!==2 || !state.boss) return;
     const b = state.boss;
 
+    // 歩き
     if (--b.moveCD <= 0){
       b.moveCD = BOSS_STEP_TICKS;
-      // ランダム徘徊（硬壁のみ不可／爆弾は無視して進む）
       let tries = 0;
       if (!b.dir) b.dir = randDir();
       while (tries < 4){
@@ -260,9 +277,72 @@ function boot(){
         if (cell(nx,ny) !== HARD){ b.x = nx; b.y = ny; break; }
         b.dir = randDir(); tries++;
       }
-      // 接触でプレイヤー敗北
       if (b.x===state.player.x && b.y===state.player.y) die("ボスに触れた…");
     }
+
+    // 射撃
+    if (--b.shootCD <= 0){
+      b.shootCD = BOSS_SHOOT_COOLDOWN;
+      if (BOSS_PATTERN_ALT){
+        b.shootAlt = !b.shootAlt;
+        if (b.shootAlt) shootAimed(b); else shootCross(b);
+      } else {
+        shootAimed(b);
+      }
+    }
+  }
+
+  // --- 射撃パターン：プレイヤー狙い（軸最短） ---
+  function shootAimed(b){
+    const dx = state.player.x - b.x;
+    const dy = state.player.y - b.y;
+    let dir;
+    if (Math.abs(dx) >= Math.abs(dy)){
+      dir = dx >= 0 ? "right" : "left";
+    } else {
+      dir = dy >= 0 ? "down" : "up";
+    }
+    pushBulletFrom(b.x, b.y, dir);
+    toast("🔸 ボスが撃ってきた！");
+  }
+
+  // --- 射撃パターン：十字（上下左右へ同時に） ---
+  function shootCross(b){
+    pushBulletFrom(b.x, b.y, "up");
+    pushBulletFrom(b.x, b.y, "down");
+    pushBulletFrom(b.x, b.y, "left");
+    pushBulletFrom(b.x, b.y, "right");
+    toast("✝ ボスが十字弾を放った！");
+  }
+
+  function pushBulletFrom(x,y,dirName){
+    const d = DIRS[dirName]; if(!d) return;
+    // 弾はその場からスタート（次のtickで1マス進む）
+    state.bullets.push({ x, y, dx:d.x, dy:d.y, moveCD: BULLET_STEP_TICKS });
+  }
+
+  // ===== 弾更新 =====
+  function updateBullets(){
+    if (state.bullets.length===0) return;
+    // 前に詰めるため新配列
+    const next = [];
+    for (const blt of state.bullets){
+      if (--blt.moveCD <= 0){
+        blt.moveCD = BULLET_STEP_TICKS;
+        const nx = clamp(blt.x + blt.dx, 0, COLS-1);
+        const ny = clamp(blt.y + blt.dy, 0, ROWS-1);
+        // 硬壁に当たると消滅
+        if (cell(nx,ny) === HARD) continue;
+        blt.x = nx; blt.y = ny;
+      }
+      // ヒット判定（プレイヤーのみ／ボスには当たらない）
+      if (blt.x === state.player.x && blt.y === state.player.y){
+        die("ボスの弾に当たった…");
+        continue; // ヒットした弾は消す
+      }
+      next.push(blt);
+    }
+    state.bullets = next;
   }
 
   // ===== 爆弾 =====
@@ -291,7 +371,7 @@ function boot(){
         const c = cell(tx,ty);
         if (c===HARD) break;
         addFlame(tx,ty);
-        if (state.phase===1 && c===SOFT){ // Phase1のみソフト破壊＆抽選
+        if (state.phase===1 && c===SOFT){
           setCell(tx,ty,FLOOR);
           maybeSpawnItem(tx,ty);
           maybeSpawnGhost(tx,ty);
@@ -310,7 +390,7 @@ function boot(){
     const hits = new Set(state.flames.map(f=>`${f.x},${f.y}`));
     // プレイヤー
     if (hits.has(`${state.player.x},${state.player.y}`)) die("爆風に巻き込まれた…");
-    // ボス（爆風だけが有効）
+    // ボス（爆風のみ有効）
     if (state.phase===2 && state.boss){
       const b = state.boss;
       if (hits.has(`${b.x},${b.y}`)){
@@ -321,7 +401,7 @@ function boot(){
     }
   }
 
-  // ===== ゴースト出現（Phase1のみ）=====
+  // ===== ゴースト（Phase1のみ）=====
   function maybeSpawnGhost(x,y){
     if (state.phase!==1) return;
     if (Math.random() < 0.25){
@@ -362,7 +442,8 @@ function boot(){
   }
 
   function resetGame(){
-    state.bombs.length=0; state.flames.length=0; state.items.length=0; state.ghosts.length=0;
+    state.bombs.length=0; state.flames.length=0; state.items.length=0;
+    state.ghosts.length=0; state.bullets.length=0;
     Object.assign(state, {phase:1, timeLeft:180, life:3, power:2, capacity:1, cal:0, cleared:false, gameOver:false, tick:0, boss:null});
     enterPhase1();
     if (HUD.time) HUD.time.textContent = state.timeLeft;
@@ -383,6 +464,7 @@ function boot(){
     updateFlames();
     updateGhosts();
     updateBoss();
+    updateBullets();
   }
 
   function draw(){
@@ -411,6 +493,12 @@ function boot(){
       ctx.fillStyle=C.bomb; ctx.beginPath(); ctx.arc(px+TILE/2,py+TILE/2,TILE*0.3,0,Math.PI*2); ctx.fill();
       ctx.strokeStyle="#333"; ctx.beginPath(); ctx.moveTo(px+TILE/2,py+TILE/2); ctx.lineTo(px+TILE*0.75,py+TILE*0.25); ctx.stroke();
     }
+    // 弾
+    for(const blt of state.bullets){
+      const px=blt.x*TILE, py=blt.y*TILE;
+      ctx.fillStyle=C.bullet;
+      ctx.fillRect(px+14, py+14, TILE-28, TILE-28);
+    }
     // 炎
     for(const f of state.flames){
       const px=f.x*TILE, py=f.y*TILE, pad=6+(f.timer%4);
@@ -432,7 +520,7 @@ function boot(){
       const b=state.boss, px=b.x*TILE, py=b.y*TILE;
       ctx.fillStyle=C.boss;
       ctx.beginPath(); ctx.arc(px+TILE/2, py+TILE/2, TILE*0.36, 0, Math.PI*2); ctx.fill();
-      // HPバーっぽい表示
+      // HPバー
       ctx.fillStyle="#000"; ctx.fillRect(px+6, py+6, TILE-12, 6);
       ctx.fillStyle="#ffea00"; ctx.fillRect(px+6, py+6, (TILE-12)* (b.hp/BOSS_HP_MAX), 6);
     }
