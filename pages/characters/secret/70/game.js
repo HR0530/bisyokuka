@@ -1,6 +1,9 @@
 /* 美食家さん｜激むず70（ボンバーマン型・2フェーズ＋ボス弾）
- * Phase1: ランダムマップ → ゴール到達で Phase2 突入（👻はランダム徘徊）
- * Phase2: ボス戦アリーナ（弾を撃つ／HP=3、爆風のみダメージ）
+ * Phase1: ランダムマップ → ゴールで Phase2（👻はランダム徘徊）
+ * Phase2: ボス戦（弾を撃つ／HP=3、爆風のみダメージ）
+ * A: 当たり判定ゆるめ＋ヒット硬直
+ * B: 爆風滞留延長（Phase2のみ）
+ * D: 射撃後硬直
  * 勝利: ボス撃破時に unlockSecret(70,"secret_70.png")
  */
 
@@ -33,21 +36,18 @@ function boot(){
   const safeBind=(el,ev,fn,opts)=>{ if(!el){console.warn("[bind-skip]",ev);return;} el.addEventListener(ev,fn,opts); };
 
   // ===== 定数 =====
-  // 👻（プレイヤーより遅く・1マスずつ）
-  const GHOST_STEP_TICKS = 50;     // 大きいほど遅い
+  const GHOST_STEP_TICKS = 50;     // 👻歩調（大きいほど遅い）
   const GHOST_TURN_CHANCE = 0.20;  // 方向転換確率
 
-  // ボス
-  const BOSS_STEP_TICKS  = 70;     // ボスの歩調（大きいほど遅い）
+  const BOSS_STEP_TICKS  = 70;     // ボス歩調
   const BOSS_HP_MAX      = 3;
 
-  // ボス弾
-  const BULLET_STEP_TICKS   = 5;   // 弾の歩調（小さいほど速い）
-  const BOSS_SHOOT_COOLDOWN = 48;  // 発射間隔 ≒0.8s（60fps換算）
-  const BOSS_PATTERN_ALT    = true;// 交互パターンON: 狙い撃ち→十字→狙い撃ち→…
+  const BULLET_STEP_TICKS   = 5;   // 弾歩調（小さいほど速い）
+  const BOSS_SHOOT_COOLDOWN = 48;  // 発射間隔 ≒0.8s
+  const BOSS_PATTERN_ALT    = true;// 狙い撃ち↔十字 交互
 
-  // 爆弾：置いた直後の誤爆防止
-  const BOMB_ARM_TICKS = 8; // ≒0.13秒
+  // 置いた直後の誤爆防止（リモート無しでも安全）
+  const BOMB_ARM_TICKS = 8; // ≒0.13s
 
   const COLS=15, ROWS=13, TILE=40;
   canvas.width = COLS*TILE; canvas.height = ROWS*TILE;
@@ -75,7 +75,7 @@ function boot(){
     player: { x:1, y:1, dir:"right" },
     bombs: [], flames: [], items: [],
     ghosts: [],    // {x,y,moveCD,dir}
-    boss:   null,  // {x,y,moveCD,dir,hp,shootCD,shootAlt}
+    boss:   null,  // {x,y,moveCD,dir,hp,shootCD,shootAlt,stun}
     bullets: [],   // {x,y,dx,dy,moveCD}
     cleared:false, gameOver:false,
     tick:0,
@@ -166,7 +166,6 @@ function boot(){
     if (state.gameOver || state.cleared) return;
     if (DIR_KEYS.has(e.key)) { e.preventDefault(); tryMovePlayer(DIR_KEYS.get(e.key)); }
     else if (e.key === " ") { e.preventDefault(); placeBomb(); }
-    else if (e.key.toLowerCase() === "x") { e.preventDefault(); detonateOldest(); } // リモート起爆
   });
 
   document.querySelectorAll(".btn.dir").forEach(btn=>{
@@ -206,7 +205,8 @@ function boot(){
       dir: randDir(),
       hp: BOSS_HP_MAX,
       shootCD: BOSS_SHOOT_COOLDOWN,
-      shootAlt: false // 交互パターン用フラグ
+      shootAlt: false, // 交互パターン
+      stun: 0
     };
     toast("⚔️ ボス戦開始！");
   }
@@ -275,6 +275,9 @@ function boot(){
     if (state.phase!==2 || !state.boss) return;
     const b = state.boss;
 
+    // ★A: ヒット硬直中は動かない＆撃たない
+    if (b.stun && --b.stun > 0) return;
+
     // 歩き
     if (--b.moveCD <= 0){
       b.moveCD = BOSS_STEP_TICKS;
@@ -299,6 +302,8 @@ function boot(){
       } else {
         shootAimed(b);
       }
+      // ★D: 射撃後の硬直（短め）
+      b.stun = Math.max(b.stun||0, 10); // ≒0.17s
     }
   }
 
@@ -327,7 +332,6 @@ function boot(){
 
   function pushBulletFrom(x,y,dirName){
     const d = DIRS[dirName]; if(!d) return;
-    // 弾はその場からスタート（次のtickで1マス進む）
     state.bullets.push({ x, y, dx:d.x, dy:d.y, moveCD: BULLET_STEP_TICKS });
   }
 
@@ -340,14 +344,12 @@ function boot(){
         blt.moveCD = BULLET_STEP_TICKS;
         const nx = clamp(blt.x + blt.dx, 0, COLS-1);
         const ny = clamp(blt.y + blt.dy, 0, ROWS-1);
-        // 硬壁に当たると消滅
-        if (cell(nx,ny) === HARD) continue;
+        if (cell(nx,ny) === HARD) continue; // 硬壁で消滅
         blt.x = nx; blt.y = ny;
       }
-      // ヒット判定（プレイヤーのみ）
       if (blt.x === state.player.x && blt.y === state.player.y){
         die("ボスの弾に当たった…");
-        continue; // ヒットした弾は消す
+        continue;
       }
       next.push(blt);
     }
@@ -367,7 +369,7 @@ function boot(){
       range: state.power,
       exploded: false,
       owner: "player",
-      armTick: state.tick + BOMB_ARM_TICKS   // 置いた直後は武装待ち
+      armTick: state.tick + BOMB_ARM_TICKS
     });
   }
 
@@ -379,27 +381,19 @@ function boot(){
     }
   }
 
-  // リモート起爆（最古の未爆発を起爆）
-  function detonateOldest(){
-    if (state.gameOver || state.cleared) return;
-    const b = state.bombs.find(bb => !bb.exploded);
-    if (b) {
-      b.armTick = state.tick; // 即武装
-      b.timer = 0;            // 次のupdateで爆発（完全即時にしたければ explode(b); b.exploded=true;）
-    } else {
-      toast("💥 起爆できる爆弾がないよ");
-    }
-  }
-
+  // ===== 爆発処理 =====
   function explode(b){
-    addFlame(b.x,b.y);
+    // ★B: Phase2は炎の寿命を延長
+    const ttl = (state.phase===2 ? 36 : 24);
+
+    addFlame(b.x,b.y,ttl);
     for (const dirName of ["up","down","left","right"]){
       const d = DIRS[dirName];
       for(let i=1;i<=b.range;i++){
         const tx=b.x+d.x*i, ty=b.y+d.y*i;
         const c = cell(tx,ty);
         if (c===HARD) break;
-        addFlame(tx,ty);
+        addFlame(tx,ty,ttl);
         if (state.phase===1 && c===SOFT){
           setCell(tx,ty,FLOOR);
           maybeSpawnItem(tx,ty);
@@ -411,19 +405,27 @@ function boot(){
     checkFlameHits();
   }
 
-  const addFlame=(x,y)=>state.flames.push({x,y,timer:24});
+  // ★B: 可変TTL
+  const addFlame=(x,y,ttl=24)=>state.flames.push({x,y,timer:ttl});
   function updateFlames(){ state.flames = state.flames.filter(f=>--f.timer>0); }
 
-  // 爆風当たり判定
+  // ===== 爆風当たり判定 =====
   function checkFlameHits(){
     const hits = new Set(state.flames.map(f=>`${f.x},${f.y}`));
     // プレイヤー
     if (hits.has(`${state.player.x},${state.player.y}`)) die("爆風に巻き込まれた…");
-    // ボス（爆風のみ有効）
+
+    // ★A: ボス判定ゆるめ（Chebyshev距離<=1）＋ヒット硬直
     if (state.phase===2 && state.boss){
       const b = state.boss;
-      if (hits.has(`${b.x},${b.y}`)){
+      let bossHit = false;
+      for (const f of state.flames){
+        const dx = Math.abs(f.x - b.x), dy = Math.abs(f.y - b.y);
+        if (Math.max(dx, dy) <= 1){ bossHit = true; break; }
+      }
+      if (bossHit){
         b.hp--;
+        b.stun = Math.max(b.stun||0, 18); // ≒0.3s 硬直
         toast(`💥 ボスにダメージ！ (HP:${Math.max(0,b.hp)})`);
         if (b.hp<=0){ finalClear(); }
       }
@@ -439,7 +441,7 @@ function boot(){
     }
   }
 
-  // ===== アイテム（Phase1のみ） =====
+  // ===== アイテム（Phase1のみ）=====
   function maybeSpawnItem(x,y){
     if (state.phase!==1) return;
     if (Math.random() < 0.35){
@@ -465,7 +467,6 @@ function boot(){
     state.life--; if(HUD.life) HUD.life.textContent = state.life;
     toast(`💥 ${reason}`);
     if (state.life<=0){ state.gameOver=true; toast("💀 GAME OVER"); return; }
-    // 各フェーズのリスポーン位置
     if (state.phase===1){ state.player.x = 1; state.player.y = 1; }
     else if (state.phase===2){ state.player.x = 1; state.player.y = 1; }
   }
