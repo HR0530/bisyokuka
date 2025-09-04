@@ -32,6 +32,9 @@ function boot(){
   const safeBind=(el,ev,fn,opts)=>{ if(!el){console.warn("[bind-skip]",ev);return;} el.addEventListener(ev,fn,opts); };
 
   // ===== 定数 =====
+  // ゴーストの歩幅：60fps想定で 12tick ≒ 0.20秒/歩
+  const GHOST_STEP_TICKS = 12; // 遅くしたいほど数値を大きく（例: 14〜16）
+
   const COLS=15, ROWS=13, TILE=40;
   canvas.width = COLS*TILE; canvas.height = ROWS*TILE;
 
@@ -186,30 +189,29 @@ function boot(){
 
   // ===== ゴースト（爆弾無効・追尾）=====
   function updateGhosts(){
-    // だいたい 0.12s に1マス移動：CD = 7tick
-    for(const g of state.ghosts){
-      if (--g.moveCD > 0) continue;
-      g.moveCD = 7;
+  // GHOST_STEP_TICKS ごとに1マスだけ動く
+  for(const g of state.ghosts){
+    if (--g.moveCD > 0) continue;
+    g.moveCD = GHOST_STEP_TICKS;
 
-      const step = nextStepTowards({x:g.x,y:g.y}, state.player);
-      if (step){
-        g.x = step.x; g.y = step.y;
-      }else{
-        // 経路なし：ランダム一歩（硬壁以外。爆弾は無視して進める）
-        const dirs = Object.values(DIRS);
-        const shuffled = dirs.sort(()=>Math.random()-0.5);
-        for (const d of shuffled){
-          const nx = clamp(g.x + d.x, 0, COLS-1);
-          const ny = clamp(g.y + d.y, 0, ROWS-1);
-          if (cell(nx,ny)!==HARD){ g.x=nx; g.y=ny; break; }
-        }
-      }
-      // 接触判定
-      if (g.x===state.player.x && g.y===state.player.y){
-        die("ゴーストに触れた…");
+    const step = nextStepTowards({x:g.x,y:g.y}, state.player);
+    if (step){
+      g.x = step.x; g.y = step.y;
+    }else{
+      // 経路が取れないときは硬壁以外へランダム1歩（爆弾は無視してOK仕様）
+      const dirs = Object.values(DIRS).sort(()=>Math.random()-0.5);
+      for (const d of dirs){
+        const nx = clamp(g.x + d.x, 0, COLS-1);
+        const ny = clamp(g.y + d.y, 0, ROWS-1);
+        if (cell(nx,ny)!==HARD){ g.x=nx; g.y=ny; break; }
       }
     }
+    // 接触判定
+    if (g.x===state.player.x && g.y===state.player.y){
+      die("ゴーストに触れた…");
+    }
   }
+}
 
   // BFSで次の一歩（硬壁のみ障害、爆弾/炎は無視＝すり抜け）
   function nextStepTowards(from, to){
@@ -294,11 +296,11 @@ function boot(){
 
   // ===== ゴースト出現（25%）=====
   function maybeSpawnGhost(x,y){
-    if (maybe(0.25)){
-      state.ghosts.push({x,y,moveCD:1});
-      toast("👻 ゴーストが現れた！");
-    }
+  if (Math.random() < 0.25){
+    state.ghosts.push({ x, y, moveCD: GHOST_STEP_TICKS }); // ← 生成直後から遅いテンポ
+    toast("👻 ゴーストが現れた！");
   }
+}
 
   // ===== アイテム =====
   function maybeSpawnItem(x,y){
