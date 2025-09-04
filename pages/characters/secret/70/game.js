@@ -12,12 +12,10 @@ window.addEventListener("load", () => {
 });
 
 function boot(){
+  // 二重起動ガード
   if (window.__hard70Booted) { console.warn("hard70: already booted"); return; }
   window.__hard70Booted = true;
-  // …既存のboot処理…
-}
 
-function boot(){
   // ===== DOM =====
   const canvas = document.getElementById("game");
   const ctx = canvas?.getContext("2d");
@@ -35,12 +33,12 @@ function boot(){
   const safeBind=(el,ev,fn,opts)=>{ if(!el){console.warn("[bind-skip]",ev);return;} el.addEventListener(ev,fn,opts); };
 
   // ===== 定数 =====
-  // 👻
+  // 👻（プレイヤーより遅く・1マスずつ）
   const GHOST_STEP_TICKS = 50;     // 大きいほど遅い
   const GHOST_TURN_CHANCE = 0.20;  // 方向転換確率
 
   // ボス
-  const BOSS_STEP_TICKS  = 70;     // ボスの歩調
+  const BOSS_STEP_TICKS  = 70;     // ボスの歩調（大きいほど遅い）
   const BOSS_HP_MAX      = 3;
 
   // ボス弾
@@ -48,7 +46,8 @@ function boot(){
   const BOSS_SHOOT_COOLDOWN = 48;  // 発射間隔 ≒0.8s（60fps換算）
   const BOSS_PATTERN_ALT    = true;// 交互パターンON: 狙い撃ち→十字→狙い撃ち→…
 
-  const BOMB_ARM_TICKS = 8; // ≒0.13秒。数値↑で“置いた直後の誤爆”をさらに防止
+  // 爆弾：置いた直後の誤爆防止
+  const BOMB_ARM_TICKS = 8; // ≒0.13秒
 
   const COLS=15, ROWS=13, TILE=40;
   canvas.width = COLS*TILE; canvas.height = ROWS*TILE;
@@ -133,7 +132,7 @@ function boot(){
     const pillarProb = 0.12;
     for(let y=2;y<ROWS-2;y++){
       for(let x=2;x<COLS-2;x++){
-        if ((x%2===0 && y%2===0) && maybe(pillarProb) && canPlaceHard(g,x,y)){
+        if ((x%2===0 && y%2===0) && canPlaceHard(g,x,y) && maybe(pillarProb)){
           g[y][x] = HARD;
         }
       }
@@ -163,12 +162,12 @@ function boot(){
 
   // ===== 入力（1押し=1マス） =====
   document.addEventListener("keydown",(e)=>{
-  if (state.gameOver || state.cleared) return;
-  if (DIR_KEYS.has(e.key)) { e.preventDefault(); tryMovePlayer(DIR_KEYS.get(e.key)); }
-  else if (e.key === " ") { e.preventDefault(); placeBomb(); }
-  // ★ ここを追加：Xでリモート起爆
-  else if (e.key.toLowerCase() === "x") { e.preventDefault(); detonateOldest(); }
-});
+    if (e.repeat) return; // 長押しの連発防止
+    if (state.gameOver || state.cleared) return;
+    if (DIR_KEYS.has(e.key)) { e.preventDefault(); tryMovePlayer(DIR_KEYS.get(e.key)); }
+    else if (e.key === " ") { e.preventDefault(); placeBomb(); }
+    else if (e.key.toLowerCase() === "x") { e.preventDefault(); detonateOldest(); } // リモート起爆
+  });
 
   document.querySelectorAll(".btn.dir").forEach(btn=>{
     const dir = btn.dataset.dir;
@@ -335,7 +334,6 @@ function boot(){
   // ===== 弾更新 =====
   function updateBullets(){
     if (state.bullets.length===0) return;
-    // 前に詰めるため新配列
     const next = [];
     for (const blt of state.bullets){
       if (--blt.moveCD <= 0){
@@ -346,7 +344,7 @@ function boot(){
         if (cell(nx,ny) === HARD) continue;
         blt.x = nx; blt.y = ny;
       }
-      // ヒット判定（プレイヤーのみ／ボスには当たらない）
+      // ヒット判定（プレイヤーのみ）
       if (blt.x === state.player.x && blt.y === state.player.y){
         die("ボスの弾に当たった…");
         continue; // ヒットした弾は消す
@@ -363,38 +361,35 @@ function boot(){
     if (active >= state.capacity){ toast("💣 これ以上置けない！"); return; }
     const {x,y} = state.player;
     if (state.bombs.some(b=>!b.exploded && b.x===x && b.y===y)){ toast("そこには置けない！"); return; }
-   state.bombs.push({
-  x, y,
-  timer: 120,
-  range: state.power,
-  exploded: false,
-  owner: "player",
-  armTick: state.tick + BOMB_ARM_TICKS   // ★ 追加
-});
-
+    state.bombs.push({
+      x, y,
+      timer: 120,
+      range: state.power,
+      exploded: false,
+      owner: "player",
+      armTick: state.tick + BOMB_ARM_TICKS   // 置いた直後は武装待ち
+    });
   }
 
- function updateBombs(){
-  for(const b of state.bombs){
-    if (b.exploded) continue;
-    if (state.tick < (b.armTick || 0)) continue;   // ★ 武装前は減らさない
-    if (--b.timer <= 0){ explode(b); b.exploded = true; }
+  function updateBombs(){
+    for(const b of state.bombs){
+      if (b.exploded) continue;
+      if (state.tick < (b.armTick || 0)) continue;   // 武装前は減らさない
+      if (--b.timer <= 0){ explode(b); b.exploded = true; }
+    }
   }
-}
 
-
-  // ★ 追加：最も古い未爆発の爆弾を即起爆
-function detonateOldest(){
-  if (state.gameOver || state.cleared) return;
-  const b = state.bombs.find(bb => !bb.exploded);
-  if (b) {
-    b.armTick = state.tick; // ★ 即武装
-    b.timer = 0;            // 次のupdateで爆発（または即時にしたいなら explode(b); b.exploded=true;）
-  } else {
-    toast("💥 起爆できる爆弾がないよ");
+  // リモート起爆（最古の未爆発を起爆）
+  function detonateOldest(){
+    if (state.gameOver || state.cleared) return;
+    const b = state.bombs.find(bb => !bb.exploded);
+    if (b) {
+      b.armTick = state.tick; // 即武装
+      b.timer = 0;            // 次のupdateで爆発（完全即時にしたければ explode(b); b.exploded=true;）
+    } else {
+      toast("💥 起爆できる爆弾がないよ");
+    }
   }
-}
-
 
   function explode(b){
     addFlame(b.x,b.y);
@@ -571,6 +566,12 @@ function detonateOldest(){
   }
 
   // ===== ループ =====
-  let last=0; function loop(ts){ const dt=(ts-last)/16.67; last=ts; update(dt); draw(); requestAnimationFrame(loop); }
-  requestAnimationFrame(loop);
+  let last = 0;
+  function loop(ts){
+    const dt = (ts - last) / 16.67; last = ts;
+    update(dt); draw();
+    window.__hard70RafId = requestAnimationFrame(loop); // ハンドル保持
+  }
+  if (window.__hard70RafId) cancelAnimationFrame(window.__hard70RafId); // 既存を止める
+  window.__hard70RafId = requestAnimationFrame(loop);
 }
