@@ -34,7 +34,7 @@ function boot(){
   const GHOST_TURN_CHANCE = 0.20;  // 方向転換確率
 
   // ボス
-  const BOSS_STEP_TICKS  = 40;     // ボスの歩調
+  const BOSS_STEP_TICKS  = 70;     // ボスの歩調
   const BOSS_HP_MAX      = 3;
 
   // ボス弾
