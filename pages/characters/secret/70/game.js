@@ -217,6 +217,63 @@ function boot(){
   // ===== 初期化 =====
   enterPhase1();
 
+  // ===== 追加：キャンバス自動フィット（DPR対応） =====
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+/** 余白・ヘッダ・フッタを差し引いた正方形領域にフィットさせる */
+function fitCanvasToWindow() {
+  const header = document.querySelector('.app-header');
+  const footer = document.querySelector('.foot');
+
+  const headerH = header?.getBoundingClientRect().height ?? 0;
+  const footerH = footer?.getBoundingClientRect().height ?? 0;
+
+  // main領域のパディング/周囲マージン相当（CSSに合わせて微調整）
+  const verticalExtra = 32;  // 上下の余白トータル（お好みで）
+  const horizontalExtra = 32;
+
+  // CSS上限（--canvas-max と 92vw の小さい方）を再現
+  const cssMax = parseInt(getComputedStyle(document.documentElement)
+                  .getPropertyValue('--canvas-max')) || 920;
+  const availW = Math.min(window.innerWidth - horizontalExtra, cssMax);
+  const availH = window.innerHeight - headerH - footerH - verticalExtra;
+
+  // 正方形で収める。小さすぎる時の下限も確保
+  const cssSize = Math.max(340, Math.min(availW, availH));
+  const dpr = window.devicePixelRatio || 1;
+
+  // 見た目サイズ（CSSピクセル）
+  canvas.style.width = cssSize + 'px';
+  canvas.style.height = cssSize + 'px';
+
+  // 実描画サイズ（物理解像度）
+  const pixelSize = Math.floor(cssSize * dpr);
+  if (canvas.width !== pixelSize || canvas.height !== pixelSize) {
+    canvas.width = pixelSize;
+    canvas.height = pixelSize;
+  }
+
+  // スケール（DPR分だけ描画を1:1に）
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // ここで必要なら再描画を呼ぶ（例：drawAll()）
+  // drawAll();
+}
+
+// 画面変化に追従
+window.addEventListener('resize', fitCanvasToWindow);
+window.addEventListener('orientationchange', fitCanvasToWindow);
+
+// あなたの初期化の最後で一度呼ぶ：
+// （例）DOMContentLoadedやアセットロード完了時など
+document.addEventListener('DOMContentLoaded', () => {
+  // ...既存の初期化...
+  fitCanvasToWindow();
+  // ゲームループ開始や描画開始など
+  // startGameLoop();
+});
+
+
   // HUD初期
   if (HUD.time) HUD.time.textContent = state.timeLeft;
   if (HUD.life) HUD.life.textContent = state.life;
