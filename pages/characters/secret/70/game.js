@@ -1,7 +1,8 @@
-/* 美食家さん｜激むず70（ボンバーマン型・3フェーズ：色指定崩落P3）
+/* 美食家さん｜激むず70（ボンバーマン型・3フェーズ：色指定崩落P3＋ランダムスポーン対応）
  * P1: ランダムマップ → ゴールで P2
  * P2: ボス戦（HP=3・弾）… 起爆なし／炎寿命延長・ゆる判定
- * P3: 色指定崩落：指定色タイル以外が落ちるラウンド×N → 最後は1マスのGOLDへ到達でクリア
+ * P3: 色指定崩落：指定色タイル以外が落ちるラウンド×N（プレイヤーはラウンドごとにランダム配置）
+ *     最後は1マスのGOLDへ到達でクリア
  * CLEAR: unlockSecret(70,"/pages/characters/secret/70/secret_70.png")
  */
 
@@ -46,6 +47,7 @@ function boot(){
   const BOSS_SHOOT_COOLDOWN = 48;
   const BOSS_PATTERN_ALT    = true;
 
+  // 爆弾
   const BOMB_ARM_TICKS = 8; // 誤爆防止
 
   // === Phase3：色指定崩落 ===
@@ -57,11 +59,20 @@ function boot(){
   ];
   const PH3_GOLD = { key:"GOLD", fill:"#fbbf24" };
 
-  const PH3_ROUNDS            = 3;   // 通常色ラウンド数
-  const PH3_ANNOUNCE_TICKS    = 120; // 色提示 → 移動猶予（~2s）
-  const PH3_COLLAPSE_HOLD     = 90;  // 落下後の小休止（~1.5s）
-  const PH3_GOLD_ANNOUNCE     = 120; // GOLD 告知
-  const PH3_GOLD_COUNTDOWN    = 210; // GOLD に移動する猶予（~3.5s）
+  // 秒→tick変換（60tick ≒ 1秒）
+  const sec = s => Math.round(s * 60);
+
+  // タイミング（必要に応じて秒数を調整してください）
+  const PH3_ROUNDS         = 3;        // 通常色ラウンド数
+  const PH3_ANNOUNCE_TICKS = sec(5);   // 指定色を告知してから崩落までの猶予
+  const PH3_COLLAPSE_HOLD  = sec(2);   // 崩落直後の小休止
+  const PH3_GOLD_ANNOUNCE  = sec(3);   // GOLD 告知の予告時間
+  const PH3_GOLD_COUNTDOWN = sec(6);   // GOLD へ移動するカウントダウン
+
+  // ランダムスポーン設定
+  const PH3_RANDOM_SPAWN_ON_START   = true;   // P3突入時にランダム配置
+  const PH3_RANDOM_SPAWN_EACH_ROUND = true;   // 各ラウンド開始時（announce直前）にランダム配置
+  const PH3_RANDOM_SAFE_ONLY        = false;  // trueなら「指定色タイル上」に限定して配置
 
   const COLS=15, ROWS=13, TILE=40;
   canvas.width = COLS*TILE; canvas.height = ROWS*TILE;
@@ -115,6 +126,24 @@ function boot(){
   const setCell=(x,y,v)=>{ if(state.grid[y] && typeof state.grid[y][x]!=="undefined") state.grid[y][x]=v; };
   const maybe=(p)=>Math.random()<p;
 
+  // P3用：プレイヤーをランダム配置する（safeOnly=true なら指定色タイルの上だけ）
+  function randomizePlayerInP3(safeOnly=false){
+    const cand = [];
+    for(let y=1;y<ROWS-1;y++){
+      for(let x=1;x<COLS-1;x++){
+        if (cell(x,y)!==FLOOR) continue; // 壁/穴は除外
+        if (safeOnly){
+          if (!state.ph3.colorMap || state.ph3.colorMap[y]?.[x] !== state.ph3.safeIdx) continue;
+        }
+        cand.push({x,y});
+      }
+    }
+    if (cand.length){
+      const p = cand[(Math.random()*cand.length)|0];
+      state.player.x = p.x; state.player.y = p.y;
+    }
+  }
+
   // ===== マップ生成 =====
   function generateStageMap(){
     const g = Array.from({length:ROWS}, ()=>Array(COLS).fill(FLOOR));
@@ -161,7 +190,6 @@ function boot(){
   }
 
   function generateColorArena(){
-    // 柱は少なめで動きやすく
     const g = Array.from({length:ROWS}, ()=>Array(COLS).fill(FLOOR));
     for(let x=0;x<COLS;x++){ g[0][x]=HARD; g[ROWS-1][x]=HARD; }
     for(let y=0;y<ROWS;y++){ g[y][0]=HARD; g[y][COLS-1]=HARD; }
@@ -246,10 +274,17 @@ function boot(){
     state.bombs.length=0; state.flames.length=0; state.items.length=0;
     state.ghosts.length=0; state.bullets.length=0;
     state.boss = null;
-    state.player.x = 1; state.player.y = 1;
 
-    // カラーマップ生成
+    // カラーマップ生成（safeIdx がここで決まる）
     ph3RepaintColors();
+
+    // ★ ランダム配置（設定に応じて）
+    if (PH3_RANDOM_SPAWN_ON_START) {
+      randomizePlayerInP3(PH3_RANDOM_SAFE_ONLY);
+    } else {
+      state.player.x = 1; state.player.y = 1;
+    }
+
     state.ph3.round = 1;
     state.ph3.mode = "announce";
     state.ph3.cd   = PH3_ANNOUNCE_TICKS;
@@ -401,12 +436,17 @@ function boot(){
       if (state.ph3.cd<=0){
         if (state.ph3.round < PH3_ROUNDS){
           state.ph3.round++;
-          ph3RepaintColors();
+          ph3RepaintColors(); // safeIdx更新
+
+          // ★ ランダム配置（設定に応じて）
+          if (PH3_RANDOM_SPAWN_EACH_ROUND){
+            randomizePlayerInP3(PH3_RANDOM_SAFE_ONLY);
+          }
+
           state.ph3.mode="announce";
           state.ph3.cd = PH3_ANNOUNCE_TICKS;
           toast(`🎨 指定色に移動：${PH3_COLORS[state.ph3.safeIdx].key}`);
         }else{
-          // GOLD フェーズへ
           startGoldPhase();
         }
       }
@@ -453,7 +493,7 @@ function boot(){
     // 盤面を床へ戻す
     for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){ if (state.grid[y][x]!==HARD) setCell(x,y,FLOOR); }
     state.ph3.colorMap = Array.from({length:ROWS}, ()=>Array(COLS).fill(-1));
-    // GOLD 位置をランダムな床から選択（スタート/外周は除外）
+    // GOLD 位置をランダムな床から選択（外周は除外）
     const cand=[];
     for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
       if (cell(x,y)===FLOOR) cand.push({x,y});
@@ -733,11 +773,11 @@ function boot(){
       ctx.fillStyle="#fff"; ctx.font="bold 18px system-ui"; ctx.textAlign="center"; ctx.textBaseline="middle";
       const cd = Math.max(0, Math.ceil(state.ph3.cd/60));
       let msg="";
-      if (state.ph3.mode==="announce")       msg=`指定色：${PH3_COLORS[state.ph3.safeIdx].key} まで ${cd}s`;
-      else if (state.ph3.mode==="wait")       msg=`ラウンド ${state.ph3.round}/${PH3_ROUNDS}`;
-      else if (state.ph3.mode==="gold_announce")  msg=`⭐ GOLD 指定まで ${cd}s`;
-      else if (state.ph3.mode==="gold_countdown") msg=`⭐ GOLD に移動せよ… 残り ${cd}s`;
-      else if (state.ph3.mode==="gold_active")    msg=`⭐ GOLD の上に乗れ！`;
+      if (state.ph3.mode==="announce")           msg=`指定色：${PH3_COLORS[state.ph3.safeIdx].key} まで ${cd}s`;
+      else if (state.ph3.mode==="wait")          msg=`ラウンド ${state.ph3.round}/${PH3_ROUNDS}`;
+      else if (state.ph3.mode==="gold_announce") msg=`⭐ GOLD 指定まで ${cd}s`;
+      else if (state.ph3.mode==="gold_countdown")msg=`⭐ GOLD に移動せよ… 残り ${cd}s`;
+      else if (state.ph3.mode==="gold_active")   msg=`⭐ GOLD の上に乗れ！`;
       ctx.fillText(msg, canvas.width/2, 17);
     }
 
