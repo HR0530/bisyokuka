@@ -181,7 +181,9 @@ function boot(){
       if (nx===state.goalPos.x && ny===state.goalPos.y){
         state.cleared=true; toast("🎉 クリア！");
       }
-      // 例：ゴール到達時
+    }
+
+     // 例：ゴール到達時
 state.cleared = true;
 toast("🎉 クリア！");
 
@@ -192,8 +194,6 @@ try {
 } catch (e) {
   console.warn("unlockSecret failed:", e);
 }
-
-    }
     
     // ゴースト接触
     if (state.ghosts.some(g=>g.x===state.player.x && g.y===state.player.y)){
