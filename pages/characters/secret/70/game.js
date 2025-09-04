@@ -36,10 +36,10 @@ function boot(){
   const safeBind=(el,ev,fn,opts)=>{ if(!el){console.warn("[bind-skip]",ev);return;} el.addEventListener(ev,fn,opts); };
 
   // ===== 定数 =====
-  const GHOST_STEP_TICKS = 50;     // 👻歩調（大きいほど遅い）
+  const GHOST_STEP_TICKS = 20;     // 👻歩調（大きいほど遅い）
   const GHOST_TURN_CHANCE = 0.20;  // 方向転換確率
 
-  const BOSS_STEP_TICKS  = 70;     // ボス歩調
+  const BOSS_STEP_TICKS  = 50;     // ボス歩調
   const BOSS_HP_MAX      = 3;
 
   const BULLET_STEP_TICKS   = 5;   // 弾歩調（小さいほど速い）
