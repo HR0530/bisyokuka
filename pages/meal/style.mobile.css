@@ -105,7 +105,7 @@ input::placeholder{ color:#6b7280 }
 /* ===== 3列ギャラリー ===== */
 .cards{
   display:grid;
-  gap:8px;                           /* 詰める */
+  gap:8px;
   grid-template-columns:repeat(3, 1fr);
 }
 @media (max-width:380px){
@@ -148,7 +148,38 @@ details.ing[open] summary::before{ transform: rotate(90deg); }
 .table tr:last-child td{ border-bottom:none }
 .table .num{ text-align:right }
 
-/* アクセシビリティ */
+/* ===== モーダル bottom sheet ===== */
+.modal{
+  position:fixed; inset:0; background:rgba(0,0,0,.6);
+  display:flex; align-items:flex-end; justify-content:center;
+  z-index:100;
+}
+.modal[hidden]{ display:none }
+
+.sheet{
+  width:100%; max-width:720px;
+  background:var(--card); color:var(--ink);
+  border-radius:16px 16px 0 0;
+  border:1px solid var(--line);
+  overflow:hidden;
+  animation:slideUp .25s ease-out;
+}
+@keyframes slideUp{
+  from{ transform:translateY(100%); }
+  to{ transform:translateY(0); }
+}
+.sheet-head{ display:flex; justify-content:flex-end; padding:8px; }
+.icon-btn{
+  background:transparent; border:none; color:var(--ink);
+  font-size:20px; cursor:pointer;
+}
+.sheet-photo{
+  width:100%; max-height:50vh;
+  object-fit:contain; background:#000;
+}
+.sheet-body{ padding:12px; font-size:14px; }
+
+/* アクセシビリティ（スクリーンリーダー用） */
 .sr-only{
   position:absolute !important;
   width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
