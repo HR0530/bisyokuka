@@ -2,15 +2,10 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>美食家さん｜キャラ育成</title>
-
-  <!-- ★ 共通ルーター：相対パスに修正 -->
-  <script src="../view-router.js"></script>
-
   <link rel="stylesheet" href="./style.css" />
 </head>
-
 <body>
   <header class="app-header">
     <h1>🍽️ 美食家さん｜キャラ育成</h1>
@@ -43,14 +38,14 @@
       <div class="stage">
         <div class="grid-bg" aria-hidden="true"></div>
 
-        <!-- キャラ -->
+        <!-- ★ キャラ（正面の静止画のみ） -->
         <div id="character" class="char dir-front" title="主人公"></div>
 
-        <!-- 吹き出し -->
+        <!-- ★ 吹き出し（復活） -->
         <div class="speech" id="speech">今日のPFCバランス、いい感じ？</div>
 
         <div class="stage-fab">
-          <button class="fab" id="fabDex"  title="図鑑へ">📚</button>
+          <button class="fab" id="fabDex" title="図鑑へ">📚</button>
           <button class="fab" id="fabHome" title="ホームへ">🏠</button>
         </div>
       </div>
@@ -79,9 +74,11 @@
   <footer class="app-footer">
     © Bishokuka-san
     <div class="footer-actions">
-      <button class="blue"  id="goInsights">確認する</button>
+      <button class="blue" id="goInsights">確認する</button>
       <button class="green" id="quickClear">達成！ログをクリア</button>
     </div>
   </footer>
+
+  <script src="./main.js"></script>
 </body>
 </html>
