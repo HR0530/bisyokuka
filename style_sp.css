@@ -1,41 +1,59 @@
-/* ===== ベース ===== */
-:root{ --bg:#f4f1ec; --text:#333; --muted:#888; --muted2:#999; --tile:#fff; --accent:#60a5fa; --danger:#f87171; }
+:root {
+  --bg:#f4f1ec; --text:#333;
+  --muted:#888; --muted2:#999;
+  --tile:#fff; --accent:#60a5fa; --danger:#f87171;
+}
 *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-html,body{ margin:0; padding:0; background:var(--bg); color:var(--text); font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans JP", sans-serif; }
-
-
-.home-page{ padding:16px; padding-bottom:24px; max-width:720px; margin:auto; }
-
+html,body {
+  margin:0; padding:0;
+  background:var(--bg); color:var(--text);
+  font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans JP", sans-serif;
+}
+.home-page{ padding:16px; max-width:720px; margin:auto; }
 
 /* ===== ヘッダー ===== */
-.header{ position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 8px; margin:-16px -16px 12px; background:linear-gradient(180deg, rgba(244,241,236,1), rgba(244,241,236,.85)); backdrop-filter: blur(6px); border-bottom:1px solid rgba(0,0,0,.05); }
-.header-left{ display:flex; align-items:center; gap:12px; min-width:0; }
+.header{ display:flex; justify-content:space-between; align-items:center;
+  padding:12px 8px; margin-bottom:12px;
+  background:linear-gradient(180deg, rgba(244,241,236,1), rgba(244,241,236,.85));
+  border-bottom:1px solid rgba(0,0,0,.05);
+}
+.header-left{ display:flex; align-items:center; gap:12px; }
 .profile-icon{ width:48px; height:48px; border-radius:50%; object-fit:cover; }
-.user-texts{ display:flex; flex-direction:column; min-width:0; }
-.hello{ font-size:16px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hello{ font-size:16px; font-weight:700; }
 .header-right{ display:flex; gap:8px; }
-.settings-button, .logout-button{ width:40px; height:40px; border:none; border-radius:10px; display:grid; place-items:center; font-size:18px; color:#fff; cursor:pointer; }
+.settings-button, .logout-button {
+  width:40px; height:40px; border:none; border-radius:10px;
+  display:grid; place-items:center; font-size:18px; color:#fff; cursor:pointer;
+}
 .settings-button{ background:var(--accent); }
-.settings-button:active{ transform: translateY(1px); }
 .logout-button{ background:var(--danger); }
-.logout-button:active{ transform: translateY(1px); }
-
+.settings-button:active, .logout-button:active{ transform:translateY(1px); }
 
 /* ===== カロリーカード ===== */
-.calorie-card{ background:var(--tile); border-radius:16px; box-shadow:0 2px 10px rgba(0,0,0,.08); padding:18px; text-align:center; margin:12px 0 20px; }
+.calorie-card{
+  background:var(--tile); border-radius:16px;
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
+  padding:18px; text-align:center; margin:12px 0 20px;
+}
 .rank-label{ font-size:14px; color:var(--muted); }
-.calorie-value{ font-size:32px; font-weight:800; line-height:1.2; margin:6px 0; }
+.calorie-value{ font-size:32px; font-weight:800; margin:6px 0; }
 .rank-sub{ font-size:13px; color:var(--muted2); }
 
-
-/* ===== 機能グリッド（スマホ=2列, タップ領域大きめ） ===== */
+/* ===== 機能グリッド ===== */
 .feature-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; }
-.feature-card{ appearance:none; background:var(--tile); border:none; border-radius:14px; box-shadow:0 2px 8px rgba(0,0,0,.06); padding:18px 8px; text-align:center; font-size:18px; font-weight:700; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; min-height:96px; cursor:pointer; }
+.feature-card{
+  appearance:none; background:var(--tile);
+  border:none; border-radius:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+  padding:18px 8px; text-align:center;
+  font-size:18px; font-weight:700;
+  display:flex; flex-direction:column; gap:8px;
+  min-height:96px; cursor:pointer;
+}
 .feature-card span{ font-size:14px; font-weight:700; }
-.feature-card:active{ transform: translateY(1px); }
+.feature-card:active{ transform:translateY(1px); }
 
-
-/* 端末幅が広い時は3列に拡張 */
-@media (min-width: 480px){
-.feature-grid{ grid-template-columns:repeat(3, 1fr); }
+/* 横幅広いときは3列に */
+@media (min-width:480px) {
+  .feature-grid{ grid-template-columns:repeat(3, 1fr); }
 }
