@@ -2,11 +2,11 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>美食家さん｜キャラ育成</title>
 
-  <!-- ★これを最初に（共通ルーター）-->
-  <script src="/view-router.js"></script>
+  <!-- ★ 共通ルーター：相対パスに修正 -->
+  <script src="../view-router.js"></script>
 
   <link rel="stylesheet" href="./style.css" />
 </head>
@@ -43,10 +43,10 @@
       <div class="stage">
         <div class="grid-bg" aria-hidden="true"></div>
 
-        <!-- ★ キャラ（正面の静止画のみ） -->
+        <!-- キャラ -->
         <div id="character" class="char dir-front" title="主人公"></div>
 
-        <!-- ★ 吹き出し（復活） -->
+        <!-- 吹き出し -->
         <div class="speech" id="speech">今日のPFCバランス、いい感じ？</div>
 
         <div class="stage-fab">
@@ -83,6 +83,5 @@
       <button class="green" id="quickClear">達成！ログをクリア</button>
     </div>
   </footer>
-
 </body>
 </html>
