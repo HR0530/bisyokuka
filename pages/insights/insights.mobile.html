@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>美食家さん 分析（モバイル）</title>
+  <link rel="stylesheet" href="insights.mobile.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <a class="back" href="../../index.html">← ホームへ</a>
+      <h1>📊 分析</h1>
+      <button id="openCharts" class="ghost small">詳細なグラフ</button>
+    </header>
+
+    <nav class="nav">
+      <button class="chip" data-range="today">今日</button>
+      <button class="chip" data-range="week">今週</button>
+      <button class="chip" data-range="month">今月</button>
+      <button class="chip" data-range="all">すべて</button>
+      <span class="spacer"></span>
+      <button id="expandAll" class="ghost small">すべて展開</button>
+      <button id="collapseAll" class="ghost small">すべて畳む</button>
+    </nav>
+
+    <!-- 合計サマリー -->
+    <section class="summary-cards" id="summaryCards">
+      <div class="card"><div class="label">合計カロリー</div><div class="value"><span id="sumKcal">0</span> kcal</div></div>
+      <div class="card"><div class="label">たんぱく質</div><div class="value"><span id="sumP">0</span> g</div></div>
+      <div class="card"><div class="label">脂質</div><div class="value"><span id="sumF">0</span> g</div></div>
+      <div class="card"><div class="label">炭水化物</div><div class="value"><span id="sumC">0</span> g</div></div>
+    </section>
+
+    <!-- 日別アコーディオン -->
+    <section id="daysRoot" class="days-root"></section>
+
+    <footer class="footer">
+      <a class="back" href="../../index.html">← ホームへ戻る</a>
+    </footer>
+  </div>
+
+  <script src="insights.mobile.js"></script>
+  <script>
+    // 「詳細なグラフ」へ
+    document.getElementById('openCharts')?.addEventListener('click', () => {
+      location.href = 'charts.mobile.html';
+    });
+  </script>
+</body>
+</html>
