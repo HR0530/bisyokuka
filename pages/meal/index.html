@@ -2,14 +2,8 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>美食家さん｜食事記録（PC）</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap"
-    rel="stylesheet"
-  />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -17,15 +11,10 @@
     <h1>🍽️ 食事記録</h1>
 
     <div class="meal-upload-area">
-      <!-- 画像アップロード -->
+      <!-- 写真選択 -->
       <label class="file-label">
-        <input
-          type="file"
-          id="fileInput"
-          accept="image/*,.heic,.HEIC"
-          style="display:none;"
-        />
-        <span class="file-btn">📁 ファイルを選択</span>
+        <input type="file" id="photoInput" accept="image/*" style="display:none;" />
+        <span class="file-btn">📷 写真を選択</span>
       </label>
 
       <!-- プレビュー -->
@@ -33,29 +22,25 @@
 
       <!-- 評価 & コメント -->
       <div class="controls-row">
-        <label>星評価:
-          <input
-            type="number"
-            id="starsInput"
-            min="1"
-            max="5"
-            value="4"
-            title="星評価"
-          />
-        </label>
+        <input
+          type="number"
+          id="starsInput"
+          min="1"
+          max="5"
+          value="4"
+          title="星評価"
+        />
         <input
           type="text"
           id="commentInput"
-          maxlength="64"
+          maxlength="32"
           placeholder="コメント(任意)"
         />
       </div>
 
       <!-- 操作ボタン -->
-      <div class="button-row">
-        <button id="addMealBtn" class="primary">記録する</button>
-        <button id="resetBtn" class="danger">全てリセット</button>
-      </div>
+      <button id="addMealBtn" class="primary">記録する</button>
+      <button id="resetBtn" class="danger subtle">全てリセット</button>
 
       <!-- ヘルパーテキスト -->
       <div id="helperText" class="hint"></div>
@@ -70,8 +55,29 @@
     </div>
   </div>
 
-  <!-- HEIC/HEIF → JPEG 変換（iPhone対応） -->
-  <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
+  <!-- 編集モーダル -->
+  <div id="modalOverlay" class="modal-overlay">
+    <div class="modal">
+      <button id="closeModal" class="close-btn">✖</button>
+      <img id="modalPhoto" alt="meal" class="modal-photo" />
+      <div class="modal-fields">
+        <label>
+          料理名
+          <input type="text" id="modalFoodInput" />
+        </label>
+        <label>
+          星（1〜5）
+          <input type="number" id="modalStarsInput" min="1" max="5" />
+        </label>
+        <label>
+          コメント
+          <input type="text" id="modalCommentInput" maxlength="32" />
+        </label>
+      </div>
+      <button id="saveModalBtn" class="primary">保存</button>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
