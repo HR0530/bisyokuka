@@ -1,77 +1,145 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>美食家さん｜食事記録</title>
+const API_URL = "https://xxxx.ngrok-free.app/api/calc-calorie"; // 最新URLに差し替え
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap"
-    rel="stylesheet"
-  />
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="meal-app-container pc">
-    <h1>🍽️ 食事記録</h1>
+const els = {
+  fileInput: document.getElementById("fileInput"),
+  photoPreview: document.getElementById("photoPreview"),
+  starsInput: document.getElementById("starsInput"),
+  commentInput: document.getElementById("commentInput"),
+  addMealBtn: document.getElementById("addMealBtn"),
+  resetBtn: document.getElementById("resetBtn"),
+  mealsByDay: document.getElementById("mealsByDay"),
+  helperText: document.getElementById("helperText"),
+};
 
-    <div class="meal-upload-area">
-      <!-- 画像アップロード -->
-      <label class="file-label">
-        <input
-          type="file"
-          id="fileInput"
-          accept="image/*,.heic,.HEIC"
-          style="display:none;"
-        />
-        <span class="file-btn">📁 ファイルを選択</span>
-      </label>
+const STORAGE_KEY = "bisyokuka_meals_v2";
 
-      <!-- プレビュー -->
-      <div id="photoPreview" class="photo-preview"></div>
+function loadMeals() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+  catch { return []; }
+}
+function saveMeals(items) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
 
-      <!-- 評価 & コメント -->
-      <div class="controls-row">
-        <label>星評価:
-          <input
-            type="number"
-            id="starsInput"
-            min="1"
-            max="5"
-            value="4"
-            title="星評価"
-          />
-        </label>
-        <input
-          type="text"
-          id="commentInput"
-          maxlength="64"
-          placeholder="コメント(任意)"
-        />
-      </div>
+function fmt(n) {
+  return new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 0 }).format(n);
+}
+function groupByDay(items) {
+  const map = new Map();
+  for (const m of items) {
+    const k = m.date.slice(0,10);
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(m);
+  }
+  return Array.from(map.entries()).sort((a,b)=> b[0].localeCompare(a[0]));
+}
 
-      <!-- 操作ボタン -->
-      <div class="button-row">
-        <button id="addMealBtn" class="primary">記録する</button>
-        <button id="resetBtn" class="danger">全てリセット</button>
-      </div>
+async function fileToDataURL(file) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(String(fr.result));
+    fr.onerror = rej;
+    fr.readAsDataURL(file);
+  });
+}
 
-      <!-- ヘルパーテキスト -->
-      <div id="helperText" class="hint"></div>
-    </div>
+function render() {
+  const items = loadMeals();
+  const grouped = groupByDay(items);
+  els.mealsByDay.innerHTML = "";
 
-    <!-- 日付ごとの一覧 -->
-    <div id="mealsByDay"></div>
+  for (const [date, arr] of grouped) {
+    const sec = document.createElement("section");
+    sec.className = "day-block";
+    const h = document.createElement("h2");
+    h.textContent = new Date(date+"T00:00:00").toLocaleDateString('ja-JP', { weekday:"short", year:"numeric", month:"2-digit", day:"2-digit" });
+    sec.appendChild(h);
 
-    <!-- 戻る -->
-    <div class="back-button">
-      <a href="../../index_pc.html">← ホームへ戻る</a>
-    </div>
-  </div>
+    const grid = document.createElement("div");
+    grid.className = "meal-grid";
 
-  <!-- HEIC/HEIF → JPEG 変換 -->
-  <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
-  <script src="script.js"></script>
-</body>
-</html>
+    for (const m of arr) {
+      const card = document.createElement("div");
+      card.className = "meal-card";
+
+      card.innerHTML = `
+        <img class="meal-img" src="${m.photo}" alt="${m.food}">
+        <div class="meta">
+          <div class="name">${m.food}</div>
+          <div class="badges">
+            <span class="kcal">${fmt(m.totals?.kcal ?? 0)} kcal</span>
+            <span>P ${fmt(m.totals?.protein ?? 0)} g</span>
+            <span>F ${fmt(m.totals?.fat ?? 0)} g</span>
+            <span>C ${fmt(m.totals?.carbs ?? 0)} g</span>
+          </div>
+          ${m.comment ? `<div class="comment">「${m.comment}」</div>` : ""}
+        </div>
+      `;
+      grid.appendChild(card);
+    }
+
+    sec.appendChild(grid);
+    els.mealsByDay.appendChild(sec);
+  }
+}
+
+// ファイル選択
+let originalFile = null;
+els.fileInput.addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  originalFile = file;
+  const url = URL.createObjectURL(file);
+  els.photoPreview.innerHTML = `<img src="${url}" alt="preview">`;
+});
+
+// 記録する
+els.addMealBtn.addEventListener("click", async () => {
+  if (!originalFile) { alert("ファイルを選んでください"); return; }
+
+  const photoDataURL = await fileToDataURL(originalFile);
+  const now = new Date();
+
+  const item = {
+    id: "m_" + now.getTime(),
+    date: now.toISOString(),
+    photo: photoDataURL,
+    food: "不明",
+    stars: parseInt(els.starsInput.value || "3", 10),
+    comment: els.commentInput.value.trim(),
+    totals: { protein:0, fat:0, carbs:0, kcal:0 }
+  };
+
+  // API解析
+  try {
+    const fd = new FormData();
+    fd.append("photo", originalFile);
+    const res = await fetch(API_URL, { method:"POST", body: fd });
+    if (res.ok) {
+      const raw = await res.json();
+      item.food = raw.food || "不明";
+      item.totals = raw.totals || item.totals;
+    }
+  } catch (e) {
+    console.warn("AI解析失敗", e);
+  }
+
+  const items = loadMeals();
+  items.push(item);
+  saveMeals(items);
+  render();
+
+  els.commentInput.value = "";
+  els.photoPreview.innerHTML = "";
+  originalFile = null;
+});
+
+// 全消し
+els.resetBtn.addEventListener("click", () => {
+  if (!confirm("すべて削除しますか？")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  render();
+});
+
+// 初期表示
+render();
