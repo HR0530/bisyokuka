@@ -1,120 +1,41 @@
-body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Helvetica Neue', sans-serif;
-  background-color: #fff6f6;
-}
+/* ===== ベース ===== */
+:root{ --bg:#f4f1ec; --text:#333; --muted:#888; --muted2:#999; --tile:#fff; --accent:#60a5fa; --danger:#f87171; }
+*{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+html,body{ margin:0; padding:0; background:var(--bg); color:var(--text); font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans JP", sans-serif; }
 
-.home-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 1rem;
-}
 
-/* ヘッダー部分 */
-.header-row {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  position: relative;
-}
+.home-page{ padding:16px; padding-bottom:24px; max-width:720px; margin:auto; }
 
-.profile-icon {
-  width: 90px;
-  height: 90px;
-  object-fit: cover;
-  border-radius: 50%;
-  border: 2px solid #f5b2b2;
-  margin-bottom: 0.5rem;
-}
 
-.user-name {
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-  color: #444;
-}
+/* ===== ヘッダー ===== */
+.header{ position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 8px; margin:-16px -16px 12px; background:linear-gradient(180deg, rgba(244,241,236,1), rgba(244,241,236,.85)); backdrop-filter: blur(6px); border-bottom:1px solid rgba(0,0,0,.05); }
+.header-left{ display:flex; align-items:center; gap:12px; min-width:0; }
+.profile-icon{ width:48px; height:48px; border-radius:50%; object-fit:cover; }
+.user-texts{ display:flex; flex-direction:column; min-width:0; }
+.hello{ font-size:16px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.header-right{ display:flex; gap:8px; }
+.settings-button, .logout-button{ width:40px; height:40px; border:none; border-radius:10px; display:grid; place-items:center; font-size:18px; color:#fff; cursor:pointer; }
+.settings-button{ background:var(--accent); }
+.settings-button:active{ transform: translateY(1px); }
+.logout-button{ background:var(--danger); }
+.logout-button:active{ transform: translateY(1px); }
 
-/* 設定・ログアウトアイコン */
-.header-row {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
 
-.header-top-right {
-  position: absolute;
-  top: 0.3rem;
-  right: 0.8rem;
-  display: flex;
-  gap: 0.5rem;
-}
+/* ===== カロリーカード ===== */
+.calorie-card{ background:var(--tile); border-radius:16px; box-shadow:0 2px 10px rgba(0,0,0,.08); padding:18px; text-align:center; margin:12px 0 20px; }
+.rank-label{ font-size:14px; color:var(--muted); }
+.calorie-value{ font-size:32px; font-weight:800; line-height:1.2; margin:6px 0; }
+.rank-sub{ font-size:13px; color:var(--muted2); }
 
-.settings-button,
-.logout-button {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-}
 
-.settings-button {
-  color: #3b82f6;
-}
+/* ===== 機能グリッド（スマホ=2列, タップ領域大きめ） ===== */
+.feature-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; }
+.feature-card{ appearance:none; background:var(--tile); border:none; border-radius:14px; box-shadow:0 2px 8px rgba(0,0,0,.06); padding:18px 8px; text-align:center; font-size:18px; font-weight:700; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; min-height:96px; cursor:pointer; }
+.feature-card span{ font-size:14px; font-weight:700; }
+.feature-card:active{ transform: translateY(1px); }
 
-.logout-button {
-  color: #ef4444;
-}
 
-/* カロリーカード */
-.calorie-card {
-  background-color: white;
-  border-radius: 1rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  width: 100%;
-  max-width: 320px;
-  padding: 1rem;
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-
-.rank-label {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-.calorie-value {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #e63946;
-  margin: 0.5rem 0;
-}
-
-.rank-sub {
-  font-size: 0.9rem;
-  color: #999;
-}
-
-/* 機能ボタン */
-.feature-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  width: 100%;
-  max-width: 360px;
-}
-
-.feature-card {
-  background: white;
-  border-radius: 0.8rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  padding: 1.2rem;
-  text-align: center;
-  font-size: 1rem;
-  cursor: pointer;
-  color: #1e40af;
+/* 端末幅が広い時は3列に拡張 */
+@media (min-width: 480px){
+.feature-grid{ grid-template-columns:repeat(3, 1fr); }
 }
