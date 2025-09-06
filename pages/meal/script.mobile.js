@@ -1,5 +1,5 @@
 // ===== モバイル版 script（API先を更新！）=====
-const API_URL = "https://cbb0b1273bbb.ngrok-free.app/api/calc-calorie"; // ←今のURLに
+const API_URL = "https://xxxxx.ngrok-free.app/api/calc-calorie"; // ←今のURLに置換
 
 // ---- DOM ----
 const els = {
@@ -15,16 +15,20 @@ const els = {
 };
 
 // ---- Utils ----
-const fmt = (n) => new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 0 }).format(n);
+const fmt = (n) =>
+  new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 0 }).format(n);
+
 function groupByDay(items) {
   const map = new Map();
   for (const m of items) {
-    const k = m.date.slice(0,10);
+    const k = (m.date || "").slice(0, 10);
     if (!map.has(k)) map.set(k, []);
     map.get(k).push(m);
   }
-  return Array.from(map.entries()).sort((a,b)=> b[0].localeCompare(a[0]));
+  // 新しい日付が先
+  return Array.from(map.entries()).sort((a, b) => b[0].localeCompare(a[0]));
 }
+
 async function fileToDataURL(file) {
   return await new Promise((res, rej) => {
     const fr = new FileReader();
@@ -42,7 +46,11 @@ async function convertHeicIfNeeded(file) {
 
   if (typeof heic2any !== "function") return file; // ライブラリ未読込なら素通り
   try {
-    const jpgBlob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
+    const jpgBlob = await heic2any({
+      blob: file,
+      toType: "image/jpeg",
+      quality: 0.9,
+    });
     return new File([jpgBlob], (file.name || "image") + ".jpg", {
       type: "image/jpeg",
       lastModified: Date.now(),
@@ -97,10 +105,10 @@ async function downscaleForApi(file, max = 1280) {
 async function analyzeByAI(fileForApi) {
   const fd = new FormData();
   fd.append("photo", fileForApi);
-  const res = await fetch(API_URL, { method:"POST", body: fd });
+  const res = await fetch(API_URL, { method: "POST", body: fd });
   if (!res.ok) {
-    const txt = await res.text().catch(()=> "");
-    throw new Error(`API ${res.status}: ${txt.slice(0,200)}`);
+    const txt = await res.text().catch(() => "");
+    throw new Error(`API ${res.status}: ${txt.slice(0, 200)}`);
   }
   return await res.json(); // { food, ingredients?, totals?, note? } or fallback
 }
@@ -108,34 +116,53 @@ async function analyzeByAI(fileForApi) {
 // レスポンス正規化
 function normalizeNutrition(data) {
   if (data?.totals || data?.ingredients) {
-    const sums = (data.ingredients || []).reduce((a, it) => ({
-      protein: a.protein + (Number(it.protein) || 0),
-      fat:     a.fat     + (Number(it.fat)     || 0),
-      carbs:   a.carbs   + (Number(it.carbs)   || 0),
-      kcal:    a.kcal    + (Number(it.kcal)    || 0),
-    }), { protein:0, fat:0, carbs:0, kcal:0 });
+    const sums = (data.ingredients || []).reduce(
+      (a, it) => ({
+        protein: a.protein + (Number(it.protein) || 0),
+        fat: a.fat + (Number(it.fat) || 0),
+        carbs: a.carbs + (Number(it.carbs) || 0),
+        kcal: a.kcal + (Number(it.kcal) || 0),
+      }),
+      { protein: 0, fat: 0, carbs: 0, kcal: 0 }
+    );
     return {
       food: String(data?.food ?? "不明"),
       ingredients: Array.isArray(data?.ingredients) ? data.ingredients : [],
       totals: {
         protein: Number(data?.totals?.protein) || sums.protein,
-        fat:     Number(data?.totals?.fat)     || sums.fat,
-        carbs:   Number(data?.totals?.carbs)   || sums.carbs,
-        kcal:    Number(data?.totals?.kcal)    || sums.kcal,
-      }
+        fat: Number(data?.totals?.fat) || sums.fat,
+        carbs: Number(data?.totals?.carbs) || sums.carbs,
+        kcal: Number(data?.totals?.kcal) || sums.kcal,
+      },
     };
   }
   if (typeof data?.kcal !== "undefined") {
     const kcal = Number(data.kcal) || 0;
-    return { food: String(data?.food ?? "不明"), ingredients: [], totals: { protein:0, fat:0, carbs:0, kcal } };
+    return {
+      food: String(data?.food ?? "不明"),
+      ingredients: [],
+      totals: { protein: 0, fat: 0, carbs: 0, kcal },
+    };
   }
-  return { food: "（推定不可）", ingredients: [], totals: { protein:0, fat:0, carbs:0, kcal:0 } };
+  return {
+    food: "（推定不可）",
+    ingredients: [],
+    totals: { protein: 0, fat: 0, carbs: 0, kcal: 0 },
+  };
 }
 
 // ---- Storage ----
 const STORAGE_KEY = "bisyokuka_meals_v2";
-function loadMeals() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch { return []; } }
-function saveMeals(items) { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+function loadMeals() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+function saveMeals(items) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
 
 // ---- Render ----
 function render() {
@@ -144,22 +171,29 @@ function render() {
   els.mealsByDay.innerHTML = "";
 
   for (const [date, arr] of grouped) {
-    const sec = document.createElement("section");
-    sec.className = "day-block";
+    const daySec = document.createElement("section");
+    daySec.className = "day";
+
     const h = document.createElement("h2");
-    h.className = "day-title";
-    h.textContent = new Date(date+"T00:00:00").toLocaleDateString('ja-JP', { weekday:"short", year:"numeric", month:"2-digit", day:"2-digit" });
-    sec.appendChild(h);
+    h.textContent = new Date(date + "T00:00:00").toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      weekday: "short",
+    });
+    daySec.appendChild(h);
 
     const grid = document.createElement("div");
-    grid.className = "meal-grid";
+    grid.className = "cards";
 
     for (const m of arr) {
-      const card = document.createElement("div");
-      card.className = "meal-card";
+      const card = document.createElement("article");
+      card.className = "card";
       card.dataset.id = m.id;
 
-      const rows = (m.ingredients||[]).map(it => `
+      const rows = (m.ingredients || [])
+        .map(
+          (it) => `
         <tr>
           <td>${it.name}</td>
           <td class="num">${fmt(it.grams)}</td>
@@ -167,41 +201,47 @@ function render() {
           <td class="num">${fmt(it.fat)}</td>
           <td class="num">${fmt(it.carbs)}</td>
           <td class="num">${fmt(it.kcal)}</td>
-        </tr>
-      `).join("");
+        </tr>`
+        )
+        .join("");
 
       card.innerHTML = `
-        <img class="meal-img" src="${m.photo}" alt="${m.food}" onerror="this.style.display='none'">
-        <div class="meal-meta">
-          <div class="name">${m.food}</div>
+        <img class="img" src="${m.photo}" alt="${m.food}" onerror="this.style.display='none'">
+        <div class="meta">
+          <div class="title">${m.food}</div>
           <div class="badges">
-            <span class="kcal-badge">${fmt(m.totals?.kcal ?? 0)} kcal</span>
+            <span class="kcal">${fmt(m.totals?.kcal ?? 0)} kcal</span>
             <span class="badge">P ${fmt(m.totals?.protein ?? 0)} g</span>
             <span class="badge">F ${fmt(m.totals?.fat ?? 0)} g</span>
             <span class="badge">C ${fmt(m.totals?.carbs ?? 0)} g</span>
+            <span class="badge star">★ ${m.stars ?? 0}</span>
           </div>
           ${m.comment ? `<div class="hint">「${m.comment}」</div>` : ""}
         </div>
-        ${rows ? `
-        <details class="ing-details">
+        ${
+          rows
+            ? `
+        <details class="ing">
           <summary>食材内訳</summary>
-          <table class="ing-table">
+          <table class="table">
             <thead>
               <tr><th>食材</th><th class="num">g</th><th class="num">P</th><th class="num">F</th><th class="num">C</th><th class="num">kcal</th></tr>
             </thead>
             <tbody>${rows}</tbody>
           </table>
-        </details>` : ""}
+        </details>`
+            : ""
+        }
       `;
       grid.appendChild(card);
     }
 
-    sec.appendChild(grid);
-    els.mealsByDay.appendChild(sec);
+    daySec.appendChild(grid);
+    els.mealsByDay.appendChild(daySec);
   }
 }
 
-// ---- フォト入力（共通）----
+// ---- フォト入力 ----
 let originalFile = null;
 function handleFiles(fileList) {
   const file = fileList && fileList[0];
@@ -210,12 +250,16 @@ function handleFiles(fileList) {
   const url = URL.createObjectURL(file);
   els.photoPreview.innerHTML = `<img src="${url}" alt="preview">`;
 }
+
 els.cameraInput?.addEventListener("change", (e) => handleFiles(e.target.files));
 els.libraryInput?.addEventListener("change", (e) => handleFiles(e.target.files));
 
 // ---- 記録ボタン ----
 els.addMealBtn.addEventListener("click", async () => {
-  if (!originalFile) { alert("写真を選択してください"); return; }
+  if (!originalFile) {
+    alert("写真を選択してください");
+    return;
+  }
 
   els.addMealBtn.disabled = true;
   const defaultText = els.addMealBtn.textContent;
@@ -224,7 +268,7 @@ els.addMealBtn.addEventListener("click", async () => {
 
   let photoDataURL = null;
   try {
-    // 先に写真を DataURL 化（API がコケても記録は残す）
+    // 先に写真を DataURL 化（API が失敗しても記録は残す）
     photoDataURL = await fileToDataURL(originalFile);
 
     // API 解析
@@ -243,16 +287,16 @@ els.addMealBtn.addEventListener("click", async () => {
       stars: Math.max(1, Math.min(5, parseInt(els.starsInput.value || "3", 10))),
       comment: els.commentInput.value.trim(),
       ingredients: norm.ingredients,
-      totals: norm.totals
+      totals: norm.totals,
     };
     const items = loadMeals();
     items.push(item);
     saveMeals(items);
-
   } catch (e) {
     console.warn("AI解析失敗", e);
     // フォールバック保存（写真・コメントだけでも残す）
-    els.helperText.textContent = "解析に失敗しました（ネットワーク/URL/CORSの可能性）。写真は記録しました。";
+    els.helperText.textContent =
+      "解析に失敗しました（ネットワーク/URL/CORSの可能性）。写真は記録しました。";
 
     const now = new Date();
     const item = {
@@ -263,7 +307,7 @@ els.addMealBtn.addEventListener("click", async () => {
       stars: Math.max(1, Math.min(5, parseInt(els.starsInput.value || "3", 10))),
       comment: els.commentInput.value.trim(),
       ingredients: [],
-      totals: { protein:0, fat:0, carbs:0, kcal:0 }
+      totals: { protein: 0, fat: 0, carbs: 0, kcal: 0 },
     };
     const items = loadMeals();
     items.push(item);
@@ -280,7 +324,7 @@ els.addMealBtn.addEventListener("click", async () => {
   }
 });
 
-// ---- 全消し（任意）----
+// ---- 全消し ----
 els.resetBtn?.addEventListener("click", () => {
   if (!confirm("保存されている全ての食事記録を削除します。よろしいですか？")) return;
   localStorage.removeItem(STORAGE_KEY);
@@ -288,5 +332,7 @@ els.resetBtn?.addEventListener("click", () => {
   render();
 });
 
-// 初期
-(function init(){ render(); })();
+// 初期表示
+(function init() {
+  render();
+})();
