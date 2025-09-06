@@ -1,0 +1,133 @@
+:root{
+  --bg:#0f172a; --card:#111827; --ink:#e5e7eb; --muted:#94a3b8;
+  --accent:#22d3ee; --green:#22c55e; --blue:#3b82f6; --line:#1f2937; --orange:#f59e0b;
+
+  --frame: 32px;
+  --hero-scale: 7.5;   /* スマホ向けに少し小さく */
+  --hero-x: 36%;
+  --hero-y: 38%;
+
+  --walk-dur: .9s;
+  --bob-dur:  .9s;
+  --grid-dur: 1.8s;
+}
+
+*{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+html,body{height:100%}
+body{margin:0; font-family:system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background:var(--bg); color:var(--ink)}
+
+/* ===== Header（スマホ向け） ===== */
+.app-header{
+  position:sticky; top:0; z-index:10;
+  display:grid; grid-template-columns:auto 1fr auto; align-items:center;
+  gap:8px; padding:10px 12px;
+  background:linear-gradient(180deg, rgba(15,23,42,.95), rgba(15,23,42,.85));
+  border-bottom:1px solid var(--line);
+}
+.app-header h1{ margin:0; font-size:18px; text-align:center }
+.nav-pill{
+  width:36px; height:36px; border-radius:10px;
+  border:1px solid #243246; background:#0b1626; color:#e5e7eb;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.user-summary{
+  grid-column:1/-1; display:grid; gap:8px; padding-top:6px;
+}
+.title-badge{
+  justify-self:center;
+  background:linear-gradient(135deg,#2dd4bf,#60a5fa);
+  color:#0b1320; font-weight:700; padding:4px 10px; border-radius:999px; font-size:12px;
+}
+.xp-wrap{ width:100% }
+.xp-label{ display:flex; justify-content:space-between; font-size:12px; color:var(--muted) }
+.xp-bar{ height:10px; background:#0b1220; border-radius:999px; overflow:hidden; border:1px solid #0a1020 }
+#xpFill{ height:100%; width:0%; background:linear-gradient(90deg,#22d3ee,#3b82f6); transition:width .4s ease }
+
+/* ===== Layout ===== */
+.layout{
+  max-width:760px; margin:0 auto; padding:12px;
+  display:grid; gap:12px;
+}
+.stage-card, .side-card{
+  background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px;
+  box-shadow:0 6px 20px rgba(0,0,0,.25);
+}
+.stage-toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px }
+.stat{ font-size:12px; color:var(--muted) }
+.ghost-btn{ background:transparent; color:var(--ink); border:1px solid #263144; padding:6px 10px; border-radius:10px; cursor:pointer }
+
+/* ===== Stage ===== */
+.stage{
+  position:relative; height:420px; border-radius:12px; overflow:hidden;
+  background:radial-gradient(ellipse at 30% 30%, #0f2438, #0c1827 60%); outline:1px solid #0c2238
+}
+.grid-bg{
+  position:absolute; inset:0;
+  background-image:linear-gradient(#14314d 1px,transparent 1px),linear-gradient(90deg,#14314d 1px,transparent 1px);
+  background-size:40px 40px; opacity:.35;
+  animation:gridMove var(--grid-dur) linear infinite; will-change: background-position;
+}
+@keyframes gridMove{ to { background-position: 0 40px, 0 40px; } }
+
+/* キャラ（スプライト） */
+.char{
+  position:absolute; left:var(--hero-x); top:var(--hero-y);
+  width:var(--frame); height:var(--frame);
+  background-image: var(--char-img, url('./project-root/char.png'));
+  background-repeat:no-repeat; background-position:0 0;
+  image-rendering:pixelated;
+  transform: translate(-50%, calc(-100% + var(--bob, 0px))) scale(var(--hero-scale));
+  transform-origin: top left; z-index:2;
+}
+.walking{
+  animation: walkAnim var(--walk-dur) steps(3) infinite,
+             bob var(--bob-dur) ease-in-out infinite;
+}
+@keyframes walkAnim{ from{ background-position-x:0px } to{ background-position-x:-96px } }
+@keyframes bob{ 0%,100%{ --bob:0px } 50%{ --bob:1.5px } }
+
+/* 吹き出し */
+.speech{
+  position:absolute; left:var(--hero-x); top: calc(var(--hero-y) - 28%);
+  transform: translateX(-10%); z-index:5; pointer-events:none; text-align:center;
+  max-width: 70vw;
+  padding:8px 12px; font-size:13px; line-height:1.25;
+  background:#0f172a; color:#e5e7eb; border:1px solid #203049; border-radius:12px;
+  transition:opacity .3s; opacity:1;
+}
+.speech::after{
+  content:""; position:absolute; left:50%; bottom:-8px; transform:translateX(-50%);
+  border:8px solid transparent; border-top-color:#203049;
+}
+
+/* FAB */
+.stage-fab{ position:absolute; right:10px; bottom:10px; display:flex; gap:8px; z-index:3 }
+.fab{ width:42px; height:42px; border-radius:10px; border:1px solid #21304a; background:#0b1626; color:#e5e7eb; cursor:pointer; font-size:18px }
+
+/* クエスト */
+.side-card h2{ margin:4px 0 10px }
+.quest-list{ display:flex; flex-direction:column; gap:10px }
+.quest{ border:1px solid #203049; background:#0e1726; border-radius:12px; padding:10px 12px }
+.quest .top{ display:flex; justify-content:space-between; align-items:center; gap:8px }
+.quest .name{ font-weight:600 }
+.quest .xp{ font-size:12px; color:var(--muted) }
+.quest .desc{ margin:6px 0 10px; color:#b6c2d1; font-size:13px }
+.quest .actions{ display:flex; gap:8px }
+button.blue{ background:var(--blue); color:#fff; border:none; padding:8px 10px; border-radius:10px; font-weight:600 }
+button.green{ background:var(--green); color:#06200f; border:none; padding:8px 10px; border-radius:10px; font-weight:700 }
+button:disabled{ opacity:.6; cursor:not-allowed }
+.quest.done{ opacity:.55 }
+.quest.done .name{ text-decoration:line-through }
+.quest .state{ font-size:12px; color:#a5f3fc; margin-left:6px }
+
+.howto{ margin-top:12px; background:#0c1422; border:1px solid #1a2740; border-radius:12px; padding:10px 12px; color:#c8d3e1 }
+.muted-line{ margin-top:6px; color:#94a3b8; font-size:12px }
+.mt{ margin-top:14px }
+.log{ margin:8px 0 0; padding-left:18px; max-height:160px; overflow:auto }
+
+/* Footer */
+.app-footer{
+  max-width:760px; margin:0 auto 20px; padding:12px; display:flex; gap:8px;
+  align-items:center; justify-content:space-between; color:#94a3b8;
+}
+.app-footer .back{ color:#ffbb54; text-decoration:none }
