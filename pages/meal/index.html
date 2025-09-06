@@ -2,77 +2,64 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>美食家さん 食事記録</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>美食家さん 食事記録（モバイル）</title>
+
+  <!-- フォント & CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.mobile.css" />
 </head>
-
-  <script>
-  // 1度だけ判定してモバイルへ
-  (function () {
-    // 既にモバイルにいたら何もしない
-    if (location.pathname.endsWith('index.mobile.html')) return;
-
-    // ユーザーが手動で戻したいケースもあるので、明示オプトアウト対応
-    if (localStorage.getItem('meal_forceDesktop') === '1') return;
-
-    // 画面幅で判定（UAは誤検知があるため避ける）
-    var w = Math.min(window.screen.width, window.innerWidth || 9999);
-    if (w <= 812) { // 目安：タブレット未満をモバイル扱い
-      location.replace('index.mobile.html');
-    }
-  })();
-</script>
-
 <body>
-  <div class="meal-app-container">
-    <h1>🍽️ 美食家さん 食事記録</h1>
+  <div class="app">
+    <header class="topbar">
+      <a class="back" href="../../index.html">← ホームへ戻る</a>
+      <h1>🍽️ 食事記録</h1>
+      <span style="width:48px"></span>
+    </header>
 
-    <div class="meal-upload-area">
-      <label class="file-label">
-        <input type="file" id="photoInput" accept="image/*" style="display:none;">
-        <span class="file-btn">写真を選択</span>
-      </label>
+    <section class="input-card">
+      <!-- 画像入力 -->
+      <div class="row">
+        <label class="file" for="cameraInput">
+          <input type="file" id="cameraInput" accept="image/*,.heic,.HEIC" capture="environment" />
+          <span>📷 カメラで撮る</span>
+        </label>
+        <label class="file ghost" for="libraryInput">
+          <input type="file" id="libraryInput" accept="image/*,.heic,.HEIC" />
+          <span>🖼 ライブラリから選ぶ</span>
+        </label>
+      </div>
 
-      <div id="photoPreview" class="photo-preview"></div>
+      <!-- プレビュー -->
+      <div id="photoPreview" class="preview"></div>
 
-      <!-- 料理名のドロップダウンは廃止。AI推定をそのまま採用 -->
-      <input type="number" id="starsInput" min="1" max="5" value="4" title="星評価" style="width:70px;">
-      <input type="text" id="commentInput" maxlength="32" placeholder="コメント(任意)" style="width:170px;">
+      <!-- 星&コメント -->
+      <div class="row compact">
+        <div class="stars">
+          <label for="starsInput" class="sr-only">星評価</label>
+          <input type="number" id="starsInput" min="1" max="5" value="4" inputmode="numeric" />
+        </div>
+        <input type="text" id="commentInput" maxlength="32" placeholder="コメント(任意)" />
+      </div>
 
-      <div class="actions-row">
-        <button id="addMealBtn">記録する</button>
-        <button id="resetBtn" class="danger-btn" title="全データを削除">リセット</button>
+      <!-- 操作 -->
+      <button id="addMealBtn" class="primary">記録する</button>
+      <div class="row compact">
+        <button id="resetBtn" class="ghost" style="width:100%; color:#fca5a5; border-color:#792c2c">全てリセット</button>
       </div>
 
       <div id="helperText" class="hint"></div>
-    </div>
+    </section>
 
-    <div id="mealsByDay"></div>
-
-    <div class="back-button" style="text-align:center; margin-top: 2.5rem;">
-      <a href="../../index.html" style="text-decoration: none; color: #ffbb54; font-family:Poppins;">← トップに戻る</a>
-    </div>
+    <!-- 日付ごとの一覧 -->
+    <section id="mealsByDay" class="days"></section>
   </div>
 
-  <!-- 詳細・編集モーダル（料理名はテキスト編集方式） -->
-  <div id="modalOverlay" class="modal-overlay" style="display:none;">
-    <div class="modal-content">
-      <span id="closeModal" class="close-modal">&times;</span>
-      <img id="modalPhoto" class="modal-photo" src="" alt="写真">
-      <div class="modal-actions">
-        <input type="text" id="modalFoodInput" placeholder="料理名" />
-        <input type="number" id="modalStarsInput" min="1" max="5" style="width:70px;">
-        <input type="text" id="modalCommentInput" maxlength="32" placeholder="コメント(任意)" style="width:170px;">
-      </div>
-      <div class="hint">※ 料理名を編集してもカロリーは自動再計算されません（写真が無いため）。</div>
-      <div style="margin-top:10px;">
-        <button id="saveModalBtn" class="save-btn">保存</button>
-      </div>
-    </div>
-  </div>
+  <!-- HEIC/HEIF → JPEG 変換（iPhone対応） -->
+  <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
 
-  <script src="script.js"></script>
+  <!-- モバイル用スクリプト（API_URL を最新 ngrok に！） -->
+  <script src="script.mobile.js"></script>
 </body>
 </html>
