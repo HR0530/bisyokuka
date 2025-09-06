@@ -12,10 +12,15 @@ const els = {
   resetBtn: document.getElementById("resetBtn"),
   mealsByDay: document.getElementById("mealsByDay"),
   helperText: document.getElementById("helperText"),
+  modal: document.getElementById("photoModal"),
+  modalPhoto: document.getElementById("modalPhoto"),
+  modalMeta: document.getElementById("modalMeta"),
+  closeModalBtn: document.getElementById("closeModalBtn"),
 };
 
 // ---- Utils ----
 const fmt = (n) => new Intl.NumberFormat("ja-JP", { maximumFractionDigits: 0 }).format(n);
+
 function groupByDay(items) {
   const map = new Map();
   for (const m of items) {
@@ -26,6 +31,7 @@ function groupByDay(items) {
   }
   return Array.from(map.entries()).sort((a,b)=> b[0].localeCompare(a[0]));
 }
+
 async function fileToDataURL(file) {
   return await new Promise((res, rej) => {
     const fr = new FileReader();
@@ -195,6 +201,10 @@ function render() {
           </table>
         </details>` : ""}
       `;
+
+      // === クリックでモーダル開く ===
+      card.addEventListener("click", () => openModal(m));
+
       grid.appendChild(card);
     }
 
@@ -289,6 +299,31 @@ els.resetBtn?.addEventListener("click", () => {
   els.helperText.textContent = "すべての記録を削除しました。";
   render();
 });
+
+// ===== モーダル制御 =====
+function openModal(meal) {
+  els.modalPhoto.src = meal.photo;
+  els.modalMeta.innerHTML = `
+    <div><strong>${escapeHtml(meal.food)}</strong></div>
+    <div>${fmt(meal.totals.kcal)} kcal
+      / P:${fmt(meal.totals.protein)}g
+      F:${fmt(meal.totals.fat)}g
+      C:${fmt(meal.totals.carbs)}g</div>
+    ${meal.comment ? `<div>「${escapeHtml(meal.comment)}」</div>` : ""}
+  `;
+  els.modal.hidden = false;
+}
+function closeModal(){ els.modal.hidden = true; }
+
+els.closeModalBtn.addEventListener("click", closeModal);
+els.modal.addEventListener("click", (e)=>{ if(e.target === els.modal) closeModal(); });
+
+// エスケープ
+function escapeHtml(s) {
+  return String(s || "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  }[ch]));
+}
 
 // 初期
 (function init(){ render(); })();
