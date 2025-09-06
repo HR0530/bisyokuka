@@ -1,81 +1,85 @@
 <!DOCTYPE html>
-<div class="rank-label" id="kcal-title">本日の摂取カロリー</div>
-<div class="calorie-value"><span id="currentCalorie">0</span> kcal</div>
-<div class="rank-sub">目標まであと <span id="remainingCalorie">--</span> kcal</div>
-</section>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>美食家さん（SP）</title>
+  <link rel="stylesheet" href="style_sp.css" />
+</head>
+<body onload="checkLogin(); loadUserSettings(); loadCalorieInfo();">
+  <div class="home-page">
+    <!-- ヘッダー -->
+    <header class="header">
+      <div class="header-left">
+        <img id="profileIcon" src="img/user-icon.png" alt="ユーザーアイコン" class="profile-icon" />
+        <div class="hello" id="userName">こんにちは、美食家さん！</div>
+      </div>
+      <div class="header-right">
+        <button class="settings-button" onclick="window.location.href='settings.html'">⚙️</button>
+        <button class="logout-button" onclick="logout()">⎋</button>
+      </div>
+    </header>
 
+    <!-- カロリーカード -->
+    <section class="calorie-card">
+      <div class="rank-label">本日の摂取カロリー</div>
+      <div class="calorie-value"><span id="currentCalorie">0</span> kcal</div>
+      <div class="rank-sub">目標まであと <span id="remainingCalorie">--</span> kcal</div>
+    </section>
 
-<!-- 機能グリッド（スマホは2列） -->
-<nav class="feature-grid" aria-label="機能一覧">
-<button class="feature-card" onclick="switchPage('meal')">📷<span>食事記録</span></button>
-<button class="feature-card" onclick="switchPage('insights')">📊<span>栄養チェック</span></button>
-<button class="feature-card" onclick="switchPage('characters')">👻<span>キャラ育成</span></button>
-<button class="feature-card" onclick="switchPage('nutrients')">👥<span>栄養分析</span></button>
-<button class="feature-card" onclick="switchPage('akinator')">🍽️<span>AI献立</span></button>
-<button class="feature-card" onclick="switchPage('shop')">🛒<span>ショップ</span></button>
-</nav>
-</div>
+    <!-- 機能グリッド -->
+    <nav class="feature-grid">
+      <button class="feature-card" onclick="switchPage('meal')">📷<span>食事記録</span></button>
+      <button class="feature-card" onclick="switchPage('insights')">📊<span>栄養チェック</span></button>
+      <button class="feature-card" onclick="switchPage('characters')">👻<span>キャラ育成</span></button>
+      <button class="feature-card" onclick="switchPage('nutrients')">👥<span>栄養分析</span></button>
+      <button class="feature-card" onclick="switchPage('akinator')">🍽️<span>AI献立</span></button>
+      <button class="feature-card" onclick="switchPage('shop')">🛒<span>ショップ</span></button>
+    </nav>
+  </div>
 
-
-<script>
-// ========= 共通 =========
-function checkLogin() {
-if (localStorage.getItem("loggedIn") !== "true") {
-window.location.href = "login.html"; // 既存のログイン画面を流用
-}
-}
-function logout() {
-localStorage.removeItem("loggedIn");
-window.location.href = "login.html";
-}
-function switchPage(pageName) {
-window.location.href = `pages/${pageName}/index.html`;
-}
-function loadUserSettings() {
-const userName = localStorage.getItem("username") || "美食家さん";
-document.getElementById("userName").textContent = `こんにちは、${userName}！`;
-const userIcon = localStorage.getItem("userIcon");
-if (userIcon) document.getElementById("profileIcon").src = userIcon;
-}
-
-
-// mealページは date を ISO 文字列(UTC)で保存しているので、それに合わせて判定
-function isoToday() {
-return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-}
-
-
-// ========= 本日のカロリー合計（mealの合計だけを集計） =========
-function loadCalorieInfo() {
-const calorieGoal = parseInt(localStorage.getItem("calorieGoal")) || 1580;
-const todayKey = isoToday();
-
-
-let totalKcal = 0;
-try {
-const meals = JSON.parse(localStorage.getItem("bisyokuka_meals_v2") || "[]");
-totalKcal = meals
-.filter(m => (m.date || "").slice(0, 10) === todayKey)
-.reduce((sum, m) => sum + Number(m.totals?.kcal ?? m.kcal ?? 0), 0);
-} catch {
-totalKcal = 0;
-}
-
-
-document.getElementById("currentCalorie").textContent = totalKcal;
-document.getElementById("remainingCalorie").textContent = Math.max(0, calorieGoal - totalKcal);
-}
-
-
-// 他タブで meal を追加した場合も更新（任意）
-window.addEventListener("storage", (e) => {
-if (e.key === "bisyokuka_meals_v2" || e.key === "calorieGoal") {
-loadCalorieInfo();
-}
-if (e.key === "username" || e.key === "userIcon") {
-loadUserSettings();
-}
-});
-</script>
+  <script>
+    // ========= 共通 =========
+    function checkLogin() {
+      if (localStorage.getItem("loggedIn") !== "true") {
+        window.location.href = "login.html";
+      }
+    }
+    function logout() {
+      localStorage.removeItem("loggedIn");
+      window.location.href = "login.html";
+    }
+    function switchPage(pageName) {
+      window.location.href = `pages/${pageName}/index.html`;
+    }
+    function loadUserSettings() {
+      const userName = localStorage.getItem("username") || "美食家さん";
+      document.getElementById("userName").textContent = `こんにちは、${userName}！`;
+      const userIcon = localStorage.getItem("userIcon");
+      if (userIcon) document.getElementById("profileIcon").src = userIcon;
+    }
+    function isoToday() {
+      return new Date().toISOString().slice(0, 10);
+    }
+    function loadCalorieInfo() {
+      const calorieGoal = parseInt(localStorage.getItem("calorieGoal")) || 1580;
+      const todayKey = isoToday();
+      let totalKcal = 0;
+      try {
+        const meals = JSON.parse(localStorage.getItem("bisyokuka_meals_v2") || "[]");
+        totalKcal = meals
+          .filter(m => (m.date || "").slice(0, 10) === todayKey)
+          .reduce((sum, m) => sum + Number(m.totals?.kcal ?? m.kcal ?? 0), 0);
+      } catch {
+        totalKcal = 0;
+      }
+      document.getElementById("currentCalorie").textContent = totalKcal;
+      document.getElementById("remainingCalorie").textContent = Math.max(0, calorieGoal - totalKcal);
+    }
+    window.addEventListener("storage", (e) => {
+      if (e.key === "bisyokuka_meals_v2" || e.key === "calorieGoal") loadCalorieInfo();
+      if (e.key === "username" || e.key === "userIcon") loadUserSettings();
+    });
+  </script>
 </body>
 </html>
