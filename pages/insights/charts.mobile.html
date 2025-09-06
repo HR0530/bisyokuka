@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>美食家さん - 詳細なグラフ（モバイル）</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#111827; --card:#1f2937; --ink:#e5e7eb; --line:#374151;
+      --accent:#ff9800; --muted:#9ca3af; --brand:#0ea5e9;
+    }
+    *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:"Poppins",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;
+    }
+    a{color:#ffbb54;text-decoration:none}
+    .container{width:92%;max-width:820px;margin:14px auto 24px}
+
+    header{
+      position:sticky; top:0; z-index:10;
+      display:flex;align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap;
+      padding:10px 4px; margin-bottom:6px;
+      background:linear-gradient(180deg, rgba(17,24,39,.95), rgba(17,24,39,.85));
+      backdrop-filter: blur(8px); border-bottom:1px solid var(--line);
+    }
+    h1{margin:0;font-size:18px}
+    .btn{
+      background:var(--accent);color:#111;padding:8px 12px;border:none;border-radius:10px;
+      font-weight:700;cursor:pointer
+    }
+    .ghost{background:var(--brand);color:#031422}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+
+    .panel{margin-top:10px;display:grid;gap:10px}
+    details{
+      background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px
+    }
+    summary{cursor:pointer;font-weight:700;list-style:none}
+    summary::-webkit-details-marker{display:none}
+    .muted{color:var(--muted);font-size:12px;margin-top:6px}
+
+    .charts-grid{
+      display:grid;
+      grid-template-columns: 1fr; /* スマホは1列 */
+      gap:10px;
+      margin-top:8px;
+    }
+    @media (min-width:560px){
+      .charts-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .card{ background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:10px }
+    .card h3{margin:0 0 6px;font-size:14px;color:#e8eaed}
+
+    .chart-wrap{ position:relative; width:100%; height:200px; }
+    canvas{ position:absolute; inset:0; width:100% !important; height:100% !important; }
+
+    .backline{margin-top:12px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="index.mobile.html" class="btn">← 分析に戻る</a>
+      <h1>📈 詳細なグラフ</h1>
+      <div class="controls">
+        <button id="expandAll" class="btn ghost">すべて展開</button>
+        <button id="collapseAll" class="btn ghost">すべて畳む</button>
+      </div>
+    </header>
+
+    <div class="panel" id="chartsPanel">
+      <details open>
+        <summary>本日の栄養バランス（円グラフ / 棒グラフ）</summary>
+        <div class="charts-grid">
+          <div class="card">
+            <h3>今日のP/F/C 比率</h3>
+            <div class="chart-wrap"><canvas id="chartTodayPFC"></canvas></div>
+            <div class="muted">今日の食事から算出した比率です。</div>
+          </div>
+          <div class="card">
+            <h3>今日のP/F/C 量（g）</h3>
+            <div class="chart-wrap"><canvas id="chartTodayPFCBar"></canvas></div>
+            <div class="muted">同じデータを棒グラフでも表示。</div>
+          </div>
+        </div>
+      </details>
+
+      <details open>
+        <summary>直近7日の推移（棒グラフ）</summary>
+        <div class="charts-grid">
+          <div class="card">
+            <h3>総カロリー（kcal）</h3>
+            <div class="chart-wrap"><canvas id="chartKcal7"></canvas></div>
+          </div>
+          <div class="card">
+            <h3>栄養素の合計と内訳（スタック）</h3>
+            <div class="chart-wrap"><canvas id="chartPFC7"></canvas></div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div class="backline">
+      <a href="../../index.html">← ホームへ戻る</a>
+    </div>
+  </div>
+
+  <script src="charts.mobile.js"></script>
+</body>
+</html>
