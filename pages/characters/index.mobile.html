@@ -6,22 +6,65 @@
   <title>美食家さん｜キャラ育成（SP）</title>
 
   <!-- ★ スマホ以外(PC)で開かれたらPC版へ戻す（?view=sp がある場合はSPを優先） -->
-  <script>
-  (function(){
-    const qs=new URLSearchParams(location.search);
-    const qv=(qs.get("view")||"").toLowerCase();
-    if(qv==="sp"){ try{localStorage.setItem("viewMode","sp")}catch{} }
-    const saved=(localStorage.getItem("viewMode")||"");
-    const ua=navigator.userAgent||"";
-    const isMobile=/iPhone|Android.+Mobile|Windows Phone|iPod|webOS/i.test(ua)||Math.min(screen.width,screen.height)<=820;
-    if((saved==="pc") || (!saved && !isMobile)){
-      // 同ディレクトリのPC版へ
-      const url=new URL(location.href);
-      url.pathname=url.pathname.replace("index.mobile.html","index.html");
-      location.replace(url.toString());
-    }
-  })();
-  </script>
+ <script>
+(function(){
+  // 1) 手動指定（?view=sp / ?view=pc）を尊重
+  const qs = new URLSearchParams(location.search);
+  const force = (qs.get("view")||"").toLowerCase();
+  if (force === "sp" || force === "pc") {
+    try { localStorage.setItem("viewMode", force); } catch {}
+    // クエリから view を消しておく（共有しやすく）
+    qs.delete("view");
+    const u = new URL(location.href); u.search = qs.toString();
+    history.replaceState(null, "", u.toString());
+  }
+
+  const pref = (localStorage.getItem("viewMode")||"").toLowerCase();
+
+  // 2) 画面の大きさ＋ポインタ特性で“モバイルっぽさ”を判定
+  function wantSP(){
+    const narrow = matchMedia("(max-width: 820px)").matches; // ブレークポイント
+    const coarse = matchMedia("(pointer: coarse)").matches;  // 指タッチ中心
+    return narrow && coarse;
+  }
+
+  // 3) 現在のファイル名（index.html / index.mobile.html）を判定
+  const path = location.pathname;
+  const onSP = /index\.mobile\.html$/i.test(path);
+  const onPC = /index\.html$/i.test(path) && !onSP;
+
+  // 4) 目的地を作るヘルパ
+  function swapTo(file){
+    const u = new URL(location.href);
+    if (u.pathname.endsWith("/" + file)) return; // もう居る
+    u.pathname = u.pathname.replace(/[^/]+$/, file);
+    location.replace(u.toString());
+  }
+
+  // 5) 初回ロード時の分岐：手動指定 > 端末判定
+  if (pref === "sp") { if (!onSP) swapTo("index.mobile.html"); return; }
+  if (pref === "pc") { if (!onPC) swapTo("index.html"); return; }
+
+  const shouldSP = wantSP();
+  if (shouldSP && !onSP) swapTo("index.mobile.html");
+  if (!shouldSP && !onPC) swapTo("index.html");
+
+  // 6) 画面サイズが大きく変わったら再判定（回転・分割表示など）
+  //    ※ 手動固定がある場合は何もしない
+  if (!pref) {
+    let timer;
+    addEventListener("resize", () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const sp = wantSP();
+        if (sp && !/index\.mobile\.html$/i.test(location.pathname)) swapTo("index.mobile.html");
+        if (!sp && /index\.mobile\.html$/i.test(location.pathname)) swapTo("index.html");
+      }, 150);
+    });
+  }
+})();
+</script>
+
 
   <link rel="stylesheet" href="./style.mobile.css" />
 </head>
