@@ -2,64 +2,49 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>美食家さん 食事記録（モバイル）</title>
-
-  <!-- フォント & CSS -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.mobile.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>美食家さん｜食事記録</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app">
+  <div class="meal-app">
     <header class="topbar">
-      <a class="back" href="../../index.html">← ホームへ戻る</a>
       <h1>🍽️ 食事記録</h1>
-      <span style="width:48px"></span>
+      <a href="../../index_pc.html" class="back">← ホームへ戻る</a>
     </header>
 
-    <section class="input-card">
-      <!-- 画像入力 -->
-      <div class="row">
-        <label class="file" for="cameraInput">
-          <input type="file" id="cameraInput" accept="image/*,.heic,.HEIC" capture="environment" />
-          <span>📷 カメラで撮る</span>
-        </label>
-        <label class="file ghost" for="libraryInput">
-          <input type="file" id="libraryInput" accept="image/*,.heic,.HEIC" />
-          <span>🖼 ライブラリから選ぶ</span>
-        </label>
-      </div>
-
-      <!-- プレビュー -->
-      <div id="photoPreview" class="preview"></div>
-
-      <!-- 星&コメント -->
-      <div class="row compact">
-        <div class="stars">
-          <label for="starsInput" class="sr-only">星評価</label>
-          <input type="number" id="starsInput" min="1" max="5" value="4" inputmode="numeric" />
+    <main class="main">
+      <!-- 写真アップロード -->
+      <section class="input-card">
+        <div class="row">
+          <label class="file">
+            <input type="file" id="photoInput" accept="image/*,.heic,.HEIC" />
+            <span>📷 写真をアップロード</span>
+          </label>
         </div>
-        <input type="text" id="commentInput" maxlength="32" placeholder="コメント(任意)" />
-      </div>
 
-      <!-- 操作 -->
-      <button id="addMealBtn" class="primary">記録する</button>
-      <div class="row compact">
-        <button id="resetBtn" class="ghost" style="width:100%; color:#fca5a5; border-color:#792c2c">全てリセット</button>
-      </div>
+        <div class="preview" id="preview"></div>
 
-      <div id="helperText" class="hint"></div>
-    </section>
+        <!-- 星評価とコメント -->
+        <div class="row compact">
+          <label>⭐ 評価:
+            <input type="number" id="starsInput" min="1" max="5" value="3" />
+          </label>
+          <input type="text" id="commentInput" placeholder="コメント (任意)" />
+        </div>
 
-    <!-- 日付ごとの一覧 -->
-    <section id="mealsByDay" class="days"></section>
+        <button id="saveBtn" class="primary">記録する</button>
+        <button id="resetBtn" class="ghost">全て削除</button>
+        <div class="hint" id="helperText"></div>
+      </section>
+
+      <!-- 記録一覧 -->
+      <section id="mealsRoot" class="days"></section>
+    </main>
   </div>
 
-  <!-- HEIC/HEIF → JPEG 変換（iPhone対応） -->
+  <!-- HEIC → JPEG 変換 -->
   <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
-
-  <!-- モバイル用スクリプト（API_URL を最新 ngrok に！） -->
-  <script src="script.mobile.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
