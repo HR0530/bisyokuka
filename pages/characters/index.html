@@ -84,6 +84,70 @@
     </div>
   </footer>
 
-  <script src="./main.js"></script>
+  <script>
+(function(){
+  // --- 設定（このページは PC=index.html / SP=index.mobile.html）---
+  const PC_FILE = "index.html";
+  const SP_FILE = "index.mobile.html";
+
+  // --- 手動固定（?view=sp / ?view=pc） ---
+  const qs = new URLSearchParams(location.search);
+  const force = (qs.get("view")||"").toLowerCase();
+  if (force === "sp" || force === "pc") {
+    try { localStorage.setItem("viewMode", force); } catch {}
+    qs.delete("view");
+    const u = new URL(location.href); u.search = qs.toString();
+    history.replaceState(null, "", u.toString());
+    console.log("[router] force set:", force);
+  }
+
+  const pref = (localStorage.getItem("viewMode")||"").toLowerCase();
+
+  // --- モバイル判定（サイズ + 指タッチ） ---
+  function wantSP(){
+    const narrow = matchMedia("(max-width: 820px)").matches;
+    const coarse = matchMedia("(pointer: coarse)").matches;
+    return narrow && coarse;
+  }
+
+  const path = location.pathname;
+  const onSP = path.endsWith("/"+SP_FILE);
+  const onPC = path.endsWith("/"+PC_FILE) && !onSP;
+
+  function swapTo(file){
+    const u = new URL(location.href);
+    if (u.pathname.endsWith("/"+file)) return;
+    u.pathname = u.pathname.replace(/[^/]+$/, file);
+    console.log("[router] redirect ->", file);
+    location.replace(u.toString());
+  }
+
+  console.log("[router] path:", path, "pref:", pref, "onSP:", onSP, "onPC:", onPC);
+
+  if (pref === "sp") { if (!onSP) swapTo(SP_FILE); return; }
+  if (pref === "pc") { if (!onPC) swapTo(PC_FILE); return; }
+
+  const sp = wantSP();
+  console.log("[router] wantSP:", sp);
+
+  if (sp && !onSP) swapTo(SP_FILE);
+  if (!sp && !onPC) swapTo(PC_FILE);
+
+  // 画面サイズの再判定（手動固定が無い時だけ）
+  if (!pref) {
+    let t;
+    addEventListener("resize", () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        const w = wantSP();
+        console.log("[router] resize -> wantSP:", w);
+        if (w && !/index\.mobile\.html$/i.test(location.pathname)) swapTo(SP_FILE);
+        if (!w && /index\.mobile\.html$/i.test(location.pathname)) swapTo(PC_FILE);
+      }, 120);
+    });
+  }
+})();
+</script>
+
 </body>
 </html>
