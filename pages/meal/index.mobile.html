@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>美食家さん 食事記録（モバイル）</title>
 
-  <!-- フォント & CSS -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.mobile.css" />
@@ -15,19 +14,19 @@
     <header class="topbar">
       <a class="back" href="../../index.html">← ホームへ戻る</a>
       <h1>🍽️ 食事記録</h1>
-      <span style="width:48px"></span>
+      <span class="topbar-pad"></span>
     </header>
 
     <section class="input-card">
-      <!-- 画像入力（コンパクト） -->
-      <div class="row buttons compact">
-        <label class="file" for="cameraInput">
+      <!-- 画像入力（横並び・改行防止） -->
+      <div class="file-buttons">
+        <label class="file" for="cameraInput" title="カメラで撮る">
           <input type="file" id="cameraInput" accept="image/*,.heic,.HEIC" capture="environment" />
-          <span>📷 カメラ</span>
+          <span class="nowrap">📷 カメラで撮る</span>
         </label>
-        <label class="file ghost" for="libraryInput">
+        <label class="file ghost" for="libraryInput" title="ライブラリから選ぶ">
           <input type="file" id="libraryInput" accept="image/*,.heic,.HEIC" />
-          <span>🖼 ライブラリ</span>
+          <span class="nowrap">🖼 ライブラリから選ぶ</span>
         </label>
       </div>
 
@@ -45,34 +44,43 @@
 
       <!-- 操作 -->
       <button id="addMealBtn" class="primary">記録する</button>
-      <div class="row compact">
-        <button id="resetBtn" class="ghost danger-ghost">全てリセット</button>
-      </div>
+      <button id="resetBtn" class="ghost danger-ghost">全てリセット</button>
 
       <div id="helperText" class="hint"></div>
     </section>
 
-    <!-- 日付ごとの一覧（3列ギャラリー対応） -->
+    <!-- 日付ごとの一覧（3列・簡潔カード） -->
     <section id="mealsByDay" class="days"></section>
   </div>
 
-  <!-- ====== モーダル（写真プレビュー）====== -->
+  <!-- 🔎 詳細モーダル -->
   <div id="photoModal" class="modal" hidden>
-    <div class="sheet" role="dialog" aria-modal="true" aria-label="写真プレビュー">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="食事の詳細">
       <div class="sheet-head">
         <button id="closeModalBtn" class="icon-btn" aria-label="閉じる">✕</button>
       </div>
-      <img id="modalPhoto" class="sheet-photo" src="" alt="">
+      <img id="modalPhoto" class="sheet-photo" alt="">
       <div class="sheet-body">
-        <div id="modalMeta"></div>
+        <h2 id="modalTitle" class="modal-title"></h2>
+        <div id="modalKcal" class="modal-kcal"></div>
+        <div id="modalPFC" class="modal-pfc"></div>
+        <div id="modalComment" class="modal-comment"></div>
+        <details id="modalIngDetails" class="ing" open>
+          <summary>食材内訳</summary>
+          <table class="table">
+            <thead>
+              <tr><th>食材</th><th class="num">g</th><th class="num">P</th><th class="num">F</th><th class="num">C</th><th class="num">kcal</th></tr>
+            </thead>
+            <tbody id="modalIngBody"></tbody>
+          </table>
+        </details>
       </div>
     </div>
   </div>
 
   <!-- HEIC/HEIF → JPEG 変換（iPhone対応） -->
   <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
-
-  <!-- モバイル用スクリプト（API_URL を最新 ngrok に！） -->
+  <!-- メインスクリプト -->
   <script src="script.mobile.js"></script>
 </body>
 </html>
