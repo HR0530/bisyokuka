@@ -56,6 +56,19 @@
     <section id="mealsByDay" class="days"></section>
   </div>
 
+  <!-- ====== モーダル（写真プレビュー）====== -->
+  <div id="photoModal" class="modal" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="写真プレビュー">
+      <div class="sheet-head">
+        <button id="closeModalBtn" class="icon-btn" aria-label="閉じる">✕</button>
+      </div>
+      <img id="modalPhoto" class="sheet-photo" src="" alt="">
+      <div class="sheet-body">
+        <div id="modalMeta"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- HEIC/HEIF → JPEG 変換（iPhone対応） -->
   <script src="https://cdn.jsdelivr.net/npm/heic2any/dist/heic2any.min.js"></script>
 
