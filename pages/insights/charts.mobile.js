@@ -27,7 +27,6 @@ function lastNDatesAsc(n){
   return res; // 古い→新しい
 }
 
-// 共通オプション（スマホ向けに凡例小さめ）
 const commonOpts = {
   maintainAspectRatio: false,
   plugins:{
@@ -49,7 +48,6 @@ function drawToday(){
   const todayKey = new Date().toISOString().slice(0,10);
   const t = grouped[todayKey] || {kcal:0,protein:0,fat:0,carbs:0};
 
-  // 円グラフ
   new Chart(document.getElementById("chartTodayPFC").getContext("2d"), {
     type: 'doughnut',
     data: {
@@ -80,7 +78,6 @@ function drawToday(){
     }
   });
 
-  // 棒グラフ（量）
   new Chart(document.getElementById("chartTodayPFCBar").getContext("2d"), {
     type:'bar',
     data:{
@@ -104,17 +101,12 @@ function draw7days(){
   const f7    = d7.map(d => grouped[d]?.fat || 0);
   const c7    = d7.map(d => grouped[d]?.carbs || 0);
 
-  // 総カロリー
   new Chart(document.getElementById("chartKcal7").getContext("2d"), {
     type:'bar',
-    data:{
-      labels:d7,
-      datasets:[{ label:'カロリー(kcal)', data:kcal7, backgroundColor:'#0ea5e9', borderWidth:0 }]
-    },
+    data:{ labels:d7, datasets:[{ label:'カロリー(kcal)', data:kcal7, backgroundColor:'#0ea5e9', borderWidth:0 }] },
     options:{ ...commonOpts }
   });
 
-  // P/F/C スタック
   new Chart(document.getElementById("chartPFC7").getContext("2d"), {
     type:'bar',
     data:{
@@ -135,7 +127,7 @@ function draw7days(){
   });
 }
 
-// ====== すべて展開/畳む ======
+// 展開/畳む
 const expandAllBtn = document.getElementById('expandAll');
 const collapseAllBtn = document.getElementById('collapseAll');
 const detailsEls = () => Array.from(document.querySelectorAll('#chartsPanel details'));
