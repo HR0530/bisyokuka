@@ -1,0 +1,143 @@
+/* === ベース：厳か×高級（黒×金） === */
+:root{
+  --bg:#0b0f14;
+  --panel:#0f1622;
+  --gold:#d4af37;
+  --gold2:#ffec99;
+  --text:#e8edf6;
+  --muted:#9aa3b2;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background: radial-gradient(1200px 800px at 50% -10%, #152033, #0b0f14 60%) no-repeat, var(--bg);
+  color:var(--text);
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+}
+
+/* ヘッダー */
+.lc-header{
+  position:sticky; top:0;
+  background:linear-gradient(180deg, rgba(15,22,34,0.95), rgba(15,22,34,0.6));
+  border-bottom:1px solid rgba(212,175,55,.25);
+  padding:1rem 1.2rem; text-align:center;
+  backdrop-filter: blur(6px);
+}
+.lc-header h1{
+  margin:0; letter-spacing:.15em; font-weight:700;
+  text-shadow: 0 2px 10px rgba(212,175,55,.25);
+}
+.back-btn{
+  position:absolute; left:1rem; top:0.8rem;
+  border:none; border-radius:.6rem; cursor:pointer;
+  padding:.5rem .8rem; color:#2b2100; font-weight:700;
+  background:linear-gradient(135deg,#b88a00,#ffd700 45%,#fff0a6 60%,#ad7b00);
+  box-shadow: 0 0 0 2px rgba(255,243,173,.6) inset, 0 6px 14px rgba(205,164,52,.25);
+}
+
+/* ラッパー */
+.lc-wrap{
+  max-width: 900px; margin: 2rem auto; padding: 0 1rem;
+  display:grid; gap:1.2rem;
+}
+.row{
+  display:grid; grid-template-columns: 220px 1fr; align-items:center;
+  gap:1rem;
+}
+
+/* 左ラベル */
+.label{
+  background:linear-gradient(180deg, #121a28, #0e1522);
+  border:1px solid rgba(212,175,55,.35);
+  border-left:4px solid var(--gold);
+  padding: .9rem 1rem;
+  box-shadow: 0 6px 20px rgba(0,0,0,.35), inset 0 0 18px rgba(212,175,55,.08);
+  border-radius:.5rem;
+}
+.label span{ font-size:1.05rem; font-weight:800; letter-spacing:.08em }
+.label small{ color:var(--muted); margin-left:.25rem }
+
+/* 右スロット（四角） */
+.slot{
+  position:relative;
+  display:flex; align-items:center; justify-content:center;
+  min-height:72px; width:100%;
+  background:linear-gradient(180deg, #121a28, #0f1523);
+  border:2px solid rgba(212,175,55,.65);
+  border-radius:.6rem;
+  box-shadow: 0 10px 28px rgba(0,0,0,.45),
+              inset 0 0 22px rgba(212,175,55,.12);
+  color:var(--gold2);
+  font-weight:800; font-size:1.15rem; letter-spacing:.06em;
+  cursor:pointer; overflow:hidden;
+}
+
+/* 料理名のテキスト（落下アニメ用） */
+.slot-text{
+  display:inline-block;
+  transform: translateY(0);
+  transition: transform .25s ease-out;
+  text-shadow: 0 0 8px rgba(255,220,120,.45);
+}
+.slot.drop .slot-text{
+  animation: dropIn .6s cubic-bezier(.2,.9,.25,1.4);
+}
+@keyframes dropIn{
+  0% { transform: translateY(-120px) scale(1.05); opacity:0 }
+  70%{ transform: translateY(6px); opacity:1 }
+  100%{ transform: translateY(0) }
+}
+
+/* 斜めに走る金のきらめき */
+.shine{
+  position:absolute; inset:0; pointer-events:none; opacity:0;
+  background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.8) 50%, transparent 100%);
+  transform: translateX(-150%) skewX(-15deg);
+}
+.slot.drop .shine{
+  animation: shineRun .5s ease .05s forwards;
+}
+@keyframes shineRun{
+  to{ transform: translateX(160%) skewX(-15deg); opacity:0 }
+  25%{ opacity:.7 }
+}
+
+/* ドン！効果文字 */
+.sfx-don{
+  position: fixed;
+  z-index: 50;
+  color: #fff;
+  font-weight:900;
+  font-size: clamp(28px, 6vw, 64px);
+  text-shadow: 0 6px 18px rgba(0,0,0,.6), 0 0 24px rgba(255,255,255,.55);
+  transform: translate(-50%,-50%) scale(.6) rotate(-8deg);
+  opacity:0; pointer-events:none;
+}
+.sfx-don.show{
+  animation: sfxPop .5s cubic-bezier(.15,1.1,.2,1) forwards;
+}
+@keyframes sfxPop{
+  0%{ opacity:0; transform: translate(-50%,-50%) scale(.4) rotate(-8deg) }
+  60%{ opacity:1; transform: translate(-50%,-50%) scale(1.08) rotate(-8deg) }
+  100%{ opacity:0; transform: translate(-50%,-50%) scale(1.2) rotate(-8deg) }
+}
+
+/* フッター */
+.lc-footer{
+  max-width:900px; margin:2rem auto; padding:0 1rem 2rem;
+  display:flex; justify-content:flex-end;
+}
+.reset-btn{
+  border:none; border-radius:.6rem; cursor:pointer;
+  padding:.7rem 1.1rem; color:#2b2100; font-weight:800;
+  background:linear-gradient(135deg,#b88a00,#ffd700 45%,#fff0a6 60%,#ad7b00);
+  box-shadow: 0 0 0 2px rgba(255,243,173,.6) inset, 0 6px 14px rgba(205,164,52,.25);
+}
+
+/* スマホ最適化 */
+@media (max-width:720px){
+  .row{ grid-template-columns: 1fr; }
+  .label{ order:1 }
+  .slot{ order:2 }
+}
