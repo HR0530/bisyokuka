@@ -9,23 +9,22 @@
 <body>
   <!-- ヘッダー -->
   <header class="app-header">
-    <h1>食事記録（PC版）</h1>
-    <nav>
+    <h1>食事記録（PC）</h1>
+    <nav class="nav">
       <a href="../index_pc.html" class="btn ghost">ホームへ戻る</a>
     </nav>
   </header>
 
   <!-- メイン -->
   <main class="wrap">
-    <!-- 食事追加フォーム -->
+    <!-- 追加フォーム -->
     <section class="card">
       <h2>食事を追加</h2>
-      <form id="mealForm">
+      <form id="mealForm" class="grid">
         <div>
           <label for="photoInput">写真アップロード</label>
           <input type="file" id="photoInput" accept="image/*">
-          <!-- ✅ アップロードした写真のプレビュー -->
-          <div id="photoPreview" class="preview"></div>
+          <div id="photoPreview" class="preview" aria-live="polite"></div>
         </div>
 
         <div>
@@ -37,33 +36,30 @@
             <option value="4">★★★★☆</option>
             <option value="5">★★★★★</option>
           </select>
-        </div>
 
-        <div>
-          <label for="commentInput">コメント</label>
+          <label for="commentInput" style="margin-top:12px;">コメント</label>
           <textarea id="commentInput" placeholder="感想を書いてください"></textarea>
-        </div>
 
-        <div class="row">
-          <button type="button" id="addMealBtn" class="btn primary">追加</button>
-          <button type="reset" id="resetBtn" class="btn ghost">リセット</button>
+          <div class="row" style="margin-top:12px;">
+            <button type="button" id="addMealBtn" class="btn primary">追加</button>
+            <button type="reset" id="resetBtn" class="btn ghost">リセット</button>
+          </div>
         </div>
       </form>
     </section>
 
-    <!-- 食事一覧（カードが並ぶ） -->
+    <!-- 一覧 -->
     <section class="card">
       <h2>食事一覧</h2>
-      <!-- ✅ script.js がここに追加していく -->
-      <div id="mealsByDay" class="meal-list"></div>
+      <div id="mealsByDay"></div>
     </section>
   </main>
 
   <!-- 詳細モーダル -->
-  <div id="modalOverlay" class="modal hidden">
-    <div class="modal-content">
-      <button id="closeModal" class="btn warn">閉じる</button>
-      <img id="modalPhoto" alt="料理写真">
+  <div id="modalOverlay" class="modal hidden" aria-hidden="true">
+    <div class="modal-content" role="dialog" aria-modal="true">
+      <button id="closeModal" class="btn warn" aria-label="閉じる">閉じる</button>
+      <img id="modalPhoto" alt="料理写真の拡大表示">
       <input type="text" id="modalFoodInput" placeholder="料理名">
       <select id="modalStarsInput">
         <option value="1">★☆☆☆☆</option>
