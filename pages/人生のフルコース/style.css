@@ -115,13 +115,16 @@ body{
   opacity:0; pointer-events:none;
 }
 .sfx-don.show{
-  animation: sfxPop .5s cubic-bezier(.15,1.1,.2,1) forwards;
+  animation: sfxPop 1.2s ease-out forwards; /* ← 0.5s → 1.2s に延長 */
 }
+
 @keyframes sfxPop{
-  0%{ opacity:0; transform: translate(-50%,-50%) scale(.4) rotate(-8deg) }
-  60%{ opacity:1; transform: translate(-50%,-50%) scale(1.08) rotate(-8deg) }
-  100%{ opacity:0; transform: translate(-50%,-50%) scale(1.2) rotate(-8deg) }
+  0%   { opacity:0; transform: translate(-50%,-50%) scale(.4) rotate(-8deg); }
+  30%  { opacity:1; transform: translate(-50%,-50%) scale(1.05) rotate(-8deg); }
+  70%  { opacity:1; transform: translate(-50%,-50%) scale(1.1) rotate(-8deg); } /* ← ここで長めに滞在 */
+  100% { opacity:0; transform: translate(-50%,-50%) scale(1.25) rotate(-8deg); }
 }
+
 
 /* フッター */
 .lc-footer{
