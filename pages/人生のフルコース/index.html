@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>人生のフルコース</title>
+  <link rel="stylesheet" href="./style.css"/>
+</head>
+<body>
+  <header class="lc-header">
+    <button class="back-btn" onclick="history.back()">← ホームへ</button>
+    <h1>人生のフルコース</h1>
+  </header>
+
+  <main class="lc-wrap">
+    <!-- 8コース -->
+    <section class="row" data-key="horsdoeuvre">
+      <div class="label"><span>前菜</span><small>（オードブル）</small></div>
+      <button class="slot" data-slot>
+        <span class="slot-text" data-text>未設定</span>
+        <span class="shine" aria-hidden="true"></span>
+      </button>
+    </section>
+
+    <section class="row" data-key="soup">
+      <div class="label"><span>スープ</span></div>
+      <button class="slot" data-slot><span class="slot-text" data-text>未設定</span><span class="shine"></span></button>
+    </section>
+
+    <section class="row" data-key="fish">
+      <div class="label"><span>魚料理</span></div>
+      <button class="slot" data-slot><span class="slot-text" data-text>未設定</span><span class="shine"></span></button>
+    </section>
+
+    <section class="row" data-key="meat">
+      <div class="label"><span>肉料理</span></div>
+      <button class="slot" data-slot><span class="slot-text" data-text>未設定</span><span class="shine"></span></button>
+    </section>
+
+    <section class="row" data-key="main">
+      <div class="label"><span>メイン</span></div>
+      <button class="slot" data-slot><span class="slot-text" data-text>未設定</span><span class="shine"></span></button>
+    </section>
+
+    <section class="row" data-key="salad">
+      <div class="label"><span>サラダ</span></div>
+      <button class="slot" data-slot><span class="slot-text" data-text>未設定</span><span class="shine"></span></button>
+    </section>
+
+    <section class="row" data-key="dessert">
+      <div class="label"><span>デザート</span></div>
+      <button class="slot" data-slot><span class="slot-text" data-text>未設定</span><span class="shine"></span></button>
+    </section>
+
+    <section class="row" data-key="drink">
+      <div class="label"><span>ドリンク</span></div>
+      <button class="slot" data-slot><span class="slot-text" data-text>未設定</span><span class="shine"></span></button>
+    </section>
+  </main>
+
+  <!-- ドン！効果文字（再利用用のテンプレ） -->
+  <div id="sfx-template" class="sfx-don" aria-hidden="true">ドン！</div>
+
+  <footer class="lc-footer">
+    <button class="reset-btn" id="resetBtn">リセット</button>
+  </footer>
+
+  <script src="./script.js"></script>
+</body>
+</html>
