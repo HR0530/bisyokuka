@@ -1,78 +1,62 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>美食家さん｜食事記録（PC）</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>美食家さん｜食事記録 </title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- ヘッダー -->
-  <header class="app-header">
-    <h1>食事記録（PC）</h1>
-    <nav class="nav">
-      <a href="../index_pc.html" class="btn ghost">ホームへ戻る</a>
-    </nav>
-  </header>
+  <div class="meal-app-container">
+    <h1>🍽️ 食事記録</h1>
 
-  <!-- メイン -->
-  <main class="wrap">
-    <!-- 追加フォーム -->
-    <section class="card">
-      <h2>食事を追加</h2>
-      <form id="mealForm" class="grid">
-        <div>
-          <label for="photoInput">写真アップロード</label>
-          <input type="file" id="photoInput" accept="image/*">
-          <div id="photoPreview" class="preview" aria-live="polite"></div>
-        </div>
+    <div class="meal-upload-area">
+      <!-- 写真選択 -->
+      <label class="file-label">
+        <input type="file" id="photoInput" accept="image/*" style="display:none;" />
+        <span class="file-btn">📷 写真を選択</span>
+      </label>
 
-        <div>
-          <label for="starsInput">星評価</label>
-          <select id="starsInput">
-            <option value="1">★☆☆☆☆</option>
-            <option value="2">★★☆☆☆</option>
-            <option value="3">★★★☆☆</option>
-            <option value="4">★★★★☆</option>
-            <option value="5">★★★★★</option>
-          </select>
+      <!-- プレビュー -->
+      <div id="photoPreview" class="photo-preview"></div>
 
-          <label for="commentInput" style="margin-top:12px;">コメント</label>
-          <textarea id="commentInput" placeholder="感想を書いてください"></textarea>
+      <!-- 評価 & コメント -->
+      <div class="controls-row">
+        <input
+          type="number"
+          id="starsInput"
+          min="1"
+          max="5"
+          value="4"
+          title="星評価"
+        />
+        <input
+          type="text"
+          id="commentInput"
+          maxlength="32"
+          placeholder="コメント(任意)"
+        />
+      </div>
 
-          <div class="row" style="margin-top:12px;">
-            <button type="button" id="addMealBtn" class="btn primary">追加</button>
-            <button type="reset" id="resetBtn" class="btn ghost">リセット</button>
-          </div>
-        </div>
-      </form>
-    </section>
+      <!-- 操作ボタン -->
+      <button id="addMealBtn" class="primary">記録する</button>
+      <button id="resetBtn" class="danger subtle">全てリセット</button>
 
-    <!-- 一覧 -->
-    <section class="card">
-      <h2>食事一覧</h2>
-      <div id="mealsByDay"></div>
-    </section>
-  </main>
+      <!-- ヘルパーテキスト -->
+      <div id="helperText" class="hint"></div>
+    </div>
 
-  <!-- 詳細モーダル -->
-  <div id="modalOverlay" class="modal hidden" aria-hidden="true">
-    <div class="modal-content" role="dialog" aria-modal="true">
-      <button id="closeModal" class="btn warn" aria-label="閉じる">閉じる</button>
-      <img id="modalPhoto" alt="料理写真の拡大表示">
-      <input type="text" id="modalFoodInput" placeholder="料理名">
-      <select id="modalStarsInput">
-        <option value="1">★☆☆☆☆</option>
-        <option value="2">★★☆☆☆</option>
-        <option value="3">★★★☆☆</option>
-        <option value="4">★★★★☆</option>
-        <option value="5">★★★★★</option>
-      </select>
-      <textarea id="modalCommentInput" placeholder="感想を入力"></textarea>
+    <!-- 日付ごとの一覧 -->
+    <div id="mealsByDay"></div>
+
+    <!-- 戻る -->
+    <div class="back-button">
+      <a href="../../index_pc.html">← ホームへ戻る</a>
     </div>
   </div>
 
-  <!-- スクリプト -->
-  <script src="script.js" defer></script>
+
+
+  <script src="script.js"></script>
 </body>
 </html>
