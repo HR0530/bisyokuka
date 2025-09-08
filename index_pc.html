@@ -13,7 +13,11 @@
         <img id="profileIcon" src="img/user-icon.png" alt="ユーザーアイコン" class="profile-icon">
         <div class="user-name" id="userName">こんにちは、美食家さん！</div>
       </div>
+
       <div class="header-buttons">
+        <!-- ✨ 追加：人生のフルコース（黄金＆きらっと演出） -->
+        <button class="life-course-button" onclick="goLifeCourse(event)">✨ 人生のフルコース</button>
+
         <button class="settings-button" onclick="window.location.href='settings.html'">⚙️ 設定</button>
         <button class="logout-button" onclick="logout()">ログアウト</button>
       </div>
@@ -89,6 +93,21 @@
         loadUserSettings();
       }
     });
+
+    // ========= 追加：人生のフルコースボタンの演出＆遷移 =========
+    function goLifeCourse(ev) {
+      const btn = ev.currentTarget;
+      // クリック演出クラスを付与
+      btn.classList.add('kira');
+      // アニメーション終了後に遷移（保険でタイムアウトも用意）
+      const to = setTimeout(() => {
+        window.location.href = 'pages/life-course/index.html';
+      }, 500);
+      btn.addEventListener('animationend', () => {
+        clearTimeout(to);
+        window.location.href = 'pages/life-course/index.html';
+      }, { once: true });
+    }
   </script>
 </body>
 </html>
