@@ -101,11 +101,11 @@
       btn.classList.add('kira');
       // アニメーション終了後に遷移（保険でタイムアウトも用意）
       const to = setTimeout(() => {
-        window.location.href = 'pages/life-course/index.html';
+        window.location.href = 'pages/人生のフルコース/index.html';
       }, 500);
       btn.addEventListener('animationend', () => {
         clearTimeout(to);
-        window.location.href = 'pages/life-course/index.html';
+        window.location.href = 'pages/人生のフルコース/index.html';
       }, { once: true });
     }
   </script>
