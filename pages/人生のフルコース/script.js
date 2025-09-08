@@ -1,3 +1,7 @@
+// =========================
+// 人生のフルコース script.js（クリーン版）
+// =========================
+
 // 保存キー
 const STORAGE_KEY = 'bisyokuka_fullcourse_v1';
 
@@ -25,6 +29,7 @@ function saveFullCourse(data){
 // ドン！効果の出現
 function playDonEffect(x, y, text='ドン！'){
   const base = document.getElementById('sfx-template');
+  if (!base) return; // 念のため
   const node = base.cloneNode(true);
   node.removeAttribute('id');
   node.textContent = text;
@@ -39,13 +44,11 @@ function playDonEffect(x, y, text='ドン！'){
   });
 }
 
-// スロットへ文字を落とすアニメ
-function dropIntoSlot(slotEl, value){
-  const textEl = slotEl.querySelector('[data-text]');
-  textEl.textContent = value || '未設定';
+// ==== 追加演出ヘルパー ====
 
-  function showImpactLines(slotEl){
-  // 既存が残っていたら削除して作り直し（連打対策）
+// 集中線
+function showImpactLines(slotEl){
+  // 残っていたら削除（連打対策）
   slotEl.querySelectorAll('.impact-lines').forEach(n=>n.remove());
   const lines = document.createElement('div');
   lines.className = 'impact-lines';
@@ -54,38 +57,35 @@ function dropIntoSlot(slotEl, value){
   lines.addEventListener('animationend', ()=> lines.remove(), { once:true });
 }
 
-  function scatterGoldParticles(slotEl, count = 10){
+// 金の粒子
+function scatterGoldParticles(slotEl, count = 12){
   const rect = slotEl.getBoundingClientRect();
   for(let i=0;i<count;i++){
     const p = document.createElement('span');
     p.className = 'gold-spark';
     // 発生位置：枠の周辺ランダム
-    const x = Math.random()*rect.width  * 0.9 + rect.width*0.05;
-    const y = Math.random()*rect.height * 0.6 + rect.height*0.2;
+    const x = Math.random() * rect.width  * 0.9 + rect.width * 0.05;
+    const y = Math.random() * rect.height * 0.6 + rect.height * 0.2;
     p.style.left = x + 'px';
     p.style.top  = y + 'px';
     // 散り方向をランダムに
-    const dx = (Math.random()*60 - 30);     // -30px ～ +30px に散る
-    const dy = (-30 - Math.random()*40);    // 上方向に -30～-70px
+    const dx = (Math.random() * 60 - 30);  // -30px ～ +30px
+    const dy = (-30 - Math.random() * 40); // -30 ～ -70px（上方向）
     p.style.setProperty('--dx', dx + 'px');
     p.style.setProperty('--dy', dy + 'px');
 
     slotEl.appendChild(p);
-    // 再生（次フレームでクラス付与）
-    requestAnimationFrame(()=> {
-      p.classList.add('run');
-    });
-    // 終了で削除
+    requestAnimationFrame(()=> p.classList.add('run'));
     p.addEventListener('animationend', ()=> p.remove(), { once:true });
   }
 }
 
-
-  function dropIntoSlot(slotEl, value){
+// スロットへ文字を落とす（演出込み）
+function dropIntoSlot(slotEl, value){
   const textEl = slotEl.querySelector('[data-text]');
   textEl.textContent = value || '未設定';
 
-  // アニメを確実に再発火させる
+  // CSSアニメを確実に再発火
   slotEl.classList.remove('drop');
   void slotEl.offsetWidth;
   slotEl.classList.add('drop');
@@ -96,21 +96,8 @@ function dropIntoSlot(slotEl, value){
 
   // 「ドン！」の位置は枠の少し上
   const rect = slotEl.getBoundingClientRect();
-  const x = rect.left + rect.width * 0.2 + Math.random()*40;
+  const x = rect.left + rect.width * 0.2 + Math.random() * 40;
   const y = rect.top  - 8;
-  playDonEffect(x, y, 'ドン！');
-}
-
-
-  // アニメ発火
-  slotEl.classList.remove('drop'); // 連打対策：一旦外して再付与
-  void slotEl.offsetWidth;         // reflowでリセット
-  slotEl.classList.add('drop');
-
-  // クリック位置でドン！
-  const rect = slotEl.getBoundingClientRect();
-  const x = rect.left + rect.width * 0.15 + Math.random()*30;
-  const y = rect.top  - 10; // 少し上
   playDonEffect(x, y, 'ドン！');
 }
 
@@ -141,13 +128,16 @@ function init(){
   });
 
   // リセット
-  document.getElementById('resetBtn').addEventListener('click', ()=>{
-    if (!confirm('フルコースをすべてリセットしますか？')) return;
-    saveFullCourse({ ...DEFAULT_FULLCOURSE });
-    document.querySelectorAll('[data-slot]').forEach(s=>{
-      dropIntoSlot(s, '未設定');
+  const resetBtn = document.getElementById('resetBtn');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', ()=>{
+      if (!confirm('フルコースをすべてリセットしますか？')) return;
+      saveFullCourse({ ...DEFAULT_FULLCOURSE });
+      document.querySelectorAll('[data-slot]').forEach(s=>{
+        dropIntoSlot(s, '未設定');
+      });
     });
-  });
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
