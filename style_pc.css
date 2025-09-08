@@ -189,3 +189,89 @@ body {
 .header-buttons button:hover {
   background: #e65b5b;
 }
+
+/* =========================
+   追加：人生のフルコース（金色＆きらっと演出）
+   ========================= */
+.life-course-button {
+  position: relative;
+  padding: 0.7rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #4a3b00;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  /* 黄金グラデーション */
+  background: linear-gradient(135deg, #b88a00, #ffd700 40%, #fff1a8 60%, #b07a00);
+  box-shadow:
+    0 0 0 2px rgba(255, 243, 173, 0.7) inset,
+    0 6px 14px rgba(205, 164, 52, 0.35),
+    0 0 18px rgba(255, 215, 0, 0.35);
+  overflow: hidden; /* きらっとを切り抜く */
+  transition: transform .06s ease, filter .2s ease;
+}
+
+.life-course-button:hover {
+  filter: brightness(1.06);
+}
+
+.life-course-button:active {
+  transform: translateY(1px);
+}
+
+/* 斜めに走る“きらっ” */
+.life-course-button::before {
+  content: "";
+  position: absolute;
+  top: -120%;
+  left: -30%;
+  width: 60%;
+  height: 300%;
+  transform: rotate(25deg) translateX(-150%);
+  background: linear-gradient(120deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.85) 50%,
+    rgba(255,255,255,0) 100%);
+  pointer-events: none;
+}
+
+.life-course-button.kira::before {
+  animation: lc-shine .6s ease forwards;
+}
+
+@keyframes lc-shine {
+  0%   { transform: rotate(25deg) translateX(-150%); opacity: 0.8; }
+  100% { transform: rotate(25deg) translateX(240%); opacity: 0; }
+}
+
+/* さりげないキラキラ粒子（クリック時） */
+.life-course-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 70% 20%, rgba(255,255,255,.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 40% 70%, rgba(255,255,255,.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 85% 60%, rgba(255,255,255,.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 55% 45%, rgba(255,255,255,.9) 0 2px, transparent 3px);
+  transform: scale(0.9);
+}
+
+.life-course-button.kira::after {
+  animation: lc-sparkle .5s ease forwards;
+}
+
+@keyframes lc-sparkle {
+  0%   { opacity: 0; transform: scale(0.9); }
+  25%  { opacity: 1; transform: scale(1.0); }
+  100% { opacity: 0; transform: scale(1.05); }
+}
+
+/* 既存のヘッダーボタンのホバー色と干渉しないための上書き（明示的に指定） */
+.header-buttons .settings-button:hover { background: #3b82f6; }  /* 既存の濃い青維持 */
+.header-buttons .logout-button:hover   { background: #e65b5b; }  /* 既存の濃い赤維持 */
+
