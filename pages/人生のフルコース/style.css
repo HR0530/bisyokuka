@@ -144,3 +144,48 @@ body{
   .label{ order:1 }
   .slot{ order:2 }
 }
+
+/* ==== 集中線（登録時のみ一瞬表示） ==== */
+.impact-lines{
+  position:absolute; inset:-30%; /* 枠外まで広げて迫力を出す */
+  pointer-events:none;
+  z-index:0;
+  opacity:0;
+  background:
+    /* 放射状の集中線を conic で作成 */
+    repeating-conic-gradient(
+      from 0deg,
+      rgba(255,255,255,.75) 0deg 6deg,
+      transparent 6deg 12deg
+    );
+  /* 内側は透明に、外側だけ残す */
+  -webkit-mask: radial-gradient(circle at 50% 50%, transparent 0 42%, black 52%);
+          mask: radial-gradient(circle at 50% 50%, transparent 0 42%, black 52%);
+}
+.slot.drop .impact-lines{
+  animation: impactBurst .55s ease-out forwards;
+}
+@keyframes impactBurst{
+  0%   { transform: scale(.6); opacity:0 }
+  20%  { opacity:.9 }
+  100% { transform: scale(1.4) rotate(3deg); opacity:0 }
+}
+
+/* ==== 金色のキラキラ粒子 ==== */
+.gold-spark{
+  position:absolute;
+  width:6px; height:6px; border-radius:50%;
+  pointer-events:none; z-index:2;
+  background: radial-gradient(circle, #fff 0 40%, rgba(255,255,255,0) 70%);
+  box-shadow: 0 0 10px rgba(255,215,0,.9), 0 0 18px rgba(255,215,0,.6);
+  opacity:0;
+}
+.gold-spark.run{
+  animation: sparkUp .8s ease-out forwards;
+}
+@keyframes sparkUp{
+  0%   { transform: translate(0,0) scale(.8); opacity:0 }
+  15%  { opacity:1 }
+  100% { transform: translate(var(--dx, 0px), var(--dy, -36px)) scale(1.1); opacity:0 }
+}
+
