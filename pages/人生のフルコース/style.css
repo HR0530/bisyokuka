@@ -163,7 +163,7 @@ body{
           mask: radial-gradient(circle at 50% 50%, transparent 0 42%, black 52%);
 }
 .slot.drop .impact-lines{
-  animation: impactBurst .55s ease-out forwards;
+  animation: impactBurst .70s ease-out forwards;
 }
 @keyframes impactBurst{
   0%   { transform: scale(.6); opacity:0 }
@@ -181,7 +181,7 @@ body{
   opacity:0;
 }
 .gold-spark.run{
-  animation: sparkUp .8s ease-out forwards;
+  animation: sparkUp .15s ease-out forwards;
 }
 @keyframes sparkUp{
   0%   { transform: translate(0,0) scale(.8); opacity:0 }
