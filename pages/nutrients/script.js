@@ -295,7 +295,7 @@ const foodData = {
     "塩": { cal: 0, protein: 0, fat: 0, carb: 0 },
     "こしょう": { cal: 0, protein: 0, fat: 0, carb: 0 },
     "小麦粉": { cal: 367, protein: 10, fat: 1.5, carb: 76 },
- 　 "パン粉": { cal: 384, protein: 14, fat: 5, carb: 70 },
+    "パン粉": { cal: 384, protein: 14, fat: 5, carb: 70 },
     "デミグラスソース": { cal: 120, protein: 3, fat: 6, carb: 12 },
     "ホワイトソース": { cal: 110, protein: 3, fat: 6, carb: 10 },
     "コチュジャン": { cal: 180, protein: 6, fat: 3, carb: 33 },
