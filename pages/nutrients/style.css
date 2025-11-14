@@ -1,76 +1,109 @@
+/* ベース */
+* { box-sizing: border-box; }
 body {
   font-family: 'Noto Sans JP', sans-serif;
-  background-color: #f7f9fc;
-  padding: 30px;
+  background: linear-gradient(135deg, #f6f9ff, #e9f9f1);
   color: #333;
-}
-
-h1 {
-  color: #2c3e50;
-  text-align: center;
-}
-
-.card {
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  margin: 0;
   padding: 20px;
-  margin: 20px auto;
-  max-width: 600px;
+}
+h1 { text-align: center; font-size: 1.8em; margin: 10px 0 16px; color: #2b6a4d; }
+
+/* タブ */
+.tabs {
+  display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;
+}
+.tab {
+  background: #fff; border: 1.5px solid #a4d6b3; border-radius: 18px;
+  padding: 6px 12px; cursor: pointer; color: #2b6a4d; font-weight: 700; transition: .2s;
+}
+.tab:hover { background: #e0f7ea; }
+.tab.active {
+  background: linear-gradient(135deg, #5cb85c, #4fa76e); color: #fff; border: none;
 }
 
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+/* カード */
+.card {
+  background: #fff; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  padding: 16px; margin: 12px auto; max-width: 780px;
 }
 
-input[type="text"],
-input[type="number"] {
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+/* フォーム */
+form { display: flex; flex-direction: column; gap: 10px; }
+input[type="text"], input[type="number"], input[type="date"], select {
+  width: 100%; min-height: 40px; padding: 8px 10px; border: 1.4px solid #d1e8d8; border-radius: 10px;
+  background: #fff; font-size: 0.95em;
 }
-
-button {
-  padding: 10px 15px;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s;
+input:focus, select:focus { outline: none; border-color: #5cb85c; box-shadow: 0 0 6px rgba(92,184,92,.25); }
+button[type="submit"], .danger, .adjust {
+  border: none; border-radius: 10px; min-height: 38px; padding: 8px 12px; font-weight: 700; cursor: pointer;
 }
+button[type="submit"] { background: linear-gradient(135deg, #5cb85c, #4fa76e); color: #fff; }
+button[type="submit"]:hover { filter: brightness(1.05); }
+.danger { background: #ff6b6b; color: #fff; }
+.danger:hover { filter: brightness(1.05); }
 
-button:hover {
-  background-color: #2980b9;
-}
+/* 重量コントロール */
+.weight-control { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.adjust { background: #f3f5f7; color: #333; }
+.adjust:hover { background: #e1f6e7; }
 
-.weight-control {
-  display: flex;
-  flex-direction: column;
-}
-
-.weight-control .buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 5px;
-}
-
-.weight-control .buttons button {
-  flex: 1;
-  font-size: 14px;
-  padding: 6px;
-  background-color: #95a5a6;
-}
-
-.weight-control .buttons button:hover {
-  background-color: #7f8c8d;
-}
-
+/* 食材リスト */
+#food-list { list-style: none; padding: 0; margin: 0; }
 #food-list li {
-  cursor: pointer;
-  margin-bottom: 5px;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 10px; margin-bottom: 6px; border-radius: 10px; background: #f9fff9;
+  border-left: 5px solid #a2e4a2;
+}
+#food-list li.expiring { border-left-color: #ff6b6b; background: #fff5f5; }
+.delete-btn {
+  background: #ff6b6b; color: #fff; border: none; border-radius: 8px; padding: 6px 8px; font-weight: 700; cursor: pointer;
+}
+.delete-btn:hover { filter: brightness(1.05); }
+
+/* 合計・KPI */
+#summary {
+  background: #e8fff0; border: 1.5px solid #a3dcb1; border-radius: 10px;
+  padding: 10px; text-align: center; font-weight: 700; color: #24633f;
+}
+.metrics { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.kpi { background: #f6fff8; border: 1.5px solid #a3dcb1; border-radius: 10px; padding: 10px 12px; font-weight: 700; color: #24633f; }
+.kpi.muted { background: #f3f8ff; border-color: #cfe2f5; color: #274b65; }
+
+/* レシピ提案 */
+#recipe-list {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px;
+}
+.recipe-item {
+  background: #fff; border-left: 6px solid #5bc0de; border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.1); padding: 10px 12px;
+}
+.cook-btn {
+  min-width: 88px; padding: 6px 10px; border: none; border-radius: 8px;
+  background: #5cb85c; color: #fff; cursor: pointer; font-weight: 700;
+}
+
+/* 履歴 */
+#recipe-history { list-style: none; padding: 0; margin: 0; }
+#recipe-history li { border-bottom: 1px dashed #ccc; padding: 6px 8px; color: #555; }
+
+/* レイアウト */
+.list-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.sort-control select { min-height: 34px; }
+
+/* グリッド */
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(140px, 1fr)); gap: 10px; }
+.form-grid--4 { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 10px; }
+.form-item { display: flex; flex-direction: column; gap: 6px; }
+.form-item--full { grid-column: 1 / -1; }
+
+@media (max-width: 900px) {
+  .form-grid--4 { grid-template-columns: repeat(3, minmax(140px, 1fr)); }
+}
+@media (max-width: 600px) {
+  body { padding: 12px; }
+  .card { padding: 14px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid--4 { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
 }
