@@ -107,3 +107,27 @@ button[type="submit"]:hover { filter: brightness(1.05); }
   .form-grid { grid-template-columns: 1fr; }
   .form-grid--4 { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
 }
+
+/* 🔙 ホームに戻るボタン */
+.top-bar {
+  max-width: 780px;
+  margin: 0 auto 8px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.home-button {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  background: #ffffff;
+  border: 1px solid #c8dede;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+
+.home-button:hover {
+  background: #e8f7ff;
+}
+
