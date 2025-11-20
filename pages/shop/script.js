@@ -1,20 +1,6 @@
 // 美食家さん - 知恵袋・投票・コメント機能付き（Firebase Firestore版）
 // --- 入力を消さないバージョン ---
 
-// ====== Firebase 初期化 ======
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyC8bVyIX4NFOxSH1i38MAXRnsqIZ_-3C_0",
-  authDomain: "bishokuka-qna.firebaseapp.com",
-  projectId: "bishokuka-qna",
-  storageBucket: "bishokuka-qna.firebasestorage.app",
-  messagingSenderId: "298243776444",
-  appId: "1:298243776444:web:fb4522d529a01246f095b9",
-  measurementId: "G-WNH918H8JF"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
 
 // ====== 投稿データの保持 ======
 let posts = [];
