@@ -1,16 +1,44 @@
 // 美食家さん - 知恵袋・投票・コメント機能付き（Firebase Firestore版）
-// --- 入力を消さないバージョン ---
+// 最終候補AIコード②(localStorage版) を Firestore に移植したもの（入力は消さない版）
 
+console.log("Q&A script loaded");
 
-// ====== 投稿データの保持 ======
+// ====== Firebase 初期化 ======
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyC8bVyIX4NFOxSH1i38MAXRnsqIZ_-3C_0",
+  authDomain: "bishokuka-qna.firebaseapp.com",
+  projectId: "bishokuka-qna",
+  storageBucket: "bishokuka-qna.appspot.com", // ← ここ .appspot.com に修正
+  messagingSenderId: "298243776444",
+  appId: "1:298243776444:web:fb4522d529a01246f095b9",
+  measurementId: "G-WNH918H8JF"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ====== データ構造 ======
+//
+// Firestore コレクション: "posts"
+// ドキュメント構造:
+// {
+//   title: string,
+//   description: string,
+//   createdAt: Timestamp,
+//   options: [{ text: string, votes: number }, ...],
+//   comments: [{ text: string, createdAt: Timestamp }, ...]
+// }
+
+// 投稿データのキャッシュ（ランキング計算などに使う）
 let posts = [];
 
-// Firestore → JSオブジェクト変換
+// Firestore からのスナップショットを posts 配列に変換
 function snapshotToPosts(snapshot) {
-  const arr = [];
+  const result = [];
   snapshot.forEach((doc) => {
     const data = doc.data();
-    arr.push({
+    result.push({
       id: doc.id,
       title: data.title,
       description: data.description,
@@ -19,222 +47,283 @@ function snapshotToPosts(snapshot) {
       comments: data.comments || []
     });
   });
-  return arr;
+  return result;
 }
 
-// ====== 投稿一覧描画 ======
+// ====== 投稿一覧を描画 ======
 function renderPosts() {
-  const list = document.getElementById("questionsList");
-  const empty = document.getElementById("emptyMessage");
-  list.innerHTML = "";
+  const listEl = document.getElementById("questionsList");
+  const emptyMessage = document.getElementById("emptyMessage");
+
+  listEl.innerHTML = "";
 
   if (posts.length === 0) {
-    empty.style.display = "block";
+    emptyMessage.style.display = "block";
     return;
   } else {
-    empty.style.display = "none";
+    emptyMessage.style.display = "none";
   }
 
+  // createdAt の降順でソート
   const sorted = [...posts].sort((a, b) => b.createdAt - a.createdAt);
 
   sorted.forEach((post) => {
-    const div = document.createElement("div");
-    div.className = "post";
+    const postDiv = document.createElement("div");
+    postDiv.className = "post";
 
-    const title = document.createElement("div");
-    title.className = "post-title";
-    title.textContent = post.title;
+    const titleEl = document.createElement("div");
+    titleEl.className = "post-title";
+    titleEl.textContent = post.title;
 
-    const desc = document.createElement("div");
-    desc.className = "post-description";
-    desc.textContent = post.description;
+    const descEl = document.createElement("div");
+    descEl.className = "post-description";
+    descEl.textContent = post.description;
 
-    const meta = document.createElement("div");
-    meta.className = "post-meta";
-    const total = post.options.reduce((s, o) => s + (o.votes || 0), 0);
-    meta.textContent =
+    const metaEl = document.createElement("div");
+    metaEl.className = "post-meta";
+    const totalVotes = post.options.reduce(
+      (sum, o) => sum + (o.votes || 0),
+      0
+    );
+    metaEl.textContent =
       "投稿日時: " +
       post.createdAt.toLocaleString() +
       " ／ 合計票数: " +
-      total +
+      totalVotes +
       "票";
 
-    div.appendChild(title);
-    div.appendChild(desc);
-    div.appendChild(meta);
+    postDiv.appendChild(titleEl);
+    postDiv.appendChild(descEl);
+    postDiv.appendChild(metaEl);
 
     // 選択肢
-    post.options.forEach((opt, idx) => {
-      const optDiv = document.createElement("div");
-      optDiv.className = "option";
+    post.options.forEach((option, optionIndex) => {
+      const optionDiv = document.createElement("div");
+      optionDiv.className = "option";
 
-      const text = document.createElement("span");
-      text.className = "option-text";
-      text.textContent = opt.text;
+      const textSpan = document.createElement("span");
+      textSpan.className = "option-text";
+      textSpan.textContent = option.text;
 
-      const count = document.createElement("span");
-      count.className = "vote-count";
-      count.textContent = (opt.votes || 0) + "票";
+      const voteSpan = document.createElement("span");
+      voteSpan.className = "vote-count";
+      voteSpan.textContent = (option.votes || 0) + "票";
 
-      optDiv.appendChild(text);
-      optDiv.appendChild(count);
+      optionDiv.appendChild(textSpan);
+      optionDiv.appendChild(voteSpan);
 
-      optDiv.addEventListener("click", () => {
-        handleVote(post.id, idx);
+      optionDiv.addEventListener("click", () => {
+        handleVote(post.id, optionIndex);
       });
 
-      div.appendChild(optDiv);
+      postDiv.appendChild(optionDiv);
     });
 
-    // コメント
+    // コメント表示・追加
     const commentsDiv = document.createElement("div");
     commentsDiv.className = "comments";
 
-    const ct = document.createElement("div");
-    ct.className = "comments-title";
-    ct.textContent = "コメント";
-    commentsDiv.appendChild(ct);
+    const commentsTitle = document.createElement("div");
+    commentsTitle.className = "comments-title";
+    commentsTitle.textContent = "コメント";
 
-    post.comments.forEach((c) => {
-      const item = document.createElement("div");
-      item.className = "comment-item";
+    commentsDiv.appendChild(commentsTitle);
 
-      const t = document.createElement("div");
-      t.textContent = c.text;
+    if (post.comments && post.comments.length > 0) {
+      post.comments.forEach((comment) => {
+        const commentEl = document.createElement("div");
+        commentEl.className = "comment-item";
 
-      const m = document.createElement("div");
-      m.className = "comment-meta";
-      const d =
-        c.createdAt && c.createdAt.toDate
-          ? c.createdAt.toDate()
-          : new Date(0);
-      m.textContent = d.toLocaleString();
+        const textEl = document.createElement("div");
+        textEl.textContent = comment.text;
 
-      item.appendChild(t);
-      item.appendChild(m);
-      commentsDiv.appendChild(item);
-    });
+        const meta = document.createElement("div");
+        meta.className = "comment-meta";
+        const cDate =
+          comment.createdAt instanceof Date
+            ? comment.createdAt
+            : (comment.createdAt && comment.createdAt.toDate)
+            ? comment.createdAt.toDate()
+            : new Date(0);
+        meta.textContent = cDate.toLocaleString();
 
-    const button = document.createElement("button");
-    button.className = "comment-button";
-    button.textContent = "コメントを追加";
+        commentEl.appendChild(textEl);
+        commentEl.appendChild(meta);
+        commentsDiv.appendChild(commentEl);
+      });
+    }
 
-    button.addEventListener("click", () => {
+    const commentButton = document.createElement("button");
+    commentButton.className = "comment-button";
+    commentButton.textContent = "コメントを追加";
+
+    commentButton.addEventListener("click", () => {
       handleAddComment(post.id);
     });
 
-    commentsDiv.appendChild(button);
-    div.appendChild(commentsDiv);
+    commentsDiv.appendChild(commentButton);
+    postDiv.appendChild(commentsDiv);
 
-    list.appendChild(div);
+    listEl.appendChild(postDiv);
   });
 }
 
-// ====== ランキング描画 ======
+// ====== ランキング描画（合計票数TOP5） ======
 function renderRanking() {
-  const list = document.getElementById("rankingList");
-  list.innerHTML = "";
+  const rankingEl = document.getElementById("rankingList");
+  rankingEl.innerHTML = "";
 
   if (posts.length === 0) {
     const li = document.createElement("li");
     li.textContent = "まだ投票データがありません。";
-    list.appendChild(li);
+    rankingEl.appendChild(li);
     return;
   }
 
   const sorted = [...posts].sort((a, b) => {
-    const av = a.options.reduce((s, o) => s + (o.votes || 0), 0);
-    const bv = b.options.reduce((s, o) => s + (o.votes || 0), 0);
-    return bv - av;
+    const aVotes = a.options.reduce((sum, o) => sum + (o.votes || 0), 0);
+    const bVotes = b.options.reduce((sum, o) => sum + (o.votes || 0), 0);
+    return bVotes - aVotes;
   });
 
-  sorted.slice(0, 5).forEach((post, i) => {
-    const total = post.options.reduce((s, o) => s + (o.votes || 0), 0);
+  const top = sorted.slice(0, 5);
+
+  top.forEach((post, index) => {
+    const totalVotes = post.options.reduce(
+      (sum, o) => sum + (o.votes || 0),
+      0
+    );
     const li = document.createElement("li");
-    li.textContent = `${i + 1}位: ${post.title} ／ 合計 ${total}票`;
-    list.appendChild(li);
+    li.textContent =
+      index + 1 + "位: " + post.title + " ／ 合計 " + totalVotes + "票";
+    rankingEl.appendChild(li);
   });
 }
 
-// ====== 投票処理 ======
-async function handleVote(id, index) {
-  const ref = db.collection("posts").doc(id);
-  const snap = await ref.get();
-  if (!snap.exists) return;
+// ====== 投票処理（対応する options[index].votes を +1） ======
+async function handleVote(postId, optionIndex) {
+  try {
+    const docRef = db.collection("posts").doc(postId);
+    const docSnap = await docRef.get();
+    if (!docSnap.exists) return;
 
-  const data = snap.data();
-  const ops = data.options || [];
+    const data = docSnap.data();
+    const options = data.options || [];
+    if (!options[optionIndex]) return;
 
-  ops[index].votes = (ops[index].votes || 0) + 1;
+    const currentVotes = options[optionIndex].votes || 0;
+    options[optionIndex].votes = currentVotes + 1;
 
-  await ref.update({ options: ops });
+    await docRef.update({ options: options });
+    // onSnapshot により自動で再描画
+  } catch (e) {
+    console.error("投票に失敗しました", e);
+    alert("投票に失敗しました（詳細はコンソールを見てください）");
+  }
 }
 
-// ====== コメント追加 ======
-async function handleAddComment(id) {
-  const text = prompt("コメントを入力してください：");
-  if (text === null) return;
-  const t = text.trim();
-  if (t === "") return alert("空のコメントは追加できません");
+// ====== コメント追加処理 ======
+async function handleAddComment(postId) {
+  const text = window.prompt("コメントを入力してください：");
+  if (text === null) return; // キャンセル
+  const trimmed = text.trim();
+  if (trimmed === "") {
+    alert("空のコメントは追加できません。");
+    return;
+  }
 
-  const ref = db.collection("posts").doc(id);
-  const snap = await ref.get();
-  if (!snap.exists) return;
+  try {
+    const docRef = db.collection("posts").doc(postId);
+    const docSnap = await docRef.get();
+    if (!docSnap.exists) return;
 
-  const data = snap.data();
-  const comments = data.comments || [];
+    const data = docSnap.data();
+    const comments = data.comments || [];
 
-  comments.push({
-    text: t,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
+    comments.push({
+      text: trimmed,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
 
-  await ref.update({ comments });
+    await docRef.update({ comments: comments });
+    // onSnapshotで再描画
+  } catch (e) {
+    console.error("コメント追加に失敗しました", e);
+    alert("コメント追加に失敗しました（詳細はコンソールを見てください）");
+  }
 }
 
-// ====== 投稿フォーム送信 ======
-async function handleFormSubmit(e) {
-  e.preventDefault();
+// ====== 投稿フォーム送信処理（入力は消さない） ======
+async function handleFormSubmit(event) {
+  event.preventDefault();
 
-  const title = document.getElementById("title").value.trim();
-  const desc = document.getElementById("description").value.trim();
+  const titleInput = document.getElementById("title");
+  const descInput = document.getElementById("description");
   const optionInputs = document.querySelectorAll(".option-input");
 
-  if (!title || !desc) return alert("タイトルと内容は必須です");
+  const title = titleInput.value.trim();
+  const description = descInput.value.trim();
+
+  if (title === "" || description === "") {
+    alert("タイトルと質問内容は必須です。");
+    return;
+  }
 
   const options = [];
-  optionInputs.forEach((i) => {
-    const t = i.value.trim();
-    if (t) options.push({ text: t, votes: 0 });
+  optionInputs.forEach((input) => {
+    const text = input.value.trim();
+    if (text !== "") {
+      options.push({
+        text: text,
+        votes: 0
+      });
+    }
   });
 
   if (options.length < 2) {
-    return alert("選択肢は最低2つ必要です");
+    alert("少なくとも2つの選択肢を入力してください。");
+    return;
   }
 
-  // 🔥 フォームを消さない！
-  await db.collection("posts").add({
-    title,
-    description: desc,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    options,
-    comments: []
-  });
+  try {
+    await db.collection("posts").add({
+      title: title,
+      description: description,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      options: options,
+      comments: []
+    });
 
-  // （リセットしない）
+    // ★ ここでフォームはリセットしない（入力内容を残す）
+    console.log("投稿完了");
+  } catch (e) {
+    console.error("投稿に失敗しました", e);
+    alert("投稿に失敗しました（詳細はコンソールを見てください）");
+  }
 }
 
 // ====== 初期化 ======
 document.addEventListener("DOMContentLoaded", () => {
-  document
-    .getElementById("questionForm")
-    .addEventListener("submit", handleFormSubmit);
+  console.log("DOMContentLoaded - Q&A init");
 
+  const form = document.getElementById("questionForm");
+  if (form) {
+    form.addEventListener("submit", handleFormSubmit);
+  } else {
+    console.error("#questionForm が見つかりませんでした");
+  }
+
+  // Firestore の posts コレクションをリアルタイム監視
   db.collection("posts")
     .orderBy("createdAt", "desc")
-    .onSnapshot((snap) => {
-      posts = snapshotToPosts(snap);
-      renderPosts();
-      renderRanking();
-    });
+    .onSnapshot(
+      (snapshot) => {
+        posts = snapshotToPosts(snapshot);
+        renderPosts();
+        renderRanking();
+      },
+      (error) => {
+        console.error("onSnapshot の監視でエラー:", error);
+      }
+    );
 });
