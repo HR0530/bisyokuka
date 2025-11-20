@@ -19,31 +19,35 @@ body {
   text-align: center;
 }
 
-/* タイトル＋ボタンを横並びに */
-.app-header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+.app-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #1f2933;
+}
+
+.app-description {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  color: #374151;
 }
 
 /* ホームボタン */
 .home-button {
+  display: inline-block;
+  margin-top: 0.5rem;
   padding: 0.35rem 0.9rem;
   border-radius: 999px;
-  border: none;
-  font-size: 0.85rem;
-  font-weight: 600;
   background-color: #ffffffaa;
   color: #1f2933;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
-  cursor: pointer;
 }
 
 .home-button:hover {
   background-color: #ffffff;
 }
-
 
 /* メイン */
 
