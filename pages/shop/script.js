@@ -12,13 +12,6 @@
 
       <h1>🍴 美食家さん - 知恵袋・投票</h1>
 
-      <!-- 戻るボタン -->
-      function goHome() {
-  window.location.href = "../../index_pc.html";
-}
-      </button>
-
-    </div>
 
     <p class="app-description">
       「今何を食べるべき？」をみんなに相談して、投票やコメントで意見を集めよう。
