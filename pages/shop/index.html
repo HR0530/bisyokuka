@@ -6,16 +6,15 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
   <header class="app-header">
-    <div class="app-header-top">
-      <h1>🍴 美食家さん - 知恵袋・投票</h1>
+    <h1>🍴 美食家さん - 知恵袋・投票</h1>
 
-      <!-- トップに戻るボタン -->
+    <!-- トップに戻るボタン（ここは絶対入れる） -->
+    <p>
       <a class="home-button" href="/bisyokuka/index.html">
         🏠 トップに戻る
       </a>
-    </div>
+    </p>
 
     <p class="app-description">
       「今何を食べるべき？」をみんなに相談して、投票やコメントで意見を集めよう。
@@ -24,6 +23,7 @@
   </header>
 
   <main class="app-main">
+    <!-- 質問投稿フォーム -->
     <section class="card form-section">
       <h2>新しい質問を投稿</h2>
       <form id="questionForm">
@@ -42,46 +42,53 @@
           <textarea
             id="description"
             rows="3"
-            placeholder="内容…"
+            placeholder="例：相手はトマトが苦手で、甘めの料理が好きです。卵と鶏肉があります。"
             required
           ></textarea>
         </div>
 
         <div class="form-group">
-          <label>選択肢（2～4個）</label>
+          <label>選択肢（2〜4個）</label>
           <input type="text" class="option-input" placeholder="選択肢1（必須）">
           <input type="text" class="option-input" placeholder="選択肢2（必須）">
           <input type="text" class="option-input" placeholder="選択肢3（任意）">
           <input type="text" class="option-input" placeholder="選択肢4（任意）">
-          <p class="hint">※空欄の選択肢は無視されます。</p>
+          <p class="hint">※空欄の選択肢は自動的に無視されます。</p>
         </div>
 
         <button type="submit" class="primary-btn">質問を投稿する</button>
       </form>
     </section>
 
+    <!-- 投稿一覧 -->
     <section class="card">
       <h2>🗳️ 投稿一覧と投票</h2>
       <p id="emptyMessage" class="empty-message">
-        まだ投稿がありません。
+        まだ投稿がありません。最初の質問を投稿してみましょう！
       </p>
-      <div id="questionsList"></div>
+      <div id="questionsList">
+        <!-- 投稿カードがここに表示される -->
+      </div>
     </section>
 
+    <!-- 投票ランキング -->
     <section class="card">
-      <h2>📊 投票ランキング</h2>
-      <ul id="rankingList"></ul>
+      <h2>📊 投票ランキング（合計票数が多い投稿）</h2>
+      <ul id="rankingList">
+        <!-- ランキングがここに表示される -->
+      </ul>
     </section>
   </main>
 
   <footer class="app-footer">
-    <small>© 2025 美食家さん - Firebase Q&A</small>
+    <small>© 2025 美食家さん - NC: アプリを究める（知恵袋・投票・コメント機能・Firebase版）</small>
   </footer>
 
-  <!-- Firebase SDK -->
+  <!-- Firebase SDK（v8系）-->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="script.js"></script>
 
+  <!-- アプリ本体 -->
+  <script src="script.js"></script>
 </body>
 </html>
