@@ -13,8 +13,9 @@
       <h1>🍴 美食家さん - 知恵袋・投票</h1>
 
       <!-- 戻るボタン -->
-      <button class="home-button" onclick="goHome()">
-        🏠 トップに戻る
+      function goHome() {
+  window.location.href = "../../index_pc.html";
+}
       </button>
 
     </div>
