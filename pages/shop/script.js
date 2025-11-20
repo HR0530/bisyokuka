@@ -1,8 +1,9 @@
-③script.js
 // 美食家さん - 知恵袋・投票・コメント機能付き（Firebase Firestore版）
 // 最終候補AIコード②(localStorage版) を Firestore に移植したもの。
 
 // ====== Firebase 初期化 ======
+// ↓ ここは Firebase コンソールから自分の設定をコピペする
+// プロジェクトの設定 > マイアプリ > Web アプリ > SDK の設定と構成 > 「構成」
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyC8bVyIX4NFOxSH1i38MAXRnsqIZ_-3C_0",
@@ -198,7 +199,7 @@ function renderRanking() {
   });
 }
 
-// 投票処理（対応する options[index].votes を +1 にしてアップデート）
+// 投票処理
 async function handleVote(postId, optionIndex) {
   try {
     const docRef = db.collection("posts").doc(postId);
@@ -261,55 +262,4 @@ async function handleFormSubmit(event) {
   const description = descInput.value.trim();
 
   if (title === "" || description === "") {
-    alert("タイトルと質問内容は必須です。");
-    return;
-  }
-
-  const options = [];
-  optionInputs.forEach((input) => {
-    const text = input.value.trim();
-    if (text !== "") {
-      options.push({
-        text: text,
-        votes: 0
-      });
-    }
-  });
-
-  if (options.length < 2) {
-    alert("少なくとも2つの選択肢を入力してください。");
-    return;
-  }
-
-  try {
-    await db.collection("posts").add({
-      title: title,
-      description: description,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      options: options,
-      comments: []
-    });
-
-    // フォームリセット
-    titleInput.value = "";
-    descInput.value = "";
-    optionInputs.forEach((input) => (input.value = ""));
-  } catch (e) {
-    console.error("投稿に失敗しました", e);
-  }
-}
-
-// 初期化
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("questionForm");
-  form.addEventListener("submit", handleFormSubmit);
-
-  // Firestore の posts コレクションをリアルタイム監視
-  db.collection("posts")
-    .orderBy("createdAt", "desc")
-    .onSnapshot((snapshot) => {
-      posts = snapshotToPosts(snapshot);
-      renderPosts();
-      renderRanking();
-    });
-});
+    alert("タイトルと質問内容は必須です。")
