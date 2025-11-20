@@ -16,6 +16,10 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// ホーム画面（index_pc.html）へ戻る
+function goHome() {
+  window.location.href = "index_pc.html";
+}
 // ====== データ構造 ======
 //
 // Firestore コレクション: "posts"
