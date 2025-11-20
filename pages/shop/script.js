@@ -1,9 +1,7 @@
 // 美食家さん - 知恵袋・投票・コメント機能付き（Firebase Firestore版）
-// 最終候補AIコード②(localStorage版) を Firestore に移植したもの。
+// --- 入力を消さないバージョン ---
 
 // ====== Firebase 初期化 ======
-// ↓ ここは Firebase コンソールから自分の設定をコピペする
-// プロジェクトの設定 > マイアプリ > Web アプリ > SDK の設定と構成 > 「構成」
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyC8bVyIX4NFOxSH1i38MAXRnsqIZ_-3C_0",
@@ -18,27 +16,15 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ====== データ構造 ======
-//
-// Firestore コレクション: "posts"
-// ドキュメント構造:
-// {
-//   title: string,
-//   description: string,
-//   createdAt: Timestamp,
-//   options: [{ text: string, votes: number }, ...],
-//   comments: [{ text: string, createdAt: Timestamp }, ...]
-// }
-
-// 投稿データのキャッシュ（ランキング計算などに使う）
+// ====== 投稿データの保持 ======
 let posts = [];
 
-// Firestore からのスナップショットを posts 配列に変換
+// Firestore → JSオブジェクト変換
 function snapshotToPosts(snapshot) {
-  const result = [];
+  const arr = [];
   snapshot.forEach((doc) => {
     const data = doc.data();
-    result.push({
+    arr.push({
       id: doc.id,
       title: data.title,
       description: data.description,
@@ -47,219 +33,222 @@ function snapshotToPosts(snapshot) {
       comments: data.comments || []
     });
   });
-  return result;
+  return arr;
 }
 
-// 投稿一覧を描画
+// ====== 投稿一覧描画 ======
 function renderPosts() {
-  const listEl = document.getElementById("questionsList");
-  const emptyMessage = document.getElementById("emptyMessage");
-
-  listEl.innerHTML = "";
+  const list = document.getElementById("questionsList");
+  const empty = document.getElementById("emptyMessage");
+  list.innerHTML = "";
 
   if (posts.length === 0) {
-    emptyMessage.style.display = "block";
+    empty.style.display = "block";
     return;
   } else {
-    emptyMessage.style.display = "none";
+    empty.style.display = "none";
   }
 
-  // createdAt の降順でソート
   const sorted = [...posts].sort((a, b) => b.createdAt - a.createdAt);
 
   sorted.forEach((post) => {
-    const postDiv = document.createElement("div");
-    postDiv.className = "post";
+    const div = document.createElement("div");
+    div.className = "post";
 
-    const titleEl = document.createElement("div");
-    titleEl.className = "post-title";
-    titleEl.textContent = post.title;
+    const title = document.createElement("div");
+    title.className = "post-title";
+    title.textContent = post.title;
 
-    const descEl = document.createElement("div");
-    descEl.className = "post-description";
-    descEl.textContent = post.description;
+    const desc = document.createElement("div");
+    desc.className = "post-description";
+    desc.textContent = post.description;
 
-    const metaEl = document.createElement("div");
-    metaEl.className = "post-meta";
-    const totalVotes = post.options.reduce((sum, o) => sum + (o.votes || 0), 0);
-    metaEl.textContent =
+    const meta = document.createElement("div");
+    meta.className = "post-meta";
+    const total = post.options.reduce((s, o) => s + (o.votes || 0), 0);
+    meta.textContent =
       "投稿日時: " +
       post.createdAt.toLocaleString() +
       " ／ 合計票数: " +
-      totalVotes +
+      total +
       "票";
 
-    postDiv.appendChild(titleEl);
-    postDiv.appendChild(descEl);
-    postDiv.appendChild(metaEl);
+    div.appendChild(title);
+    div.appendChild(desc);
+    div.appendChild(meta);
 
     // 選択肢
-    post.options.forEach((option, optionIndex) => {
-      const optionDiv = document.createElement("div");
-      optionDiv.className = "option";
+    post.options.forEach((opt, idx) => {
+      const optDiv = document.createElement("div");
+      optDiv.className = "option";
 
-      const textSpan = document.createElement("span");
-      textSpan.className = "option-text";
-      textSpan.textContent = option.text;
+      const text = document.createElement("span");
+      text.className = "option-text";
+      text.textContent = opt.text;
 
-      const voteSpan = document.createElement("span");
-      voteSpan.className = "vote-count";
-      voteSpan.textContent = (option.votes || 0) + "票";
+      const count = document.createElement("span");
+      count.className = "vote-count";
+      count.textContent = (opt.votes || 0) + "票";
 
-      optionDiv.appendChild(textSpan);
-      optionDiv.appendChild(voteSpan);
+      optDiv.appendChild(text);
+      optDiv.appendChild(count);
 
-      optionDiv.addEventListener("click", () => {
-        handleVote(post.id, optionIndex);
+      optDiv.addEventListener("click", () => {
+        handleVote(post.id, idx);
       });
 
-      postDiv.appendChild(optionDiv);
+      div.appendChild(optDiv);
     });
 
-    // コメント表示・追加
+    // コメント
     const commentsDiv = document.createElement("div");
     commentsDiv.className = "comments";
 
-    const commentsTitle = document.createElement("div");
-    commentsTitle.className = "comments-title";
-    commentsTitle.textContent = "コメント";
+    const ct = document.createElement("div");
+    ct.className = "comments-title";
+    ct.textContent = "コメント";
+    commentsDiv.appendChild(ct);
 
-    commentsDiv.appendChild(commentsTitle);
+    post.comments.forEach((c) => {
+      const item = document.createElement("div");
+      item.className = "comment-item";
 
-    if (post.comments && post.comments.length > 0) {
-      post.comments.forEach((comment) => {
-        const commentEl = document.createElement("div");
-        commentEl.className = "comment-item";
+      const t = document.createElement("div");
+      t.textContent = c.text;
 
-        const textEl = document.createElement("div");
-        textEl.textContent = comment.text;
+      const m = document.createElement("div");
+      m.className = "comment-meta";
+      const d =
+        c.createdAt && c.createdAt.toDate
+          ? c.createdAt.toDate()
+          : new Date(0);
+      m.textContent = d.toLocaleString();
 
-        const meta = document.createElement("div");
-        meta.className = "comment-meta";
-        const cDate =
-          comment.createdAt instanceof Date
-            ? comment.createdAt
-            : (comment.createdAt && comment.createdAt.toDate)
-              ? comment.createdAt.toDate()
-              : new Date(0);
-        meta.textContent = cDate.toLocaleString();
+      item.appendChild(t);
+      item.appendChild(m);
+      commentsDiv.appendChild(item);
+    });
 
-        commentEl.appendChild(textEl);
-        commentEl.appendChild(meta);
-        commentsDiv.appendChild(commentEl);
-      });
-    }
+    const button = document.createElement("button");
+    button.className = "comment-button";
+    button.textContent = "コメントを追加";
 
-    const commentButton = document.createElement("button");
-    commentButton.className = "comment-button";
-    commentButton.textContent = "コメントを追加";
-
-    commentButton.addEventListener("click", () => {
+    button.addEventListener("click", () => {
       handleAddComment(post.id);
     });
 
-    commentsDiv.appendChild(commentButton);
-    postDiv.appendChild(commentsDiv);
+    commentsDiv.appendChild(button);
+    div.appendChild(commentsDiv);
 
-    listEl.appendChild(postDiv);
+    list.appendChild(div);
   });
 }
 
-// ランキング描画（合計票数TOP5）
+// ====== ランキング描画 ======
 function renderRanking() {
-  const rankingEl = document.getElementById("rankingList");
-  rankingEl.innerHTML = "";
+  const list = document.getElementById("rankingList");
+  list.innerHTML = "";
 
   if (posts.length === 0) {
     const li = document.createElement("li");
     li.textContent = "まだ投票データがありません。";
-    rankingEl.appendChild(li);
+    list.appendChild(li);
     return;
   }
 
   const sorted = [...posts].sort((a, b) => {
-    const aVotes = a.options.reduce((sum, o) => sum + (o.votes || 0), 0);
-    const bVotes = b.options.reduce((sum, o) => sum + (o.votes || 0), 0);
-    return bVotes - aVotes;
+    const av = a.options.reduce((s, o) => s + (o.votes || 0), 0);
+    const bv = b.options.reduce((s, o) => s + (o.votes || 0), 0);
+    return bv - av;
   });
 
-  const top = sorted.slice(0, 5);
-
-  top.forEach((post, index) => {
-    const totalVotes = post.options.reduce((sum, o) => sum + (o.votes || 0), 0);
+  sorted.slice(0, 5).forEach((post, i) => {
+    const total = post.options.reduce((s, o) => s + (o.votes || 0), 0);
     const li = document.createElement("li");
-    li.textContent =
-      (index + 1) +
-      "位: " +
-      post.title +
-      " ／ 合計 " +
-      totalVotes +
-      "票";
-    rankingEl.appendChild(li);
+    li.textContent = `${i + 1}位: ${post.title} ／ 合計 ${total}票`;
+    list.appendChild(li);
   });
 }
 
-// 投票処理
-async function handleVote(postId, optionIndex) {
-  try {
-    const docRef = db.collection("posts").doc(postId);
-    const docSnap = await docRef.get();
-    if (!docSnap.exists) return;
+// ====== 投票処理 ======
+async function handleVote(id, index) {
+  const ref = db.collection("posts").doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return;
 
-    const data = docSnap.data();
-    const options = data.options || [];
-    if (!options[optionIndex]) return;
+  const data = snap.data();
+  const ops = data.options || [];
 
-    const currentVotes = options[optionIndex].votes || 0;
-    options[optionIndex].votes = currentVotes + 1;
+  ops[index].votes = (ops[index].votes || 0) + 1;
 
-    await docRef.update({ options: options });
-    // onSnapshot により自動で再描画される
-  } catch (e) {
-    console.error("投票に失敗しました", e);
-  }
+  await ref.update({ options: ops });
 }
 
-// コメント追加処理
-async function handleAddComment(postId) {
-  const text = window.prompt("コメントを入力してください：");
-  if (text === null) return; // キャンセル
-  const trimmed = text.trim();
-  if (trimmed === "") {
-    alert("空のコメントは追加できません。");
-    return;
-  }
+// ====== コメント追加 ======
+async function handleAddComment(id) {
+  const text = prompt("コメントを入力してください：");
+  if (text === null) return;
+  const t = text.trim();
+  if (t === "") return alert("空のコメントは追加できません");
 
-  try {
-    const docRef = db.collection("posts").doc(postId);
-    const docSnap = await docRef.get();
-    if (!docSnap.exists) return;
+  const ref = db.collection("posts").doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) return;
 
-    const data = docSnap.data();
-    const comments = data.comments || [];
+  const data = snap.data();
+  const comments = data.comments || [];
 
-    comments.push({
-      text: trimmed,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+  comments.push({
+    text: t,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
 
-    await docRef.update({ comments: comments });
-    // onSnapshotで再描画
-  } catch (e) {
-    console.error("コメント追加に失敗しました", e);
-  }
+  await ref.update({ comments });
 }
 
-// 投稿フォーム送信処理
-async function handleFormSubmit(event) {
-  event.preventDefault();
+// ====== 投稿フォーム送信 ======
+async function handleFormSubmit(e) {
+  e.preventDefault();
 
-  const titleInput = document.getElementById("title");
-  const descInput = document.getElementById("description");
+  const title = document.getElementById("title").value.trim();
+  const desc = document.getElementById("description").value.trim();
   const optionInputs = document.querySelectorAll(".option-input");
 
-  const title = titleInput.value.trim();
-  const description = descInput.value.trim();
+  if (!title || !desc) return alert("タイトルと内容は必須です");
 
-  if (title === "" || description === "") {
-    alert("タイトルと質問内容は必須です。")
+  const options = [];
+  optionInputs.forEach((i) => {
+    const t = i.value.trim();
+    if (t) options.push({ text: t, votes: 0 });
+  });
+
+  if (options.length < 2) {
+    return alert("選択肢は最低2つ必要です");
+  }
+
+  // 🔥 フォームを消さない！
+  await db.collection("posts").add({
+    title,
+    description: desc,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    options,
+    comments: []
+  });
+
+  // （リセットしない）
+}
+
+// ====== 初期化 ======
+document.addEventListener("DOMContentLoaded", () => {
+  document
+    .getElementById("questionForm")
+    .addEventListener("submit", handleFormSubmit);
+
+  db.collection("posts")
+    .orderBy("createdAt", "desc")
+    .onSnapshot((snap) => {
+      posts = snapshotToPosts(snap);
+      renderPosts();
+      renderRanking();
+    });
+});
