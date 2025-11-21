@@ -1,7 +1,6 @@
 // ===== pages/meal/script.js（完成版） =====
 // ★必ず “今の ngrok URL” に置き換える
-const API_URL = "https://33063579d69a.ngrok-free.app/api/calc-calorie";
-
+const API_URL = "https://e8c7bb75f9af.ngrok-free.app/api/calc-calorie";
 
 // ---- DOM ----
 const els = {
